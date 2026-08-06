@@ -52,27 +52,22 @@ Die CLI bietet keine offizielle Fernsteuerungs-API — sie ist als reines Text-M
 
 ## Ressourcenverbrauch
 
-Real gemessen auf einem 4-vCPU/8-GB-Server mit 11 gleichzeitig laufenden Bot-Charakteren:
+**Test 1** — 4 vCPU / 8 GB RAM, 11 gleichzeitig laufende Bot-Charaktere:
 
 | Prozess | RAM |
 |---|---|
 | Dashboard (`node server.js`) | ~100 MB |
 | sf-api-Bridge (Rust) | ~13 MB |
 | Bot-Charakter (`mercy-cli-linux-x64`), je Prozess | ~10 MB Ø |
+| CPU | Load-Average 0,11–0,18 |
 
-CPU liegt dabei praktisch bei null (Load-Average 0,11–0,18 auf 4 Kernen) — RAM ist der begrenzende Faktor, nicht CPU.
+**Test 2** — 1 vCPU / 1 GiB RAM (Proxmox-LXC-Container), 30 gleichzeitig laufende Accounts:
 
-**Hochrechnung für einen kleinen VPS (1 vCPU / 1 GB RAM):**
-
-| Posten | RAM |
+| Metrik | Wert |
 |---|---|
-| OS-Grundlast (sshd, systemd, cron) | ~150 MB |
-| Dashboard + sf-api-Bridge (Fixkosten) | ~113 MB |
-| Verbleibend für Bot-Charaktere | ~761 MB |
-| Theoretisches Maximum (Ø 10 MB/Charakter) | ~76 Charaktere |
-| Mit 20 % Sicherheitsmarge | **~60 Charaktere** |
-
-**Bestätigt durch echten Betrieb:** Ein separater Proxmox-LXC-Container mit exakt 1 vCPU / 1 GiB RAM lief mit **30 gleichzeitigen Accounts bei nur 216 MB RAM (21 %) und 2,82 % CPU-Auslastung eines einzelnen Kerns**. Das räumt die vorherige Single-Core-Unsicherheit aus — ein einzelner Kern trägt diese Größenordnung mühelos, und der reale RAM-Verbrauch liegt sogar unter der theoretischen Hochrechnung oben (LXC-Container haben kaum Betriebssystem-Overhead gegenüber einer vollen VM, da kein eigener Kernel nötig ist).
+| CPU-Auslastung | 2,82 % eines Kerns |
+| RAM-Auslastung | 216,20 MiB von 1,00 GiB (21,11 %) |
+| Bootdisk | 3,68 GiB von 7,78 GiB (47,36 %) |
 
 ## Tech-Stack
 
