@@ -4,6 +4,8 @@ Ein Web-Dashboard für [Mercy SF](https://mercysf.app), das um die bestehende CL
 
 Alles läuft auf Basis der offiziellen CLI. Es wird nichts am Bot selbst verändert, nur ein Interface drumherum gebaut.
 
+> ⚠️ **Experimentell, Nutzung auf eigenes Risiko.** Dieses Dashboard befindet sich in aktiver Entwicklung, es kann Fehler enthalten. Außerdem: Automatisiertes Spielen (Botting) verstößt in der Regel gegen die Nutzungsbedingungen von Shakes & Fidget — es besteht grundsätzlich das Risiko einer Account-Sperrung, unabhängig davon, ob die Automatisierung über dieses Dashboard oder direkt über die CLI läuft. Nutzung auf eigene Verantwortung.
+
 ## Installation
 
 Auf einem frischen Debian/Ubuntu-Server, als root:
