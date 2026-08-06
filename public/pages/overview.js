@@ -78,6 +78,7 @@ export default {
             <button class="icon-btn" id="gamestate-refresh-btn" title="Ausrüstung, Gilde, Taverne & Mail aktualisieren">⟳</button>
           </div>
           <div class="stat-grid" id="stat-grid"></div>
+          <div id="daily-earnings-body" class="daily-earnings"></div>
         </section>
         <section class="card collapsible-card" id="equipment-card">
           <div class="card-header"><span>🛡 Ausrüstung</span></div>
@@ -137,6 +138,15 @@ export default {
       .guild-member-row:last-child, .tavern-quest-row:last-child, .mail-row:last-child { border-bottom: none; }
       .mail-row.unread { font-weight: 600; }
       .link-btn-inline { background: none; border: none; color: var(--accent, #4f8cff); cursor: pointer; font-size: 12px; padding: 8px 0 0; text-decoration: underline; text-underline-offset: 2px; }
+
+      .daily-earnings { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+      .daily-earnings-title { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px; }
+      .daily-stat { display: flex; align-items: baseline; gap: 8px; font-size: 13px; padding: 3px 0; }
+      .daily-stat-label { color: var(--muted); min-width: 70px; }
+      .daily-stat-value { font-weight: 600; }
+      .daily-stat-cmp { font-size: 11px; margin-left: auto; }
+      .positive { color: var(--green); }
+      .negative { color: var(--red); }
     `);
 
     async function renderAccountsTable(accounts) {
@@ -173,6 +183,40 @@ export default {
           div.innerHTML = `<div class="stat-label">${label}</div><div class="stat-value">${value ?? '—'}</div>`;
           grid.appendChild(div);
         });
+    }
+
+    async function renderDailyEarnings(accountId) {
+      const el = wrap.querySelector('#daily-earnings-body');
+      if (!accountId) { el.innerHTML = ''; return; }
+      try {
+        const daily = await ctx.fetchJSON(`/api/stats/${encodeURIComponent(accountId)}/daily?days=2`);
+        const todayDate = new Date().toISOString().slice(0, 10);
+        const yesterdayDate = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+        const empty = { expGained: 0, silverGained: 0, honorGained: 0, levelsGained: 0 };
+        const today = daily.find(d => d.date === todayDate) || empty;
+        const yesterday = daily.find(d => d.date === yesterdayDate) || null;
+
+        function row(field, label, value) {
+          let cmp = '';
+          if (yesterday) {
+            const diff = value - yesterday[field];
+            const arrow = diff > 0 ? '▲' : diff < 0 ? '▼' : '▪';
+            const cls = diff > 0 ? 'positive' : diff < 0 ? 'negative' : 'muted';
+            cmp = `<span class="daily-stat-cmp ${cls}">${arrow} ${diff >= 0 ? '+' : ''}${diff} ggü. gestern</span>`;
+          }
+          return `<div class="daily-stat"><span class="daily-stat-label">${label}</span><span class="daily-stat-value">+${value}</span>${cmp}</div>`;
+        }
+
+        el.innerHTML = `
+          <div class="daily-earnings-title">📅 Heute erwirtschaftet</div>
+          ${row('expGained', 'EP', today.expGained)}
+          ${row('silverGained', 'Silber', today.silverGained)}
+          ${row('honorGained', 'Ehre', today.honorGained)}
+          <div class="daily-stat"><span class="daily-stat-label">Level-Ups</span><span class="daily-stat-value">${today.levelsGained}</span></div>
+        `;
+      } catch (err) {
+        el.textContent = 'Fehler: ' + err.message;
+      }
     }
 
     async function renderLog(accountId, charName) {
@@ -301,6 +345,7 @@ export default {
       await renderAccountsTable(accounts);
       const current = accounts.find(a => a.id === accountId);
       renderStatCards(current);
+      await renderDailyEarnings(accountId);
       await renderLog(accountId, current ? current.charName : null);
     }
 
