@@ -70,6 +70,21 @@ export default {
           </thead>
           <tbody id="accounts-table-body"></tbody>
         </table>
+        <div class="accounts-pagination">
+          <div class="pagination-pagesize">
+            <label for="accounts-pagesize">Pro Seite</label>
+            <select id="accounts-pagesize">
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="all">Alle</option>
+            </select>
+          </div>
+          <div class="pagination-controls">
+            <button type="button" class="icon-btn" id="accounts-prev-btn" title="Vorherige Seite">‹</button>
+            <span id="accounts-page-label" class="muted"></span>
+            <button type="button" class="icon-btn" id="accounts-next-btn" title="Nächste Seite">›</button>
+          </div>
+        </div>
       </section>
       <div class="gamestate-grid">
         <section class="card collapsible-card" id="character-card">
@@ -112,6 +127,13 @@ export default {
         .gamestate-grid { grid-template-columns: 1fr; }
       }
 
+      .accounts-pagination { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; font-size: 12px; }
+      .pagination-pagesize { display: flex; align-items: center; gap: 6px; color: var(--muted); }
+      .pagination-pagesize select { background: var(--panel-2); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 3px 6px; font-size: 12px; }
+      .pagination-controls { display: flex; align-items: center; gap: 8px; }
+      .pagination-controls .icon-btn { width: 26px; height: 26px; }
+      .pagination-controls .icon-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
       .collapsible-card .card-header { cursor: pointer; user-select: none; }
       .collapsible-card .card-chevron { margin-left: auto; opacity: 0.6; font-size: 11px; transition: transform .15s; }
       .collapsible-card.collapsed .card-chevron { transform: rotate(-90deg); }
@@ -149,11 +171,28 @@ export default {
       .negative { color: var(--red); }
     `);
 
+    let accountsPage = 0;
+    let accountsPageSize = localStorage.getItem('mercy-accounts-pagesize') || '5';
+
+    function totalAccountsPages(total) {
+      if (accountsPageSize === 'all') return 1;
+      return Math.max(1, Math.ceil(total / parseInt(accountsPageSize, 10)));
+    }
+
     async function renderAccountsTable(accounts) {
       const body = wrap.querySelector('#accounts-table-body');
       wrap.querySelector('#accounts-running').textContent = `${accounts.length} Account(s)`;
+
+      const totalPages = totalAccountsPages(accounts.length);
+      if (accountsPage >= totalPages) accountsPage = totalPages - 1;
+      if (accountsPage < 0) accountsPage = 0;
+
+      const pageItems = accountsPageSize === 'all'
+        ? accounts
+        : accounts.slice(accountsPage * parseInt(accountsPageSize, 10), (accountsPage + 1) * parseInt(accountsPageSize, 10));
+
       body.innerHTML = '';
-      accounts.forEach(acc => {
+      pageItems.forEach(acc => {
         const s = acc.stats || {};
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -169,6 +208,13 @@ export default {
         `;
         body.appendChild(tr);
       });
+
+      const pageLabel = wrap.querySelector('#accounts-page-label');
+      const prevBtn = wrap.querySelector('#accounts-prev-btn');
+      const nextBtn = wrap.querySelector('#accounts-next-btn');
+      pageLabel.textContent = accountsPageSize === 'all' ? '' : `Seite ${accountsPage + 1} / ${totalPages}`;
+      prevBtn.disabled = accountsPage <= 0 || accountsPageSize === 'all';
+      nextBtn.disabled = accountsPage >= totalPages - 1 || accountsPageSize === 'all';
     }
 
     function renderStatCards(account) {
@@ -355,6 +401,23 @@ export default {
 
     const unsubGameState = ctx.onAccountChange(() => renderGameState(getCurrentProfileId()));
     wrap.querySelector('#gamestate-refresh-btn').addEventListener('click', () => renderGameState(getCurrentProfileId()));
+
+    const pageSizeSelect = wrap.querySelector('#accounts-pagesize');
+    pageSizeSelect.value = accountsPageSize;
+    pageSizeSelect.addEventListener('change', () => {
+      accountsPageSize = pageSizeSelect.value;
+      localStorage.setItem('mercy-accounts-pagesize', accountsPageSize);
+      accountsPage = 0;
+      renderAccountsTable(lastAccounts);
+    });
+    wrap.querySelector('#accounts-prev-btn').addEventListener('click', () => {
+      accountsPage -= 1;
+      renderAccountsTable(lastAccounts);
+    });
+    wrap.querySelector('#accounts-next-btn').addEventListener('click', () => {
+      accountsPage += 1;
+      renderAccountsTable(lastAccounts);
+    });
 
     wrap.querySelectorAll('.collapsible-card').forEach(cardEl => makeCollapsible(cardEl, cardEl.id));
 
