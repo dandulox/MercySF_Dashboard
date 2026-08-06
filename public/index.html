@@ -19,32 +19,32 @@
 
       <nav class="nav" id="nav"></nav>
 
+      <div class="accounts-list">
+        <div class="accounts-list-title">ACCOUNTS <span id="accounts-count"></span></div>
+        <div id="accounts-list-items"></div>
+      </div>
+
       <div class="engine-box">
         <div class="engine-row">
           <span>BOT ENGINE</span>
           <span id="engine-status" class="pill pill-off">UNBEKANNT</span>
         </div>
-        <div class="engine-row">
-          <span>MercySF CLI</span>
-          <span class="version-status-group">
+        <div class="engine-version-block">
+          <div class="engine-version-label">MercySF CLI</div>
+          <div class="engine-version-controls">
             <span id="cli-version-pill" class="pill pill-off">Prüfe…</span>
             <button class="icon-btn-tiny" id="cli-force-check-btn" title="Jetzt prüfen">⟳</button>
             <button class="btn btn-primary" id="engine-update-btn" style="display:none;width:auto;padding:2px 10px;font-size:11px;">Update</button>
-          </span>
+          </div>
         </div>
-        <div class="engine-row">
-          <span>Dashboard</span>
-          <span class="version-status-group">
+        <div class="engine-version-block">
+          <div class="engine-version-label">Dashboard</div>
+          <div class="engine-version-controls">
             <span id="dashboard-version-pill" class="pill pill-off">Prüfe…</span>
             <button class="icon-btn-tiny" id="dashboard-force-check-btn" title="Jetzt prüfen">⟳</button>
             <button class="btn btn-primary" id="dashboard-update-btn" style="display:none;width:auto;padding:2px 10px;font-size:11px;">Update</button>
-          </span>
+          </div>
         </div>
-      </div>
-
-      <div class="accounts-list">
-        <div class="accounts-list-title">ACCOUNTS <span id="accounts-count"></span></div>
-        <div id="accounts-list-items"></div>
       </div>
 
       <div class="sidebar-footer">

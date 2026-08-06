@@ -71,7 +71,8 @@ body {
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 12px;
-  margin-bottom: 16px;
+  margin-top: 12px;
+  flex-shrink: 0;
 }
 .engine-row {
   display: flex;
@@ -82,6 +83,10 @@ body {
   letter-spacing: 0.04em;
   margin-bottom: 10px;
 }
+.engine-version-block { margin-bottom: 10px; }
+.engine-version-block:last-child { margin-bottom: 0; }
+.engine-version-label { font-size: 11px; color: var(--muted); letter-spacing: 0.04em; margin-bottom: 5px; }
+.engine-version-controls { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .pill {
   font-size: 10px;
   padding: 2px 8px;
