@@ -5,8 +5,15 @@ function fmt(n) {
   return String(n);
 }
 
+function fmtDuration(sec) {
+  if (!sec) return '0 Min';
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  return h ? `${h} Std ${m} Min` : `${m} Min`;
+}
+
 function escapeHtml(s) {
-  return s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  return String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 }
 
 function escapeRegExp(s) {
@@ -49,9 +56,21 @@ export default {
       <section class="card" id="equipment-card">
         <div class="card-header">
           <span>🛡 Ausrüstung</span>
-          <button class="icon-btn" id="equipment-refresh-btn" title="Aktualisieren">⟳</button>
+          <button class="icon-btn" id="gamestate-refresh-btn" title="Ausrüstung, Gilde, Taverne & Mail aktualisieren">⟳</button>
         </div>
         <div id="equipment-body" class="muted">Wähle einen Account, um die Ausrüstung zu sehen.</div>
+      </section>
+      <section class="card" id="guild-card">
+        <div class="card-header"><span>🏰 Gilde</span></div>
+        <div id="guild-body" class="muted">Wähle einen Account, um Gildendaten zu sehen.</div>
+      </section>
+      <section class="card" id="tavern-card">
+        <div class="card-header"><span>🍺 Taverne</span></div>
+        <div id="tavern-body" class="muted">Wähle einen Account, um Tavernendaten zu sehen.</div>
+      </section>
+      <section class="card" id="mail-card">
+        <div class="card-header"><span>✉ Mail</span></div>
+        <div id="mail-body" class="muted">Wähle einen Account, um die Mail zu sehen.</div>
       </section>
       <section class="card">
         <div class="card-header">📜 Activity Log</div>
@@ -60,13 +79,21 @@ export default {
     `;
     container.appendChild(wrap);
 
-    ctx.injectStyleOnce('overview-equipment', `
+    ctx.injectStyleOnce('overview-gamestate', `
       .equip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
       .equip-slot { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
       .equip-slot-name { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
       .equip-slot-type { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
       .equip-slot-attrs { font-size: 12px; color: var(--text); line-height: 1.5; }
       .equip-slot-meta { font-size: 11px; color: var(--muted); margin-top: 6px; }
+
+      .guild-summary, .tavern-summary, .mail-summary { font-size: 13px; margin-bottom: 10px; }
+      .guild-member-row, .tavern-quest-row, .mail-row {
+        display: flex; justify-content: space-between; gap: 10px; font-size: 13px;
+        padding: 6px 0; border-bottom: 1px solid var(--border);
+      }
+      .guild-member-row:last-child, .tavern-quest-row:last-child, .mail-row:last-child { border-bottom: none; }
+      .mail-row.unread { font-weight: 600; }
     `);
 
     async function renderAccountsTable(accounts) {
@@ -120,22 +147,85 @@ export default {
       return current ? current.profileId : null;
     }
 
-    async function renderEquipment(profileId) {
+    function renderEquipmentBody(items) {
       const el = wrap.querySelector('#equipment-body');
-      if (!profileId) { el.textContent = 'Wähle einen Account, um die Ausrüstung zu sehen.'; return; }
-      el.textContent = 'Lade Ausrüstung…';
+      if (!items.length) { el.textContent = 'Keine Ausrüstung gefunden.'; return; }
+      el.innerHTML = `<div class="equip-grid">${items.map(item => `
+        <div class="equip-slot">
+          <div class="equip-slot-name">${escapeHtml(item.slot)}</div>
+          <div class="equip-slot-type">${escapeHtml(item.itemType)}</div>
+          <div class="equip-slot-attrs">${Object.entries(item.attributes).map(([k, v]) => `${escapeHtml(k)}: ${v}`).join('<br>') || '—'}</div>
+          <div class="equip-slot-meta">Qualität ${item.itemQuality} · +${item.upgradeCount}</div>
+        </div>`).join('')}</div>`;
+    }
+
+    function renderGuildBody(guild) {
+      const el = wrap.querySelector('#guild-body');
+      if (!guild) { el.textContent = 'Kein Gildenmitglied.'; return; }
+      el.innerHTML = `
+        <div class="guild-summary"><strong>${escapeHtml(guild.name)}</strong> · Ehre ${fmt(guild.honor)} · Rang ${guild.rank} · ${guild.memberCount} Mitglieder</div>
+        ${guild.members.slice(0, 20).map(m => `
+          <div class="guild-member-row">
+            <span>${escapeHtml(m.name)}</span>
+            <span class="muted">Lvl ${m.level} · ${escapeHtml(m.guildRank)}</span>
+          </div>`).join('')}
+      `;
+    }
+
+    function renderTavernBody(tavern) {
+      const el = wrap.querySelector('#tavern-body');
+      const action = escapeHtml((tavern.currentAction || '').split(' ')[0] || '—');
+      el.innerHTML = `
+        <div class="tavern-summary">🍺 ${tavern.beerDrunk}/${tavern.beerMax} · Abenteuerlust ${fmtDuration(tavern.thirstForAdventureSec)} · Aktion: ${action}</div>
+        ${tavern.quests.map(q => `
+          <div class="tavern-quest-row">
+            <span>${escapeHtml(q.location)}</span>
+            <span class="muted">${fmt(q.baseSilver)} Silber · ${fmt(q.baseExperience)} XP · ${fmtDuration(q.baseLengthSec)}</span>
+          </div>`).join('')}
+      `;
+    }
+
+    function renderMailBody(mail) {
+      const el = wrap.querySelector('#mail-body');
+      if (!mail.recent.length) { el.textContent = `Postfach leer (0/${mail.inboxCapacity}).`; return; }
+      el.innerHTML = `
+        <div class="mail-summary">${mail.unreadCount} ungelesen · ${mail.recent.length}/${mail.inboxCapacity} im Postfach</div>
+        ${mail.recent.map(entry => `
+          <div class="mail-row ${entry.read ? '' : 'unread'}">
+            <span>${escapeHtml(entry.title || '(kein Betreff)')}</span>
+            <span class="muted">von ${escapeHtml(entry.from)} · ${new Date(entry.date).toLocaleString('de-DE')}</span>
+          </div>`).join('')}
+      `;
+    }
+
+    async function renderGameState(profileId) {
+      const equipEl = wrap.querySelector('#equipment-body');
+      const guildEl = wrap.querySelector('#guild-body');
+      const tavernEl = wrap.querySelector('#tavern-body');
+      const mailEl = wrap.querySelector('#mail-body');
+      if (!profileId) {
+        equipEl.textContent = 'Wähle einen Account, um die Ausrüstung zu sehen.';
+        guildEl.textContent = 'Wähle einen Account, um Gildendaten zu sehen.';
+        tavernEl.textContent = 'Wähle einen Account, um Tavernendaten zu sehen.';
+        mailEl.textContent = 'Wähle einen Account, um die Mail zu sehen.';
+        return;
+      }
+      equipEl.textContent = 'Lade…';
+      guildEl.textContent = 'Lade…';
+      tavernEl.textContent = 'Lade…';
+      mailEl.textContent = 'Lade…';
       try {
-        const data = await ctx.fetchJSON(`/api/equipment/${encodeURIComponent(profileId)}`);
-        if (!data.items.length) { el.textContent = 'Keine Ausrüstung gefunden.'; return; }
-        el.innerHTML = `<div class="equip-grid">${data.items.map(item => `
-          <div class="equip-slot">
-            <div class="equip-slot-name">${escapeHtml(item.slot)}</div>
-            <div class="equip-slot-type">${escapeHtml(item.itemType)}</div>
-            <div class="equip-slot-attrs">${Object.entries(item.attributes).map(([k, v]) => `${escapeHtml(k)}: ${v}`).join('<br>') || '—'}</div>
-            <div class="equip-slot-meta">Qualität ${item.itemQuality} · +${item.upgradeCount}</div>
-          </div>`).join('')}</div>`;
+        const data = await ctx.fetchJSON(`/api/gamestate/${encodeURIComponent(profileId)}`);
+        renderEquipmentBody(data.equipment);
+        renderGuildBody(data.guild);
+        renderTavernBody(data.tavern);
+        renderMailBody(data.mail);
       } catch (err) {
-        el.textContent = 'Fehler: ' + err.message;
+        const msg = 'Fehler: ' + err.message;
+        equipEl.textContent = msg;
+        guildEl.textContent = msg;
+        tavernEl.textContent = msg;
+        mailEl.textContent = msg;
       }
     }
 
@@ -150,13 +240,13 @@ export default {
       await renderLog(accountId, current ? current.charName : null);
     }
 
-    render().then(() => renderEquipment(getCurrentProfileId()));
+    render().then(() => renderGameState(getCurrentProfileId()));
     const unsub = ctx.onAccountChange(render);
     const interval = setInterval(render, 5000);
 
-    const unsubEquipment = ctx.onAccountChange(() => renderEquipment(getCurrentProfileId()));
-    wrap.querySelector('#equipment-refresh-btn').addEventListener('click', () => renderEquipment(getCurrentProfileId()));
+    const unsubGameState = ctx.onAccountChange(() => renderGameState(getCurrentProfileId()));
+    wrap.querySelector('#gamestate-refresh-btn').addEventListener('click', () => renderGameState(getCurrentProfileId()));
 
-    return () => { unsub(); unsubEquipment(); clearInterval(interval); };
+    return () => { unsub(); unsubGameState(); clearInterval(interval); };
   }
 };

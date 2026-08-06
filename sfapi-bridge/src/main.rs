@@ -11,7 +11,7 @@ use sf_api::session::SimpleSession;
 use std::collections::BTreeMap;
 
 #[derive(Deserialize)]
-struct EquipmentRequest {
+struct StateRequest {
     username: String,
     password: String,
     server: String,
@@ -35,9 +35,68 @@ struct EquipmentItem {
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct EquipmentResponse {
+struct GuildMember {
+    name: String,
+    level: u16,
+    guild_rank: String,
+    last_online: Option<String>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct GuildInfo {
+    name: String,
+    description: String,
+    honor: u32,
+    rank: u32,
+    member_count: usize,
+    members: Vec<GuildMember>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct QuestInfo {
+    location: String,
+    base_silver: u32,
+    base_experience: u32,
+    base_length_sec: u32,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct TavernInfo {
+    beer_drunk: u8,
+    beer_max: u8,
+    thirst_for_adventure_sec: u32,
+    current_action: String,
+    quests: Vec<QuestInfo>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct MailEntry {
+    from: String,
+    title: String,
+    date: String,
+    read: bool,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct MailInfo {
+    inbox_capacity: u16,
+    unread_count: usize,
+    recent: Vec<MailEntry>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct StateResponse {
     character_name: String,
-    items: Vec<EquipmentItem>,
+    equipment: Vec<EquipmentItem>,
+    guild: Option<GuildInfo>,
+    tavern: TavernInfo,
+    mail: MailInfo,
 }
 
 #[derive(Serialize)]
@@ -49,7 +108,7 @@ fn error_response(status: StatusCode, message: String) -> Response {
     (status, Json(ErrorResponse { error: message })).into_response()
 }
 
-async fn equipment_handler(Json(req): Json<EquipmentRequest>) -> Response {
+async fn state_handler(Json(req): Json<StateRequest>) -> Response {
     // Mercy-SF-Logins sind S&F-Accounts (SSO) — ein Login kann mehrere Charaktere auf
     // verschiedenen Servern haben (siehe accountsRegistry.js). login_sf_account() gibt eine
     // Session pro Charakter zurück; wir wählen die, deren Server zum Profil passt.
@@ -86,8 +145,9 @@ async fn equipment_handler(Json(req): Json<EquipmentRequest>) -> Response {
         }
     };
 
+    // --- Ausrüstung ---
     let character = &game_state.character;
-    let mut items = Vec::new();
+    let mut equipment = Vec::new();
     for (slot, item_opt) in character.equipment.0.iter() {
         let Some(item) = item_opt else { continue };
         let mut attributes = BTreeMap::new();
@@ -96,7 +156,7 @@ async fn equipment_handler(Json(req): Json<EquipmentRequest>) -> Response {
                 attributes.insert(format!("{attr:?}"), *value);
             }
         }
-        items.push(EquipmentItem {
+        equipment.push(EquipmentItem {
             slot: format!("{slot:?}"),
             item_type: format!("{:?}", item.typ),
             model_id: item.model_id,
@@ -111,16 +171,76 @@ async fn equipment_handler(Json(req): Json<EquipmentRequest>) -> Response {
         });
     }
 
-    Json(EquipmentResponse {
+    // --- Gilde ---
+    let guild = game_state.guild.as_ref().map(|g| GuildInfo {
+        name: g.name.clone(),
+        description: g.description.clone(),
+        honor: g.honor,
+        rank: g.rank,
+        member_count: g.members.len(),
+        members: g
+            .members
+            .iter()
+            .map(|m| GuildMember {
+                name: m.name.clone(),
+                level: m.level,
+                guild_rank: format!("{:?}", m.guild_rank),
+                last_online: m.last_online.map(|d| d.to_rfc3339()),
+            })
+            .collect(),
+    });
+
+    // --- Taverne ---
+    let t = &game_state.tavern;
+    let tavern = TavernInfo {
+        beer_drunk: t.beer_drunk,
+        beer_max: t.beer_max,
+        thirst_for_adventure_sec: t.thirst_for_adventure_sec,
+        current_action: format!("{:?}", t.current_action),
+        quests: t
+            .quests
+            .iter()
+            .map(|q| QuestInfo {
+                location: format!("{:?}", q.location_id),
+                base_silver: q.base_silver,
+                base_experience: q.base_experience,
+                base_length_sec: q.base_length,
+            })
+            .collect(),
+    };
+
+    // --- Mail ---
+    let m = &game_state.mail;
+    let mail = MailInfo {
+        inbox_capacity: m.inbox_capacity,
+        unread_count: m.inbox.iter().filter(|e| !e.read).count(),
+        recent: m
+            .inbox
+            .iter()
+            .rev()
+            .take(10)
+            .map(|e| MailEntry {
+                from: e.from.clone(),
+                title: e.title.clone(),
+                date: e.date.to_rfc3339(),
+                read: e.read,
+            })
+            .collect(),
+    };
+
+    Json(StateResponse {
         character_name: character.name.clone(),
-        items,
+        equipment,
+        guild,
+        tavern,
+        mail,
     })
     .into_response()
 }
 
 #[tokio::main]
 async fn main() {
-    let app = Router::new().route("/equipment", post(equipment_handler));
+    let app = Router::new().route("/state", post(state_handler));
     let addr = std::net::SocketAddr::from(([127, 0, 0, 1], 4001));
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
     println!("mercy-sfapi-bridge listening on {addr}");

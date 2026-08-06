@@ -3,7 +3,7 @@ const registry = require('../lib/accountsRegistry');
 const credentialStore = require('../lib/credentialStore');
 
 const router = express.Router();
-const BRIDGE_URL = 'http://127.0.0.1:4001/equipment';
+const BRIDGE_URL = 'http://127.0.0.1:4001/state';
 const CACHE_TTL_MS = 10 * 60 * 1000;
 const cache = new Map();
 
