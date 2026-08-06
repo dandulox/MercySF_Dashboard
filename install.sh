@@ -5,6 +5,9 @@
 # Nutzung auf einem frischen Debian/Ubuntu-Server (als root):
 #   curl -fsSL https://raw.githubusercontent.com/dandulox/MercySF_Dashboard/main/install.sh | bash
 #
+# Deinstallation (entfernt ALLES, inkl. gespeicherter Zugangsdaten und Statistik-Historie):
+#   curl -fsSL https://raw.githubusercontent.com/dandulox/MercySF_Dashboard/main/install.sh | bash -s -- --uninstall
+#
 # Idempotent: mehrfaches Ausführen aktualisiert nur Code + Dependencies, bestehende
 # Account-Daten (/opt/mercy/dashboard/data), Zertifikate (/opt/mercy/certs) und die
 # installierte CLI (/opt/mercy/mercy-cli-linux-x64) werden nicht angetastet, sofern
@@ -25,6 +28,17 @@ warn() { echo -e "\033[1;33m!!\033[0m $*"; }
 if [[ "$(id -u)" -ne 0 ]]; then
   echo "Bitte als root ausführen (z. B. via sudo)." >&2
   exit 1
+fi
+
+if [[ "${1:-}" == "--uninstall" ]]; then
+  log "Mercy SF Dashboard deinstallieren (entfernt ALLES: Code, Dienste, Zertifikate, CLI, gespeicherte Zugangsdaten, Statistik-Historie)"
+  systemctl stop mercy-dashboard mercy-sfapi-bridge 2>/dev/null || true
+  systemctl disable mercy-dashboard mercy-sfapi-bridge 2>/dev/null || true
+  rm -f /etc/systemd/system/mercy-dashboard.service /etc/systemd/system/mercy-sfapi-bridge.service
+  systemctl daemon-reload
+  rm -rf "$INSTALL_DIR"
+  log "Fertig — $INSTALL_DIR und beide systemd-Dienste vollständig entfernt."
+  exit 0
 fi
 
 log "Pakete aktualisieren und Build-Abhängigkeiten installieren"

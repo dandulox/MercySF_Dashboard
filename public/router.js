@@ -152,6 +152,37 @@ async function loadCliUpdateStatus() {
   }
 }
 
+async function loadDashboardUpdateStatus() {
+  const row = document.getElementById('dashboard-update-row');
+  const btn = document.getElementById('dashboard-update-btn');
+  if (!row || !btn) return;
+  const status = await fetchJSON('/api/dashboard-update/status');
+  if (status.applying) {
+    row.style.display = '';
+    btn.disabled = true;
+    btn.textContent = 'Installiere…';
+  } else if (status.updateAvailable) {
+    row.style.display = '';
+    btn.disabled = false;
+    btn.textContent = 'Installieren';
+  } else {
+    row.style.display = 'none';
+  }
+}
+
+// Nach dem Anstoßen startet sich der Dashboard-Prozess selbst neu — die Seite pollt kurz, bis
+// der Server wieder antwortet, und lädt dann automatisch neu statt den Nutzer hängen zu lassen.
+async function waitForServerAndReload() {
+  for (let i = 0; i < 30; i++) {
+    await new Promise(r => setTimeout(r, 2000));
+    try {
+      const res = await fetch('/api/auth/status');
+      if (res.ok || res.status === 401) { location.reload(); return; }
+    } catch (e) { /* Server noch nicht wieder erreichbar, weiter warten */ }
+  }
+  location.reload();
+}
+
 async function loadAccounts() {
   const accounts = await fetchJSON('/api/accounts');
   state.accounts = accounts;
@@ -350,15 +381,33 @@ document.getElementById('engine-update-btn')?.addEventListener('click', async ()
   }
 });
 
+document.getElementById('dashboard-update-btn')?.addEventListener('click', async () => {
+  if (!confirm('Dashboard aktualisieren? Der Server-Prozess startet dabei neu (git pull + Neubau), die Seite lädt danach automatisch neu.')) return;
+  const btn = document.getElementById('dashboard-update-btn');
+  btn.disabled = true;
+  btn.textContent = 'Installiere…';
+  try {
+    await fetchJSON('/api/dashboard-update/apply', { method: 'POST' });
+    btn.textContent = 'Startet neu…';
+    waitForServerAndReload();
+  } catch (err) {
+    alert('Update fehlgeschlagen: ' + err.message);
+    btn.disabled = false;
+    btn.textContent = 'Installieren';
+  }
+});
+
 initAnonMode();
 initNotifications();
 initAccessMenu();
 renderNav();
 loadStatus();
 loadCliUpdateStatus();
+loadDashboardUpdateStatus();
 loadAccounts().then(renderRoute);
 setInterval(() => {
   loadStatus();
   loadCliUpdateStatus();
+  loadDashboardUpdateStatus();
   loadAccounts();
 }, 5000);
