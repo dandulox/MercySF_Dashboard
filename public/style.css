@@ -28,7 +28,8 @@ body {
 
 .shell {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .sidebar {
@@ -172,6 +173,9 @@ body {
   flex: 1;
   padding: 20px 28px;
   min-width: 0;
+  overflow-y: auto;
+  height: 100vh;
+  box-sizing: border-box;
 }
 
 .topbar {
