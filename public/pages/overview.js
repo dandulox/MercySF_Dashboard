@@ -176,7 +176,7 @@ export default {
       const el = wrap.querySelector('#tavern-body');
       const action = escapeHtml((tavern.currentAction || '').split(' ')[0] || '—');
       el.innerHTML = `
-        <div class="tavern-summary">🍺 ${tavern.beerDrunk}/${tavern.beerMax} · Abenteuerlust ${fmtDuration(tavern.thirstForAdventureSec)} · Aktion: ${action}</div>
+        <div class="tavern-summary">🍺 ${tavern.beerDrunk}/${tavern.beerMax} · ⚡ Abenteuerlust ${tavern.adventurePoints}/${tavern.adventurePointsMax} · Aktion: ${action}</div>
         ${tavern.quests.map(q => `
           <div class="tavern-quest-row">
             <span>${escapeHtml(q.location)}</span>

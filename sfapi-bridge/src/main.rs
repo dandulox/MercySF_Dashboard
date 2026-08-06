@@ -67,7 +67,8 @@ struct QuestInfo {
 struct TavernInfo {
     beer_drunk: u8,
     beer_max: u8,
-    thirst_for_adventure_sec: u32,
+    adventure_points: u32,
+    adventure_points_max: u32,
     current_action: String,
     quests: Vec<QuestInfo>,
 }
@@ -191,11 +192,16 @@ async fn state_handler(Json(req): Json<StateRequest>) -> Response {
     });
 
     // --- Taverne ---
+    // sf-api liefert `thirst_for_adventure_sec` als rohen Server-Wert (voller Tageswert laut
+    // sf-api-Quellcode: 6000) — bei den im Spiel sichtbaren 100 Abenteuerlust-Punkten macht das
+    // Faktor 60. sf-api rechnet das selbst nicht um, daher hier manuell auf Punkte umgerechnet.
+    const ALU_RAW_PER_POINT: u32 = 60;
     let t = &game_state.tavern;
     let tavern = TavernInfo {
         beer_drunk: t.beer_drunk,
         beer_max: t.beer_max,
-        thirst_for_adventure_sec: t.thirst_for_adventure_sec,
+        adventure_points: t.thirst_for_adventure_sec / ALU_RAW_PER_POINT,
+        adventure_points_max: 6000 / ALU_RAW_PER_POINT,
         current_action: format!("{:?}", t.current_action),
         quests: t
             .quests
