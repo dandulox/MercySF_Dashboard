@@ -16,6 +16,14 @@ Das Skript installiert alle Abhängigkeiten (Node.js, Rust/Cargo für die sf-api
 
 Erneutes Ausführen des Skripts aktualisiert nur Code und Dependencies — vorhandene Account-Daten, Zertifikate und die installierte CLI-Version bleiben unangetastet.
 
+### Deinstallation
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/dandulox/MercySF_Dashboard/main/install.sh | bash -s -- --uninstall
+```
+
+Entfernt **alles**: beide systemd-Dienste, den kompletten `/opt/mercy`-Ordner inkl. Dashboard-Code, Zertifikate, CLI-Binary, gespeicherte Bot-Zugangsdaten, Dashboard-Zugang und die Ertrags-Statistik-Datenbank. Kein Zwischenschritt, keine Rückfrage — vor dem Ausführen sicher sein, dass wirklich alles weg soll.
+
 ## Funktionen
 
 - **Übersicht** — modulare, ein-/ausklappbare Karten (Zustand bleibt gespeichert): Accounts-Tabelle, Charakter-Stats, Ausrüstung, Taverne (inkl. Abenteuerlust als Balkenanzeige), Gilde, Mail, Activity-Log
@@ -27,7 +35,7 @@ Erneutes Ausführen des Skripts aktualisiert nur Code und Dependencies — vorha
 - **Einstellungen** — alle Bot-Konfig-Schalter direkt im Browser lesbar und schreibbar, gruppiert nach Bereich
 - **Benachrichtigungen** — erkennt Fehler/Warnungen automatisch aus dem Log-Output, Glocke mit Badge + Toast-Popups
 - **Anonym-Modus** — Charakternamen verpixeln, z. B. für Screenshots/Streaming
-- **Automatischer CLI-Update-Check** — 1×/Tag per MD5-Vergleich gegen die offizielle Download-Datei, Ein-Klick-Update direkt im Dashboard
+- **Automatischer Update-Check für CLI und Dashboard** — der BOT-ENGINE-Kasten in der Sidebar zeigt permanent den Status beider Komponenten ("Up To Date" / "Update Available"): die CLI wird 1×/Tag per MD5-Vergleich gegen die offizielle Download-Datei geprüft, das Dashboard selbst 1×/Tag gegen den neuesten Commit auf GitHub. Ein Klick auf "Update" installiert automatisch (`git pull` + Neubau + Neustart beim Dashboard, Download + Austausch beim CLI-Binary) — die Seite lädt danach selbstständig neu. Die laufende Dashboard-Version steht zusätzlich im Sidebar-Footer.
 - **Login/Zugangsschutz** — genau ein Dashboard-Zugang (Single-Admin), erster Besuch nach der Installation führt zur Setup-Seite; dort werden einmalig der AES-Schlüssel (verschlüsselt die gespeicherten Bot-Zugangsdaten) und ein 12-Wort-Wiederherstellungsschlüssel angezeigt (mit Pflicht-Bestätigung und Druck-Option), über den sich das Passwort später ohne E-Mail zurücksetzen lässt. Passwort-ändern und Logout direkt im Dashboard.
 
 ## Bekannte Einschränkungen
@@ -36,7 +44,8 @@ Die CLI bietet keine offizielle Fernsteuerungs-API — sie ist als reines Text-M
 
 - Kein natives Pause-Kommando — "Pause" schaltet stattdessen alle aktiven `auto_*`-Konfig-Schalter aus; ob das eine bereits laufende Bot-Schleife sofort stoppt oder erst beim nächsten Durchlauf, ist nicht verifiziert
 - Der Linux-Build der CLI schreibt keine `logs/`- oder `battle_history/`-Dateien auf die Platte — das Dashboard behilft sich mit einem In-Memory-Ringpuffer aus dem Live-Terminal-Output
-- Keine offizielle Versions-/Update-API — der Update-Check vergleicht MD5-Hashes gegen die öffentliche Download-Datei
+- Keine offizielle Versions-/Update-API für die CLI — der Update-Check vergleicht MD5-Hashes gegen die öffentliche Download-Datei
+- Ein Dashboard-Selbst-Update (`git pull` + Neubau) unterbricht kurz die laufende Verbindung, während sich beide systemd-Dienste neu starten — die Seite lädt automatisch neu, sobald der Server wieder antwortet
 - `sf-api` liefert keine lesbaren Item-Namen (nur numerische IDs/Enum-Typen) — die Ausrüstungs-Anzeige zeigt Slot, Item-Typ, Attribute und Qualität, keine Klarnamen
 - Die täglichen Erträge sind bei Silber eine **Netto-Veränderung** pro Zeitfenster (kann Ausgaben wie Reparaturen/Shop-Käufe enthalten) — EP und Ehre sind exakt, da sie sich nur durch Kämpfe/Quests ändern; welche CLI-Befehle im selben Fenster liefen, wird zusätzlich angezeigt
 - Kein Rate-Limiting auf Login/Passwort-Reset-Versuche — kein Schutz gegen Brute-Force, relevant vor allem falls das Dashboard je über das eigene LAN hinaus erreichbar gemacht wird
