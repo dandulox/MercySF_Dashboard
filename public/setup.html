@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mercy SF — Zugang einrichten</title>
+<link rel="stylesheet" href="/style.css" />
+<style>
+  body { display:flex; align-items:center; justify-content:center; min-height:100vh; }
+  .auth-card { width: 100%; max-width: 480px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 32px; margin: 20px; }
+  .auth-card h1 { margin-top:0; font-size: 20px; }
+  .auth-card label { display:block; margin: 12px 0 4px; font-size: 13px; color: var(--muted); }
+  .auth-card input[type="text"], .auth-card input[type="password"] { width:100%; box-sizing:border-box; background: var(--panel-2); border:1px solid var(--border); color: var(--text); border-radius:6px; padding:8px 10px; }
+  .auth-card .btn { margin-top:20px; width:100%; }
+  .secret-block { background: var(--panel-2); border:1px solid var(--border); border-radius:8px; padding:14px; margin-top:14px; font-family: monospace; word-break: break-all; }
+  .secret-block h3 { margin:0 0 8px; font-size:13px; color: var(--muted); font-family: inherit; }
+  .confirm-row { display:flex; align-items:flex-start; gap:8px; margin-top:20px; font-size:13px; }
+  .error-text { color: var(--red); font-size: 13px; margin-top: 10px; }
+</style>
+</head>
+<body>
+  <div class="auth-card" id="card">
+    <h1>⚔ Mercy SF — Zugang einrichten</h1>
+    <p class="muted">Es existiert noch kein Zugang für dieses Dashboard. Lege jetzt den einzigen Admin-Zugang an.</p>
+    <form id="setup-form">
+      <label for="username">Benutzername</label>
+      <input type="text" id="username" required autocomplete="username" />
+      <label for="password">Passwort</label>
+      <input type="password" id="password" required minlength="8" autocomplete="new-password" />
+      <label for="password2">Passwort wiederholen</label>
+      <input type="password" id="password2" required minlength="8" autocomplete="new-password" />
+      <div id="setup-error" class="error-text" hidden></div>
+      <button type="submit" class="btn btn-primary">Zugang anlegen</button>
+    </form>
+  </div>
+  <script type="module" src="/setup.js"></script>
+</body>
+</html>

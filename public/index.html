@@ -62,6 +62,24 @@
               <span class="switch-track"><span class="switch-thumb"></span></span>
             </span>
           </label>
+          <div class="notif-dropdown" id="access-dropdown">
+            <button class="icon-btn" id="access-btn" title="Zugang">🔐</button>
+            <div class="notif-panel" id="access-panel" hidden style="width:260px;">
+              <div class="notif-panel-header"><span>Zugang</span></div>
+              <div style="padding:14px;">
+                <form id="change-password-form">
+                  <label style="display:block;font-size:12px;color:var(--muted);margin:8px 0 4px;">Aktuelles Passwort</label>
+                  <input type="password" id="cp-current" required style="width:100%;box-sizing:border-box;background:var(--panel-2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 8px;" />
+                  <label style="display:block;font-size:12px;color:var(--muted);margin:8px 0 4px;">Neues Passwort</label>
+                  <input type="password" id="cp-new" required minlength="8" style="width:100%;box-sizing:border-box;background:var(--panel-2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 8px;" />
+                  <div id="cp-error" style="color:var(--red);font-size:12px;margin-top:6px;" hidden></div>
+                  <div id="cp-success" style="color:var(--green);font-size:12px;margin-top:6px;" hidden>Passwort geändert.</div>
+                  <button type="submit" class="btn btn-primary" style="width:100%;margin-top:10px;">Passwort ändern</button>
+                </form>
+                <button type="button" id="logout-btn" class="btn" style="width:100%;margin-top:10px;">Abmelden</button>
+              </div>
+            </div>
+          </div>
           <div class="notif-dropdown" id="notif-dropdown">
             <button class="icon-btn" id="notif-btn" title="Fehler & Warnungen">
               🔔<span class="notif-badge" id="notif-badge" hidden>0</span>

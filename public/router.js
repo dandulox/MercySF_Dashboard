@@ -6,6 +6,10 @@ const state = {
 
 export async function fetchJSON(url, opts) {
   const res = await fetch(url, opts);
+  if (res.status === 401) {
+    location.href = '/login.html';
+    throw new Error('Nicht angemeldet');
+  }
   if (!res.ok) {
     let msg = res.statusText;
     try { const body = await res.json(); if (body.error) msg = body.error; } catch (e) {}
@@ -283,6 +287,47 @@ function initAnonMode() {
   });
 }
 
+function initAccessMenu() {
+  const btn = document.getElementById('access-btn');
+  const panel = document.getElementById('access-panel');
+  const dropdown = document.getElementById('access-dropdown');
+  const form = document.getElementById('change-password-form');
+  const logoutBtn = document.getElementById('logout-btn');
+  if (!btn || !panel) return;
+  btn.onclick = (ev) => {
+    ev.stopPropagation();
+    panel.hidden = !panel.hidden;
+  };
+  document.addEventListener('click', (ev) => {
+    if (dropdown && !dropdown.contains(ev.target)) panel.hidden = true;
+  });
+  form.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const currentPassword = document.getElementById('cp-current').value;
+    const newPassword = document.getElementById('cp-new').value;
+    const errorEl = document.getElementById('cp-error');
+    const successEl = document.getElementById('cp-success');
+    errorEl.hidden = true;
+    successEl.hidden = true;
+    try {
+      await fetchJSON('/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+      successEl.hidden = false;
+      form.reset();
+    } catch (err) {
+      errorEl.textContent = err.message;
+      errorEl.hidden = false;
+    }
+  });
+  logoutBtn.addEventListener('click', async () => {
+    await fetchJSON('/api/auth/logout', { method: 'POST' });
+    location.href = '/login.html';
+  });
+}
+
 window.addEventListener('hashchange', renderRoute);
 
 document.getElementById('refresh-btn')?.addEventListener('click', () => {
@@ -307,6 +352,7 @@ document.getElementById('engine-update-btn')?.addEventListener('click', async ()
 
 initAnonMode();
 initNotifications();
+initAccessMenu();
 renderNav();
 loadStatus();
 loadCliUpdateStatus();

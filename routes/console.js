@@ -1,5 +1,6 @@
 const { WebSocketServer } = require('ws');
 const ptyManager = require('../lib/ptyManager');
+const sessionStore = require('../lib/sessionStore');
 
 const DEFAULT_ID = 'default';
 
@@ -14,6 +15,10 @@ module.exports = {
     httpServer.on('upgrade', (req, socket, head) => {
       const url = new URL(req.url, 'http://localhost');
       if (url.pathname !== '/api/console/ws') return;
+      if (!sessionStore.isValid(sessionStore.readSessionCookie(req))) {
+        socket.destroy();
+        return;
+      }
       const id = url.searchParams.get('profile') || DEFAULT_ID;
       wss.handleUpgrade(req, socket, head, ws => {
         ptyManager.ensurePty(id);

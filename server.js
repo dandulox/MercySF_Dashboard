@@ -5,9 +5,31 @@ const https = require('https');
 const http = require('http');
 const { findDataDir, listAccounts, latestSnapshot, recentLogLines, isProcessRunning } = require('./lib/data');
 const logBuffer = require('./lib/logBuffer');
+const authStore = require('./lib/authStore');
+const sessionStore = require('./lib/sessionStore');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
+
+const PUBLIC_PAGE_PATHS = new Set(['/setup.html', '/login.html', '/setup.js', '/login.js']);
+const PUBLIC_API_PREFIXES = ['/api/auth/status', '/api/auth/setup', '/api/auth/login', '/api/auth/reset'];
+
+function hasValidSession(req) {
+  return sessionStore.isValid(sessionStore.readSessionCookie(req));
+}
+
+app.use((req, res, next) => {
+  if (PUBLIC_PAGE_PATHS.has(req.path) || PUBLIC_API_PREFIXES.some(p => req.path.startsWith(p))) return next();
+
+  if (req.path.startsWith('/api/')) {
+    if (!hasValidSession(req)) return res.status(401).json({ error: 'Nicht angemeldet' });
+    return next();
+  }
+
+  if (!authStore.hasAccess()) return res.redirect('/setup.html');
+  if (!hasValidSession(req)) return res.redirect('/login.html');
+  next();
+});
 
 app.get('/api/status', (req, res) => {
   const dataDir = findDataDir();
