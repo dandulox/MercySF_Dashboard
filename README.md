@@ -52,14 +52,13 @@ Die CLI bietet keine offizielle Fernsteuerungs-API — sie ist als reines Text-M
 
 ## Ressourcenverbrauch
 
-**Test 1** — 4 vCPU / 8 GB RAM, 11 gleichzeitig laufende Bot-Charaktere:
+**Test 1** — 4 vCPU / 8 GB RAM, 11 gleichzeitig laufende Accounts:
 
-| Prozess | RAM |
+| Metrik | Wert |
 |---|---|
-| Dashboard (`node server.js`) | ~100 MB |
-| sf-api-Bridge (Rust) | ~13 MB |
-| Bot-Charakter (`mercy-cli-linux-x64`), je Prozess | ~10 MB Ø |
-| CPU | Load-Average 0,11–0,18 |
+| CPU-Auslastung | Load-Average 0,11–0,18 (4 Kerne) |
+| RAM-Auslastung | ~217,6 MB von 8 GB |
+| Bootdisk | 13 GB von 49 GB (28 %) |
 
 **Test 2** — 1 vCPU / 1 GiB RAM (Proxmox-LXC-Container), 30 gleichzeitig laufende Accounts:
 
