@@ -26,6 +26,7 @@ Erneutes Ausführen des Skripts aktualisiert nur Code und Dependencies — vorha
 - **Benachrichtigungen** — erkennt Fehler/Warnungen automatisch aus dem Log-Output, Glocke mit Badge + Toast-Popups
 - **Anonym-Modus** — Charakternamen verpixeln, z. B. für Screenshots/Streaming
 - **Automatischer CLI-Update-Check** — 1×/Tag per MD5-Vergleich gegen die offizielle Download-Datei, Ein-Klick-Update direkt im Dashboard
+- **Login/Zugangsschutz** — genau ein Dashboard-Zugang (Single-Admin), erster Besuch nach der Installation führt zur Setup-Seite; dort werden einmalig der AES-Schlüssel (verschlüsselt die gespeicherten Bot-Zugangsdaten) und ein 12-Wort-Wiederherstellungsschlüssel angezeigt (mit Pflicht-Bestätigung und Druck-Option), über den sich das Passwort später ohne E-Mail zurücksetzen lässt. Passwort-ändern und Logout direkt im Dashboard.
 
 ## Bekannte Einschränkungen
 
@@ -34,11 +35,11 @@ Die CLI bietet keine offizielle Fernsteuerungs-API — sie ist als reines Text-M
 - Kein natives Pause-Kommando — "Pause" schaltet stattdessen alle aktiven `auto_*`-Konfig-Schalter aus; ob das eine bereits laufende Bot-Schleife sofort stoppt oder erst beim nächsten Durchlauf, ist nicht verifiziert
 - Der Linux-Build der CLI schreibt keine `logs/`- oder `battle_history/`-Dateien auf die Platte — das Dashboard behilft sich mit einem In-Memory-Ringpuffer aus dem Live-Terminal-Output, eine dauerhafte Kampfhistorie-Seite gibt es deshalb (noch) nicht
 - Keine offizielle Versions-/Update-API — der Update-Check vergleicht MD5-Hashes gegen die öffentliche Download-Datei
-- Kein Login-Schutz vor dem Dashboard selbst — gedacht für den Betrieb im eigenen, vertrauenswürdigen Netz
+- Kein Rate-Limiting auf Login/Passwort-Reset-Versuche — kein Schutz gegen Brute-Force, relevant vor allem falls das Dashboard je über das eigene LAN hinaus erreichbar gemacht wird
 
 ## Tech-Stack
 
-Node.js + Express (Backend), Vanilla JS mit ES-Modulen (Frontend, kein Build-Step), `node-pty` + `xterm.js` (Konsole), `chart.js` (Analysen), `ws` (WebSocket).
+Node.js + Express (Backend), Vanilla JS mit ES-Modulen (Frontend, kein Build-Step), `node-pty` + `xterm.js` (Konsole), `chart.js` (Analysen), `ws` (WebSocket), `crypto` (Node-Bordmittel für Login-/Session-Hashing, keine zusätzliche Auth-Bibliothek).
 
 ## Lizenz
 
