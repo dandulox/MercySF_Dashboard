@@ -39,6 +39,15 @@ else
   log "Node.js bereits vorhanden ($(node -v)) — überspringe Installation"
 fi
 
+if ! command -v cargo >/dev/null 2>&1; then
+  log "Rust/Cargo installieren (für die sf-api-Bridge)"
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y >/dev/null 2>&1
+else
+  log "Rust/Cargo bereits vorhanden ($(cargo --version)) — überspringe Installation"
+fi
+# shellcheck disable=SC1090
+source "$HOME/.cargo/env"
+
 mkdir -p "$INSTALL_DIR"
 
 if [[ -d "$DASHBOARD_DIR/.git" ]]; then
@@ -85,11 +94,20 @@ systemctl daemon-reload
 systemctl enable mercy-dashboard >/dev/null 2>&1
 systemctl restart mercy-dashboard
 
+log "sf-api-Bridge bauen und als systemd-Dienst einrichten (Ausrüstungs-Abfragen, nur localhost)"
+cd "$DASHBOARD_DIR/sfapi-bridge"
+cargo build --release
+cp "$DASHBOARD_DIR/systemd/mercy-sfapi-bridge.service" /etc/systemd/system/mercy-sfapi-bridge.service
+systemctl daemon-reload
+systemctl enable mercy-sfapi-bridge >/dev/null 2>&1
+systemctl restart mercy-sfapi-bridge
+cd "$DASHBOARD_DIR"
+
 sleep 2
-if systemctl is-active --quiet mercy-dashboard; then
+if systemctl is-active --quiet mercy-dashboard && systemctl is-active --quiet mercy-sfapi-bridge; then
   IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
   log "Fertig! Dashboard läuft: https://${IP:-<server-ip>}:8080"
 else
-  warn "Dienst ist nicht aktiv — Log prüfen mit: journalctl -u mercy-dashboard -n 50 --no-pager"
+  warn "Ein Dienst ist nicht aktiv — Logs prüfen mit: journalctl -u mercy-dashboard -n 50 --no-pager / journalctl -u mercy-sfapi-bridge -n 50 --no-pager"
   exit 1
 fi

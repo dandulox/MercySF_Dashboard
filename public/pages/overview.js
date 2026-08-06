@@ -46,12 +46,28 @@ export default {
         </table>
       </section>
       <section class="stat-grid" id="stat-grid"></section>
+      <section class="card" id="equipment-card">
+        <div class="card-header">
+          <span>🛡 Ausrüstung</span>
+          <button class="icon-btn" id="equipment-refresh-btn" title="Aktualisieren">⟳</button>
+        </div>
+        <div id="equipment-body" class="muted">Wähle einen Account, um die Ausrüstung zu sehen.</div>
+      </section>
       <section class="card">
         <div class="card-header">📜 Activity Log</div>
         <div id="activity-log" class="activity-log">Wähle einen Account, um das Log zu sehen.</div>
       </section>
     `;
     container.appendChild(wrap);
+
+    ctx.injectStyleOnce('overview-equipment', `
+      .equip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+      .equip-slot { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
+      .equip-slot-name { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+      .equip-slot-type { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+      .equip-slot-attrs { font-size: 12px; color: var(--text); line-height: 1.5; }
+      .equip-slot-meta { font-size: 11px; color: var(--muted); margin-top: 6px; }
+    `);
 
     async function renderAccountsTable(accounts) {
       const body = wrap.querySelector('#accounts-table-body');
@@ -97,8 +113,35 @@ export default {
       logEl.innerHTML = lines.map(l => `<div class="line">${highlightCharName(escapeHtml(l), charName)}</div>`).join('');
     }
 
+    let lastAccounts = [];
+    function getCurrentProfileId() {
+      const accountId = ctx.getAccountId();
+      const current = lastAccounts.find(a => a.id === accountId);
+      return current ? current.profileId : null;
+    }
+
+    async function renderEquipment(profileId) {
+      const el = wrap.querySelector('#equipment-body');
+      if (!profileId) { el.textContent = 'Wähle einen Account, um die Ausrüstung zu sehen.'; return; }
+      el.textContent = 'Lade Ausrüstung…';
+      try {
+        const data = await ctx.fetchJSON(`/api/equipment/${encodeURIComponent(profileId)}`);
+        if (!data.items.length) { el.textContent = 'Keine Ausrüstung gefunden.'; return; }
+        el.innerHTML = `<div class="equip-grid">${data.items.map(item => `
+          <div class="equip-slot">
+            <div class="equip-slot-name">${escapeHtml(item.slot)}</div>
+            <div class="equip-slot-type">${escapeHtml(item.itemType)}</div>
+            <div class="equip-slot-attrs">${Object.entries(item.attributes).map(([k, v]) => `${escapeHtml(k)}: ${v}`).join('<br>') || '—'}</div>
+            <div class="equip-slot-meta">Qualität ${item.itemQuality} · +${item.upgradeCount}</div>
+          </div>`).join('')}</div>`;
+      } catch (err) {
+        el.textContent = 'Fehler: ' + err.message;
+      }
+    }
+
     async function render() {
       const accounts = await ctx.fetchJSON('/api/accounts');
+      lastAccounts = accounts;
       wrap.querySelector('#no-data-card').style.display = accounts.length ? 'none' : 'block';
       const accountId = ctx.getAccountId();
       await renderAccountsTable(accounts);
@@ -107,9 +150,13 @@ export default {
       await renderLog(accountId, current ? current.charName : null);
     }
 
-    render();
+    render().then(() => renderEquipment(getCurrentProfileId()));
     const unsub = ctx.onAccountChange(render);
     const interval = setInterval(render, 5000);
-    return () => { unsub(); clearInterval(interval); };
+
+    const unsubEquipment = ctx.onAccountChange(() => renderEquipment(getCurrentProfileId()));
+    wrap.querySelector('#equipment-refresh-btn').addEventListener('click', () => renderEquipment(getCurrentProfileId()));
+
+    return () => { unsub(); unsubEquipment(); clearInterval(interval); };
   }
 };
