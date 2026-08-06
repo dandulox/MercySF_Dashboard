@@ -90,6 +90,9 @@ body {
 }
 .pill-on { background: rgba(53,201,143,0.15); color: var(--green); }
 .pill-off { background: rgba(138,143,156,0.15); color: var(--muted); }
+.pill-warn { background: rgba(240,180,41,0.15); color: var(--yellow); }
+.version-status-group { display: flex; align-items: center; gap: 6px; }
+.sidebar-footer-version { font-size: 10px; color: var(--muted); margin-bottom: 8px; }
 
 .btn {
   display: block;

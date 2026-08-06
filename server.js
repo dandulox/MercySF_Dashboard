@@ -32,9 +32,11 @@ app.use((req, res, next) => {
   next();
 });
 
+const dashboardVersion = require('./package.json').version;
+
 app.get('/api/status', (req, res) => {
   const dataDir = findDataDir();
-  res.json({ dataDir, botRunning: isProcessRunning() });
+  res.json({ dataDir, botRunning: isProcessRunning(), version: dashboardVersion });
 });
 
 app.get('/api/accounts', (req, res) => {

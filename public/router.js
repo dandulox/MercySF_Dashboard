@@ -119,6 +119,8 @@ async function loadStatus() {
   const status = await fetchJSON('/api/status');
   const chip = document.getElementById('engine-status');
   const globalStatus = document.getElementById('global-status');
+  const versionEl = document.getElementById('footer-version');
+  if (versionEl && status.version) versionEl.textContent = `Dashboard v${status.version}`;
   if (!chip || !globalStatus) return;
   if (status.botRunning) {
     chip.textContent = 'LÄUFT';
@@ -135,38 +137,46 @@ async function loadStatus() {
 }
 
 async function loadCliUpdateStatus() {
-  const row = document.getElementById('engine-update-row');
+  const pill = document.getElementById('cli-version-pill');
   const btn = document.getElementById('engine-update-btn');
-  if (!row || !btn) return;
+  if (!pill || !btn) return;
   const status = await fetchJSON('/api/cli-update/status');
   if (status.applying) {
-    row.style.display = '';
-    btn.disabled = true;
-    btn.textContent = 'Installiere…';
+    pill.textContent = 'Installiere…';
+    pill.className = 'pill pill-warn';
+    btn.style.display = 'none';
   } else if (status.updateAvailable) {
-    row.style.display = '';
+    pill.textContent = 'Update Available';
+    pill.className = 'pill pill-warn';
+    btn.style.display = '';
     btn.disabled = false;
-    btn.textContent = 'Installieren';
+    btn.textContent = 'Update';
   } else {
-    row.style.display = 'none';
+    pill.textContent = 'Up To Date';
+    pill.className = 'pill pill-on';
+    btn.style.display = 'none';
   }
 }
 
 async function loadDashboardUpdateStatus() {
-  const row = document.getElementById('dashboard-update-row');
+  const pill = document.getElementById('dashboard-version-pill');
   const btn = document.getElementById('dashboard-update-btn');
-  if (!row || !btn) return;
+  if (!pill || !btn) return;
   const status = await fetchJSON('/api/dashboard-update/status');
   if (status.applying) {
-    row.style.display = '';
-    btn.disabled = true;
-    btn.textContent = 'Installiere…';
+    pill.textContent = 'Installiere…';
+    pill.className = 'pill pill-warn';
+    btn.style.display = 'none';
   } else if (status.updateAvailable) {
-    row.style.display = '';
+    pill.textContent = 'Update Available';
+    pill.className = 'pill pill-warn';
+    btn.style.display = '';
     btn.disabled = false;
-    btn.textContent = 'Installieren';
+    btn.textContent = 'Update';
   } else {
-    row.style.display = 'none';
+    pill.textContent = 'Up To Date';
+    pill.className = 'pill pill-on';
+    btn.style.display = 'none';
   }
 }
 
@@ -377,7 +387,7 @@ document.getElementById('engine-update-btn')?.addEventListener('click', async ()
   } catch (err) {
     alert('Update fehlgeschlagen: ' + err.message);
     btn.disabled = false;
-    btn.textContent = 'Installieren';
+    btn.textContent = 'Update';
   }
 });
 
@@ -393,7 +403,7 @@ document.getElementById('dashboard-update-btn')?.addEventListener('click', async
   } catch (err) {
     alert('Update fehlgeschlagen: ' + err.message);
     btn.disabled = false;
-    btn.textContent = 'Installieren';
+    btn.textContent = 'Update';
   }
 });
 

@@ -24,13 +24,19 @@
           <span>BOT ENGINE</span>
           <span id="engine-status" class="pill pill-off">UNBEKANNT</span>
         </div>
-        <div class="engine-row engine-update-row" id="engine-update-row" style="display:none">
-          <span>CLI-Update verfügbar</span>
-          <button class="btn btn-primary" id="engine-update-btn" style="width:auto;padding:4px 12px;font-size:12px;">Installieren</button>
+        <div class="engine-row">
+          <span>MercySF CLI</span>
+          <span class="version-status-group">
+            <span id="cli-version-pill" class="pill pill-off">Prüfe…</span>
+            <button class="btn btn-primary" id="engine-update-btn" style="display:none;width:auto;padding:2px 10px;font-size:11px;">Update</button>
+          </span>
         </div>
-        <div class="engine-row engine-update-row" id="dashboard-update-row" style="display:none">
-          <span>Dashboard-Update verfügbar</span>
-          <button class="btn btn-primary" id="dashboard-update-btn" style="width:auto;padding:4px 12px;font-size:12px;">Installieren</button>
+        <div class="engine-row">
+          <span>Dashboard</span>
+          <span class="version-status-group">
+            <span id="dashboard-version-pill" class="pill pill-off">Prüfe…</span>
+            <button class="btn btn-primary" id="dashboard-update-btn" style="display:none;width:auto;padding:2px 10px;font-size:11px;">Update</button>
+          </span>
         </div>
       </div>
 
@@ -40,6 +46,7 @@
       </div>
 
       <div class="sidebar-footer">
+        <div class="sidebar-footer-version" id="footer-version"></div>
         <div class="sidebar-footer-text">
           Dieses Dashboard baut auf der großartigen Arbeit von
           <a href="https://mercysf.app" target="_blank" rel="noopener">Mercy SF</a> auf.
