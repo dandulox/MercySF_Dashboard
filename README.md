@@ -1,6 +1,6 @@
 # Mercy SF Web-Dashboard
 
-Ein Web-Dashboard für [Mercy SF](https://mercysf.app), das um die bestehende CLI herum gebaut ist — Übersicht, Steuerung und Analyse für alle Accounts direkt im Browser, statt über das Terminal-Menü.
+Ein Web-Dashboard für [Mercy SF](https://mercysf.app), das um die bestehende CLI herum gebaut ist — Übersicht, Steuerung und Analyse für alle Accounts direkt im Browser, statt über das Terminal-Menü. Zusätzlich holt es über [sf-api](https://github.com/the-marenga/sf-api) von the-marenga Live-Daten (Ausrüstung, Gilde, Taverne, Mail) direkt vom Spieleserver.
 
 Alles läuft auf Basis der offiziellen CLI. Es wird nichts am Bot selbst verändert, nur ein Interface drumherum gebaut.
 
@@ -12,15 +12,17 @@ Auf einem frischen Debian/Ubuntu-Server, als root:
 curl -fsSL https://raw.githubusercontent.com/dandulox/MercySF_Dashboard/main/install.sh | bash
 ```
 
-Das Skript installiert alle Abhängigkeiten (Node.js, Build-Tools für native Module, die Mercy-SF-CLI), richtet ein selbstsigniertes TLS-Zertifikat ein und startet das Dashboard als systemd-Dienst. Danach ist es unter `https://<server-ip>:8080` erreichbar.
+Das Skript installiert alle Abhängigkeiten (Node.js, Rust/Cargo für die sf-api-Bridge, Build-Tools für native Module, die Mercy-SF-CLI), richtet ein selbstsigniertes TLS-Zertifikat ein und startet Dashboard sowie sf-api-Bridge als systemd-Dienste. Danach ist es unter `https://<server-ip>:8080` erreichbar — beim ersten Aufruf führt eine Setup-Seite durch das Anlegen des einen Dashboard-Zugangs.
 
 Erneutes Ausführen des Skripts aktualisiert nur Code und Dependencies — vorhandene Account-Daten, Zertifikate und die installierte CLI-Version bleiben unangetastet.
 
 ## Funktionen
 
-- **Übersicht** — alle Accounts in einer Tabelle: Level, Silber, Pilze, Ehre, Rang, Arena-/Dungeon-Kämpfe des Tages, Live-Activity-Log
+- **Übersicht** — modulare, ein-/ausklappbare Karten (Zustand bleibt gespeichert): Accounts-Tabelle, Charakter-Stats, Ausrüstung, Taverne (inkl. Abenteuerlust als Balkenanzeige), Gilde, Mail, Activity-Log
 - **Account-Verwaltung** — einmal einloggen, alle Charaktere eines Logins werden automatisch über alle Server hinweg gefunden und als eigene Profile angelegt; Passwörter liegen AES-256-verschlüsselt auf der Platte; pro Account: Start/Stop/Pause
 - **Eingebautes Web-Terminal** — pro Account eine eigene Konsolen-Session im Browser (xterm.js), inklusive automatisiertem Login-Durchklicken
+- **Live-Spieldaten über sf-api** — Ausrüstung (Slot/Typ/Attribute/Qualität), Gilde (Ehre, Rang, Mitgliederliste), Taverne (Abenteuerlust, aktuelle Aktion, verfügbare Quests) und Mail/Postfach werden direkt vom Spieleserver abgefragt (read-only, ein zustandsloser Rust-Dienst nur auf localhost, 10-Minuten-Cache pro Account)
+- **Tägliche Erträge** — SQLite-gestützte Auswertung, wie viel EP/Silber/Ehre ein Account pro Tag erwirtschaftet, plus eine Liste einzeln erkannter Kampf-Fenster (Arena/Dungeon), gespeist aus den ohnehin laufend geschriebenen CLI-Analytics-Dateien — keine zusätzlichen Logins gegen den Spieleserver nötig
 - **Analysen** — Zeitreihen-Charts für Level, Erfahrung, Silber, Pilze, Ehre, Rang, Rüstung
 - **Einstellungen** — alle Bot-Konfig-Schalter direkt im Browser lesbar und schreibbar, gruppiert nach Bereich
 - **Benachrichtigungen** — erkennt Fehler/Warnungen automatisch aus dem Log-Output, Glocke mit Badge + Toast-Popups
@@ -30,16 +32,42 @@ Erneutes Ausführen des Skripts aktualisiert nur Code und Dependencies — vorha
 
 ## Bekannte Einschränkungen
 
-Die CLI bietet keine offizielle Fernsteuerungs-API — sie ist als reines Text-Menü für interaktive Terminal-Nutzung gebaut. Alles an Automatisierung in diesem Dashboard basiert auf Pattern-Matching des Terminal-Outputs (`Select option:`, `Username:`, `Password:`, `Select character index:`, `Bot Menu` …). Ändert sich der Wortlaut eines CLI-Menüs, kann die Automatisierung brechen, bis der Code entsprechend angepasst wird. Weitere bekannte Lücken:
+Die CLI bietet keine offizielle Fernsteuerungs-API — sie ist als reines Text-Menü für interaktive Terminal-Nutzung gebaut. Alles an Login-/Bot-Automatisierung in diesem Dashboard basiert auf Pattern-Matching des Terminal-Outputs (`Select option:`, `Username:`, `Password:`, `Select character index:`, `Bot Menu` …). Ändert sich der Wortlaut eines CLI-Menüs, kann die Automatisierung brechen, bis der Code entsprechend angepasst wird. Weitere bekannte Lücken:
 
 - Kein natives Pause-Kommando — "Pause" schaltet stattdessen alle aktiven `auto_*`-Konfig-Schalter aus; ob das eine bereits laufende Bot-Schleife sofort stoppt oder erst beim nächsten Durchlauf, ist nicht verifiziert
-- Der Linux-Build der CLI schreibt keine `logs/`- oder `battle_history/`-Dateien auf die Platte — das Dashboard behilft sich mit einem In-Memory-Ringpuffer aus dem Live-Terminal-Output, eine dauerhafte Kampfhistorie-Seite gibt es deshalb (noch) nicht
+- Der Linux-Build der CLI schreibt keine `logs/`- oder `battle_history/`-Dateien auf die Platte — das Dashboard behilft sich mit einem In-Memory-Ringpuffer aus dem Live-Terminal-Output
 - Keine offizielle Versions-/Update-API — der Update-Check vergleicht MD5-Hashes gegen die öffentliche Download-Datei
+- `sf-api` liefert keine lesbaren Item-Namen (nur numerische IDs/Enum-Typen) — die Ausrüstungs-Anzeige zeigt Slot, Item-Typ, Attribute und Qualität, keine Klarnamen
+- Die täglichen Erträge sind bei Silber eine **Netto-Veränderung** pro Zeitfenster (kann Ausgaben wie Reparaturen/Shop-Käufe enthalten) — EP und Ehre sind exakt, da sie sich nur durch Kämpfe/Quests ändern; welche CLI-Befehle im selben Fenster liefen, wird zusätzlich angezeigt
 - Kein Rate-Limiting auf Login/Passwort-Reset-Versuche — kein Schutz gegen Brute-Force, relevant vor allem falls das Dashboard je über das eigene LAN hinaus erreichbar gemacht wird
+
+## Ressourcenverbrauch
+
+Real gemessen auf einem 4-vCPU/8-GB-Server mit 11 gleichzeitig laufenden Bot-Charakteren:
+
+| Prozess | RAM |
+|---|---|
+| Dashboard (`node server.js`) | ~100 MB |
+| sf-api-Bridge (Rust) | ~13 MB |
+| Bot-Charakter (`mercy-cli-linux-x64`), je Prozess | ~10 MB Ø |
+
+CPU liegt dabei praktisch bei null (Load-Average 0,11–0,18 auf 4 Kernen) — RAM ist der begrenzende Faktor, nicht CPU.
+
+**Hochrechnung für einen kleinen VPS (1 vCPU / 1 GB RAM):**
+
+| Posten | RAM |
+|---|---|
+| OS-Grundlast (sshd, systemd, cron) | ~150 MB |
+| Dashboard + sf-api-Bridge (Fixkosten) | ~113 MB |
+| Verbleibend für Bot-Charaktere | ~761 MB |
+| Theoretisches Maximum (Ø 10 MB/Charakter) | ~76 Charaktere |
+| Mit 20 % Sicherheitsmarge | **~60 Charaktere** |
+
+RAM würde also rechnerisch recht viel hergeben. CPU auf einem einzelnen Kern ist dabei die größere Unbekannte — die obige Messung lief auf 4 parallelen Kernen, ein echter Single-Core-Test steht noch aus. Praktische Empfehlung: auf einem 1-vCPU/1-GB-VPS mit **20–30 Accounts starten** und die Load Average beobachten, bevor weiter hochskaliert wird.
 
 ## Tech-Stack
 
-Node.js + Express (Backend), Vanilla JS mit ES-Modulen (Frontend, kein Build-Step), `node-pty` + `xterm.js` (Konsole), `chart.js` (Analysen), `ws` (WebSocket), `crypto` (Node-Bordmittel für Login-/Session-Hashing, keine zusätzliche Auth-Bibliothek).
+Node.js + Express (Backend), Vanilla JS mit ES-Modulen (Frontend, kein Build-Step), `node-pty` + `xterm.js` (Konsole), `chart.js` (Analysen/Erträge), `ws` (WebSocket), `better-sqlite3` (Ertrags-Tracking), `crypto` (Node-Bordmittel für Login-/Session-Hashing, keine zusätzliche Auth-Bibliothek). Die sf-api-Anbindung ist ein separater, zustandsloser Rust-Dienst (`sfapi-bridge/`, `axum` + [`sf-api`](https://github.com/the-marenga/sf-api)), der nur auf `127.0.0.1` lauscht.
 
 ## Lizenz
 
