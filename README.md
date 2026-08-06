@@ -43,4 +43,4 @@ Node.js + Express (Backend), Vanilla JS mit ES-Modulen (Frontend, kein Build-Ste
 
 ## Lizenz
 
-GPLv3, siehe [LICENSE](LICENSE).
+AGPLv3, siehe [LICENSE](LICENSE).
