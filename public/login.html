@@ -6,43 +6,182 @@
 <title>Mercy SF — Anmelden</title>
 <link rel="stylesheet" href="/style.css" />
 <style>
-  body { display:flex; align-items:center; justify-content:center; min-height:100vh; }
-  .auth-card { width: 100%; max-width: 480px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 32px; margin: 20px; }
-  .auth-card h1 { margin-top:0; font-size: 20px; }
-  .auth-card label { display:block; margin: 12px 0 4px; font-size: 13px; color: var(--muted); }
-  .auth-card input[type="text"], .auth-card input[type="password"] { width:100%; box-sizing:border-box; background: var(--panel-2); border:1px solid var(--border); color: var(--text); border-radius:6px; padding:8px 10px; }
-  .auth-card .btn { margin-top:20px; width:100%; }
-  .link-btn { background:none; border:none; color: #4f8cff; cursor:pointer; font-size:13px; padding:0; margin-top:14px; }
-  .word-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; margin-top:8px; }
-  .word-grid input { background: var(--panel-2); border:1px solid var(--border); color: var(--text); border-radius:6px; padding:6px 8px; text-align:center; }
-  .secret-block { background: var(--panel-2); border:1px solid var(--border); border-radius:8px; padding:14px; margin-top:14px; font-family: monospace; word-break: break-all; }
-  .secret-block h3 { margin:0 0 8px; font-size:13px; color: var(--muted); font-family: inherit; }
-  .confirm-row { display:flex; align-items:flex-start; gap:8px; margin-top:20px; font-size:13px; }
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+    background:
+      radial-gradient(circle at 18% 20%, rgba(79,140,255,0.10), transparent 42%),
+      radial-gradient(circle at 82% 78%, rgba(53,201,143,0.08), transparent 42%),
+      var(--bg);
+  }
+
+  .auth-card {
+    width: 100%;
+    max-width: 460px;
+    background: linear-gradient(180deg, var(--panel), var(--panel-2));
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 34px 32px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.02) inset;
+    position: relative;
+    overflow: hidden;
+  }
+  .auth-card::before {
+    content: '';
+    position: absolute;
+    top: -90px; left: -90px;
+    width: 220px; height: 220px;
+    background: radial-gradient(circle, rgba(79,140,255,0.28), transparent 70%);
+    pointer-events: none;
+  }
+
+  .auth-header { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; position: relative; }
+  .auth-icon {
+    width: 44px; height: 44px; flex-shrink: 0;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent), #7a5cff);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 21px;
+    box-shadow: 0 6px 16px rgba(79,140,255,0.35);
+  }
+  .auth-title { margin: 0; font-size: 19px; font-weight: 700; }
+  .auth-subtitle { margin: 2px 0 0; font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+
+  .field { margin-bottom: 16px; position: relative; }
+  .field label {
+    display: block; margin-bottom: 6px; font-size: 11px; font-weight: 700;
+    color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .field input[type="text"], .field input[type="password"] {
+    width: 100%; box-sizing: border-box;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 10px;
+    padding: 11px 13px;
+    font-size: 14px;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .field input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(79,140,255,0.18);
+  }
+  .password-wrap { position: relative; }
+  .password-wrap input { padding-right: 42px; }
+  .password-toggle {
+    position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer; font-size: 16px;
+    opacity: 0.6; padding: 6px; line-height: 1;
+  }
+  .password-toggle:hover { opacity: 1; }
+
+  .btn-primary-lg {
+    width: 100%; margin-top: 6px; padding: 12px; border: none; border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent), #7a5cff);
+    color: #fff; font-weight: 700; font-size: 14px; cursor: pointer;
+    box-shadow: 0 8px 22px rgba(79,140,255,0.32);
+    transition: transform .1s, box-shadow .15s, opacity .15s;
+  }
+  .btn-primary-lg:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 10px 26px rgba(79,140,255,0.42); }
+  .btn-primary-lg:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; transform: none; }
+
+  .link-btn {
+    display: block; width: 100%; text-align: center;
+    background: none; border: none; color: var(--accent); cursor: pointer;
+    font-size: 13px; padding: 0; margin-top: 16px; text-decoration: underline; text-underline-offset: 3px;
+  }
+
+  .divider { display: flex; align-items: center; gap: 10px; margin: 20px 0; color: var(--muted); font-size: 11px; }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .word-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 4px; }
+  .word-input-wrap { position: relative; }
+  .word-input-wrap .word-index {
+    position: absolute; top: 5px; left: 9px; font-size: 9px; color: var(--muted);
+    font-weight: 700; pointer-events: none;
+  }
+  .word-grid input {
+    width: 100%; box-sizing: border-box;
+    background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: var(--text);
+    border-radius: 8px; padding: 15px 8px 6px; font-family: "SFMono-Regular", Consolas, monospace;
+    font-size: 13px; text-align: center; transition: border-color .15s, box-shadow .15s;
+  }
+  .word-grid input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,140,255,0.18); }
+
+  .secret-block { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-top: 14px; }
+  .secret-block-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 10px; }
+  .secret-block h3 { margin: 0; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
+  .word-chip {
+    background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 7px 9px; font-family: "SFMono-Regular", Consolas, monospace; font-size: 13px;
+    display: flex; align-items: baseline; gap: 6px;
+  }
+  .word-chip .word-index { color: var(--muted); font-size: 10px; min-width: 12px; }
+  .copy-btn {
+    flex-shrink: 0; background: var(--panel-2); border: 1px solid var(--border); color: var(--text);
+    border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 600; cursor: pointer;
+    transition: border-color .15s, color .15s;
+  }
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .copy-btn.copied { border-color: var(--green); color: var(--green); }
+
+  .warning-banner {
+    display: flex; gap: 10px; align-items: flex-start;
+    background: rgba(240,180,41,0.09); border: 1px solid rgba(240,180,41,0.32);
+    border-radius: 10px; padding: 12px 14px; margin-top: 16px; font-size: 12.5px;
+    color: #f0b429; line-height: 1.5;
+  }
+  .warning-banner .icon { flex-shrink: 0; font-size: 15px; }
+
+  .confirm-row { display: flex; align-items: flex-start; gap: 9px; margin-top: 18px; font-size: 13px; line-height: 1.4; color: var(--text); }
+  .confirm-row input[type="checkbox"] { accent-color: var(--accent); width: 16px; height: 16px; margin-top: 1px; cursor: pointer; }
+  .confirm-row label { cursor: pointer; }
+
   .error-text { color: var(--red); font-size: 13px; margin-top: 10px; }
+  .muted { color: var(--muted); font-size: 13px; line-height: 1.5; }
 </style>
 </head>
 <body>
   <div class="auth-card" id="card">
-    <h1>⚔ Mercy SF — Anmelden</h1>
+    <div class="auth-header">
+      <div class="auth-icon">⚔</div>
+      <div>
+        <h1 class="auth-title">Anmelden</h1>
+        <p class="auth-subtitle">Mercy SF Web-Dashboard</p>
+      </div>
+    </div>
     <form id="login-form">
-      <label for="username">Benutzername</label>
-      <input type="text" id="username" required autocomplete="username" />
-      <label for="password">Passwort</label>
-      <input type="password" id="password" required autocomplete="current-password" />
+      <div class="field">
+        <label for="username">Benutzername</label>
+        <input type="text" id="username" required autocomplete="username" />
+      </div>
+      <div class="field">
+        <label for="password">Passwort</label>
+        <input type="password" id="password" required autocomplete="current-password" />
+      </div>
       <div id="login-error" class="error-text" hidden></div>
-      <button type="submit" class="btn btn-primary">Anmelden</button>
+      <button type="submit" class="btn-primary-lg">Anmelden</button>
     </form>
     <button type="button" class="link-btn" id="forgot-btn">Zugangsdaten vergessen?</button>
 
     <form id="reset-form" hidden>
+      <div class="divider">WIEDERHERSTELLUNG</div>
       <p class="muted">Gib deinen 12-Wort-Wiederherstellungsschlüssel ein.</p>
       <div class="word-grid" id="word-grid"></div>
-      <label for="new-password">Neues Passwort</label>
-      <input type="password" id="new-password" required minlength="8" autocomplete="new-password" />
-      <label for="new-password2">Neues Passwort wiederholen</label>
-      <input type="password" id="new-password2" required minlength="8" autocomplete="new-password" />
+      <div class="field" style="margin-top:16px;">
+        <label for="new-password">Neues Passwort</label>
+        <input type="password" id="new-password" required minlength="8" autocomplete="new-password" />
+      </div>
+      <div class="field">
+        <label for="new-password2">Neues Passwort wiederholen</label>
+        <input type="password" id="new-password2" required minlength="8" autocomplete="new-password" />
+      </div>
       <div id="reset-error" class="error-text" hidden></div>
-      <button type="submit" class="btn btn-primary">Passwort zurücksetzen</button>
+      <button type="submit" class="btn-primary-lg">Passwort zurücksetzen</button>
       <button type="button" class="link-btn" id="back-to-login-btn">Zurück zum Login</button>
     </form>
   </div>

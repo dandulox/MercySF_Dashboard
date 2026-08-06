@@ -12,6 +12,49 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 }
 
+function addPasswordToggles(root = document) {
+  root.querySelectorAll('input[type="password"]').forEach(input => {
+    if (input.dataset.toggled) return;
+    input.dataset.toggled = '1';
+    const wrap = document.createElement('div');
+    wrap.className = 'password-wrap';
+    input.parentNode.insertBefore(wrap, input);
+    wrap.appendChild(input);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'password-toggle';
+    btn.textContent = '👁';
+    btn.setAttribute('aria-label', 'Passwort anzeigen');
+    btn.addEventListener('click', () => {
+      const show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      btn.textContent = show ? '🙈' : '👁';
+    });
+    wrap.appendChild(btn);
+  });
+}
+
+function initCopyButtons(root = document) {
+  root.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const targetEl = document.getElementById(btn.dataset.copyTarget);
+      if (!targetEl) return;
+      try {
+        await navigator.clipboard.writeText(targetEl.textContent);
+        const original = btn.textContent;
+        btn.textContent = 'Kopiert ✓';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = original;
+          btn.classList.remove('copied');
+        }, 1800);
+      } catch (e) {
+        btn.textContent = 'Fehler';
+      }
+    });
+  });
+}
+
 async function init() {
   const status = await fetchJSON('/api/auth/status');
   if (!status.hasAccess) {
@@ -23,17 +66,24 @@ async function init() {
   document.getElementById('back-to-login-btn').addEventListener('click', showLoginForm);
   document.getElementById('reset-form').addEventListener('submit', onReset);
   buildWordGrid();
+  addPasswordToggles();
 }
 
 function buildWordGrid() {
   const grid = document.getElementById('word-grid');
   grid.innerHTML = '';
   for (let i = 1; i <= 12; i++) {
+    const wrap = document.createElement('div');
+    wrap.className = 'word-input-wrap';
+    const badge = document.createElement('span');
+    badge.className = 'word-index';
+    badge.textContent = i;
     const input = document.createElement('input');
     input.type = 'text';
-    input.placeholder = String(i);
     input.autocomplete = 'off';
-    grid.appendChild(input);
+    wrap.appendChild(badge);
+    wrap.appendChild(input);
+    grid.appendChild(wrap);
   }
 }
 
@@ -103,26 +153,47 @@ async function onReset(ev) {
 
 function showNewRecoveryPhrase(recoveryPhrase) {
   const card = document.getElementById('card');
-  const phraseText = recoveryPhrase.join(' ');
+  const wordGridHtml = recoveryPhrase.map((w, i) =>
+    `<div class="word-chip"><span class="word-index">${i + 1}</span>${escapeHtml(w)}</div>`
+  ).join('');
+
   card.innerHTML = `
-    <h1>⚔ Passwort zurückgesetzt</h1>
-    <p class="muted">Dein alter Wiederherstellungsschlüssel ist jetzt ungültig. Speichere den neuen Schlüssel an einem sicheren Ort — er wird nur jetzt angezeigt.</p>
-    <div class="secret-block">
-      <h3>Neuer 12-Wort-Wiederherstellungsschlüssel</h3>
-      <div id="recovery-phrase">${escapeHtml(phraseText)}</div>
+    <div class="auth-header">
+      <div class="auth-icon">🔑</div>
+      <div>
+        <h1 class="auth-title">Passwort zurückgesetzt</h1>
+        <p class="auth-subtitle">Dein alter Wiederherstellungsschlüssel ist jetzt ungültig.</p>
+      </div>
     </div>
+
+    <div class="secret-block">
+      <div class="secret-block-header">
+        <h3>Neuer 12-Wort-Wiederherstellungsschlüssel</h3>
+        <button type="button" class="copy-btn" data-copy-target="recovery-phrase-plain">Kopieren</button>
+      </div>
+      <div class="word-grid" style="grid-template-columns:repeat(3,1fr);">${wordGridHtml}</div>
+      <div id="recovery-phrase-plain" style="display:none;">${escapeHtml(recoveryPhrase.join(' '))}</div>
+    </div>
+
+    <div class="warning-banner">
+      <span class="icon">⚠️</span>
+      <span>Speichere den neuen Schlüssel jetzt an einem sicheren Ort — er wird nur dieses eine Mal angezeigt.</span>
+    </div>
+
     <div class="confirm-row">
       <input type="checkbox" id="confirm-saved" />
       <label for="confirm-saved">Ich habe den neuen Schlüssel sicher gespeichert.</label>
     </div>
-    <button type="button" class="btn btn-primary" id="continue-btn" disabled style="margin-top:16px;width:100%;">Weiter zum Login</button>
+    <button type="button" class="btn-primary-lg" id="continue-btn" disabled style="margin-top:14px;">Weiter zum Login</button>
   `;
+
   document.getElementById('confirm-saved').addEventListener('change', (ev) => {
     document.getElementById('continue-btn').disabled = !ev.target.checked;
   });
   document.getElementById('continue-btn').addEventListener('click', () => {
     location.href = '/login.html';
   });
+  initCopyButtons(card);
 }
 
 init();
