@@ -26,6 +26,25 @@ function highlightCharName(escapedLine, charName) {
   return escapedLine.replace(re, m => `<span class="char-name">${m}</span>`);
 }
 
+function makeCollapsible(cardEl, storageKey) {
+  const header = cardEl.querySelector('.card-header');
+  if (!header) return;
+  const chevron = document.createElement('span');
+  chevron.className = 'card-chevron';
+  chevron.textContent = '▾';
+  header.appendChild(chevron);
+
+  if (localStorage.getItem(`mercy-card-collapsed-${storageKey}`) === '1') {
+    cardEl.classList.add('collapsed');
+  }
+
+  header.addEventListener('click', (ev) => {
+    if (ev.target.closest('button')) return;
+    cardEl.classList.toggle('collapsed');
+    localStorage.setItem(`mercy-card-collapsed-${storageKey}`, cardEl.classList.contains('collapsed') ? '1' : '0');
+  });
+}
+
 export default {
   id: 'overview',
   label: 'Overview',
@@ -37,7 +56,7 @@ export default {
       <section class="card" id="no-data-card" style="display:none">
         <p>Noch keine Account-Daten gefunden. Logg dich über die Konsole ein — sobald ein Account läuft, erscheinen hier automatisch echte Live-Daten.</p>
       </section>
-      <section class="card accounts-card">
+      <section class="card collapsible-card accounts-card" id="accounts-card">
         <div class="card-header">
           <span>👥 Accounts</span>
           <span id="accounts-running" class="muted"></span>
@@ -53,33 +72,38 @@ export default {
         </table>
       </section>
       <section class="stat-grid" id="stat-grid"></section>
-      <section class="card" id="equipment-card">
+      <section class="card collapsible-card" id="equipment-card">
         <div class="card-header">
           <span>🛡 Ausrüstung</span>
           <button class="icon-btn" id="gamestate-refresh-btn" title="Ausrüstung, Gilde, Taverne & Mail aktualisieren">⟳</button>
         </div>
         <div id="equipment-body" class="muted">Wähle einen Account, um die Ausrüstung zu sehen.</div>
       </section>
-      <section class="card" id="guild-card">
+      <section class="card collapsible-card" id="guild-card">
         <div class="card-header"><span>🏰 Gilde</span></div>
         <div id="guild-body" class="muted">Wähle einen Account, um Gildendaten zu sehen.</div>
       </section>
-      <section class="card" id="tavern-card">
+      <section class="card collapsible-card" id="tavern-card">
         <div class="card-header"><span>🍺 Taverne</span></div>
         <div id="tavern-body" class="muted">Wähle einen Account, um Tavernendaten zu sehen.</div>
       </section>
-      <section class="card" id="mail-card">
+      <section class="card collapsible-card" id="mail-card">
         <div class="card-header"><span>✉ Mail</span></div>
         <div id="mail-body" class="muted">Wähle einen Account, um die Mail zu sehen.</div>
       </section>
-      <section class="card">
-        <div class="card-header">📜 Activity Log</div>
+      <section class="card collapsible-card" id="activity-log-card">
+        <div class="card-header"><span>📜 Activity Log</span></div>
         <div id="activity-log" class="activity-log">Wähle einen Account, um das Log zu sehen.</div>
       </section>
     `;
     container.appendChild(wrap);
 
     ctx.injectStyleOnce('overview-gamestate', `
+      .collapsible-card .card-header { cursor: pointer; user-select: none; }
+      .collapsible-card .card-chevron { margin-left: auto; opacity: 0.6; font-size: 11px; transition: transform .15s; }
+      .collapsible-card.collapsed .card-chevron { transform: rotate(-90deg); }
+      .collapsible-card.collapsed > *:not(.card-header) { display: none; }
+
       .equip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
       .equip-slot { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
       .equip-slot-name { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
@@ -88,12 +112,14 @@ export default {
       .equip-slot-meta { font-size: 11px; color: var(--muted); margin-top: 6px; }
 
       .guild-summary, .tavern-summary, .mail-summary { font-size: 13px; margin-bottom: 10px; }
+      .guild-member-list { max-height: 320px; overflow-y: auto; }
       .guild-member-row, .tavern-quest-row, .mail-row {
         display: flex; justify-content: space-between; gap: 10px; font-size: 13px;
         padding: 6px 0; border-bottom: 1px solid var(--border);
       }
       .guild-member-row:last-child, .tavern-quest-row:last-child, .mail-row:last-child { border-bottom: none; }
       .mail-row.unread { font-weight: 600; }
+      .link-btn-inline { background: none; border: none; color: var(--accent, #4f8cff); cursor: pointer; font-size: 12px; padding: 8px 0 0; text-decoration: underline; text-underline-offset: 2px; }
     `);
 
     async function renderAccountsTable(accounts) {
@@ -159,17 +185,31 @@ export default {
         </div>`).join('')}</div>`;
     }
 
+    function renderGuildMemberRows(members) {
+      return members.map(m => `
+        <div class="guild-member-row">
+          <span>${escapeHtml(m.name)}</span>
+          <span class="muted">Lvl ${m.level} · ${escapeHtml(m.guildRank)}</span>
+        </div>`).join('');
+    }
+
     function renderGuildBody(guild) {
       const el = wrap.querySelector('#guild-body');
       if (!guild) { el.textContent = 'Kein Gildenmitglied.'; return; }
+      const VISIBLE = 8;
+      const hiddenCount = Math.max(0, guild.members.length - VISIBLE);
       el.innerHTML = `
         <div class="guild-summary"><strong>${escapeHtml(guild.name)}</strong> · Ehre ${fmt(guild.honor)} · Rang ${guild.rank} · ${guild.memberCount} Mitglieder</div>
-        ${guild.members.slice(0, 20).map(m => `
-          <div class="guild-member-row">
-            <span>${escapeHtml(m.name)}</span>
-            <span class="muted">Lvl ${m.level} · ${escapeHtml(m.guildRank)}</span>
-          </div>`).join('')}
+        <div class="guild-member-list" id="guild-member-list">${renderGuildMemberRows(guild.members.slice(0, VISIBLE))}</div>
+        ${hiddenCount > 0 ? `<button type="button" class="link-btn-inline" id="guild-show-all-btn">+${hiddenCount} weitere anzeigen</button>` : ''}
       `;
+      const showAllBtn = el.querySelector('#guild-show-all-btn');
+      if (showAllBtn) {
+        showAllBtn.addEventListener('click', () => {
+          el.querySelector('#guild-member-list').innerHTML = renderGuildMemberRows(guild.members);
+          showAllBtn.remove();
+        });
+      }
     }
 
     function renderTavernBody(tavern) {
@@ -246,6 +286,8 @@ export default {
 
     const unsubGameState = ctx.onAccountChange(() => renderGameState(getCurrentProfileId()));
     wrap.querySelector('#gamestate-refresh-btn').addEventListener('click', () => renderGameState(getCurrentProfileId()));
+
+    wrap.querySelectorAll('.collapsible-card').forEach(cardEl => makeCollapsible(cardEl, cardEl.id));
 
     return () => { unsub(); unsubGameState(); clearInterval(interval); };
   }
