@@ -69,6 +69,13 @@ RAM würde also rechnerisch recht viel hergeben. CPU auf einem einzelnen Kern is
 
 Node.js + Express (Backend), Vanilla JS mit ES-Modulen (Frontend, kein Build-Step), `node-pty` + `xterm.js` (Konsole), `chart.js` (Analysen/Erträge), `ws` (WebSocket), `better-sqlite3` (Ertrags-Tracking), `crypto` (Node-Bordmittel für Login-/Session-Hashing, keine zusätzliche Auth-Bibliothek). Die sf-api-Anbindung ist ein separater, zustandsloser Rust-Dienst (`sfapi-bridge/`, `axum` + [`sf-api`](https://github.com/the-marenga/sf-api)), der nur auf `127.0.0.1` lauscht.
 
+## Danksagung
+
+Dieses Dashboard existiert nur, weil andere die eigentliche Grundlagenarbeit geleistet haben:
+
+- **[Mercy SF](https://mercysf.app)** (Sensei Issei) — die CLI/den Bot selbst, um den dieses Dashboard herum gebaut ist. Wer das Projekt unterstützen möchte: [Ko-fi](https://ko-fi.com/senseiissei).
+- **[sf-api](https://github.com/the-marenga/sf-api)** (the-marenga) — die Rust-Bibliothek, über die dieses Dashboard Live-Daten (Ausrüstung, Gilde, Taverne, Mail) direkt vom Spieleserver abfragt.
+
 ## Lizenz
 
 AGPLv3, siehe [LICENSE](LICENSE).
