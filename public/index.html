@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mercy SF — Web Dashboard</title>
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">⚔</div>
+        <div>
+          <div class="brand-title">Mercy SF</div>
+          <div class="brand-sub">Web-Dashboard</div>
+        </div>
+      </div>
+
+      <nav class="nav" id="nav"></nav>
+
+      <div class="engine-box">
+        <div class="engine-row">
+          <span>BOT ENGINE</span>
+          <span id="engine-status" class="pill pill-off">UNBEKANNT</span>
+        </div>
+        <div class="engine-row engine-update-row" id="engine-update-row" style="display:none">
+          <span>Update verfügbar</span>
+          <button class="btn btn-primary" id="engine-update-btn" style="width:auto;padding:4px 12px;font-size:12px;">Installieren</button>
+        </div>
+      </div>
+
+      <div class="accounts-list">
+        <div class="accounts-list-title">ACCOUNTS <span id="accounts-count"></span></div>
+        <div id="accounts-list-items"></div>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-footer-text">
+          Dieses Dashboard baut auf der großartigen Arbeit von
+          <a href="https://mercysf.app" target="_blank" rel="noopener">Mercy SF</a> auf.
+        </div>
+        <a class="sidebar-footer-kofi" href="https://ko-fi.com/senseiissei" target="_blank" rel="noopener">☕ Mercy SF auf Ko-fi unterstützen</a>
+      </div>
+    </aside>
+
+    <main class="content">
+      <header class="topbar">
+        <div class="account-select" id="account-dropdown">
+          <button class="account-dropdown-btn" id="account-dropdown-btn" type="button">
+            <span class="char-name" id="account-dropdown-label">Lade...</span>
+            <span class="account-dropdown-caret">▾</span>
+          </button>
+          <div class="account-dropdown-panel" id="account-dropdown-panel" hidden></div>
+        </div>
+        <div class="status-chip" id="global-status">Lade...</div>
+        <div class="topbar-right">
+          <label class="anon-toggle" title="Charakternamen verpixeln (z. B. für Screenshots/Streaming)">
+            <span>🕶 Anonym</span>
+            <span class="switch">
+              <input type="checkbox" id="anon-toggle-input" />
+              <span class="switch-track"><span class="switch-thumb"></span></span>
+            </span>
+          </label>
+          <div class="notif-dropdown" id="notif-dropdown">
+            <button class="icon-btn" id="notif-btn" title="Fehler & Warnungen">
+              🔔<span class="notif-badge" id="notif-badge" hidden>0</span>
+            </button>
+            <div class="notif-panel" id="notif-panel" hidden>
+              <div class="notif-panel-header">
+                <span>Fehler & Warnungen</span>
+                <button class="notif-clear-btn" id="notif-clear-btn">Alle gelesen</button>
+              </div>
+              <div class="notif-panel-list" id="notif-panel-list"></div>
+            </div>
+          </div>
+          <button class="icon-btn" id="refresh-btn" title="Aktualisieren">⟳</button>
+        </div>
+      </header>
+
+      <div id="page-root"></div>
+      <div id="toast-stack" class="toast-stack"></div>
+    </main>
+  </div>
+
+  <script type="module" src="/router.js"></script>
+</body>
+</html>
