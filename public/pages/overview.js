@@ -71,26 +71,31 @@ export default {
           <tbody id="accounts-table-body"></tbody>
         </table>
       </section>
-      <section class="stat-grid" id="stat-grid"></section>
-      <section class="card collapsible-card" id="equipment-card">
-        <div class="card-header">
-          <span>🛡 Ausrüstung</span>
-          <button class="icon-btn" id="gamestate-refresh-btn" title="Ausrüstung, Gilde, Taverne & Mail aktualisieren">⟳</button>
-        </div>
-        <div id="equipment-body" class="muted">Wähle einen Account, um die Ausrüstung zu sehen.</div>
-      </section>
-      <section class="card collapsible-card" id="guild-card">
-        <div class="card-header"><span>🏰 Gilde</span></div>
-        <div id="guild-body" class="muted">Wähle einen Account, um Gildendaten zu sehen.</div>
-      </section>
-      <section class="card collapsible-card" id="tavern-card">
-        <div class="card-header"><span>🍺 Taverne</span></div>
-        <div id="tavern-body" class="muted">Wähle einen Account, um Tavernendaten zu sehen.</div>
-      </section>
-      <section class="card collapsible-card" id="mail-card">
-        <div class="card-header"><span>✉ Mail</span></div>
-        <div id="mail-body" class="muted">Wähle einen Account, um die Mail zu sehen.</div>
-      </section>
+      <div class="gamestate-grid">
+        <section class="card collapsible-card" id="character-card">
+          <div class="card-header">
+            <span>🧙 Charakter</span>
+            <button class="icon-btn" id="gamestate-refresh-btn" title="Ausrüstung, Gilde, Taverne & Mail aktualisieren">⟳</button>
+          </div>
+          <div class="stat-grid" id="stat-grid"></div>
+        </section>
+        <section class="card collapsible-card" id="equipment-card">
+          <div class="card-header"><span>🛡 Ausrüstung</span></div>
+          <div id="equipment-body" class="muted">Wähle einen Account, um die Ausrüstung zu sehen.</div>
+        </section>
+        <section class="card collapsible-card span-2" id="tavern-card">
+          <div class="card-header"><span>🍺 Taverne</span></div>
+          <div id="tavern-body" class="muted">Wähle einen Account, um Tavernendaten zu sehen.</div>
+        </section>
+        <section class="card collapsible-card" id="guild-card">
+          <div class="card-header"><span>🏰 Gilde</span></div>
+          <div id="guild-body" class="muted">Wähle einen Account, um Gildendaten zu sehen.</div>
+        </section>
+        <section class="card collapsible-card" id="mail-card">
+          <div class="card-header"><span>✉ Mail</span></div>
+          <div id="mail-body" class="muted">Wähle einen Account, um die Mail zu sehen.</div>
+        </section>
+      </div>
       <section class="card collapsible-card" id="activity-log-card">
         <div class="card-header"><span>📜 Activity Log</span></div>
         <div id="activity-log" class="activity-log">Wähle einen Account, um das Log zu sehen.</div>
@@ -99,10 +104,22 @@ export default {
     container.appendChild(wrap);
 
     ctx.injectStyleOnce('overview-gamestate', `
+      .gamestate-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+      .gamestate-grid .span-2 { grid-column: 1 / -1; }
+      .gamestate-grid .stat-grid { grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); margin-bottom: 0; }
+      @media (max-width: 900px) {
+        .gamestate-grid { grid-template-columns: 1fr; }
+      }
+
       .collapsible-card .card-header { cursor: pointer; user-select: none; }
       .collapsible-card .card-chevron { margin-left: auto; opacity: 0.6; font-size: 11px; transition: transform .15s; }
       .collapsible-card.collapsed .card-chevron { transform: rotate(-90deg); }
       .collapsible-card.collapsed > *:not(.card-header) { display: none; }
+
+      .alu-bar-wrap { margin-bottom: 12px; }
+      .alu-bar-label { display: flex; justify-content: space-between; font-size: 12.5px; margin-bottom: 5px; }
+      .alu-bar-track { background: var(--panel-2); border: 1px solid var(--border); border-radius: 6px; height: 10px; overflow: hidden; }
+      .alu-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent, #4f8cff), #7a5cff); border-radius: 6px; transition: width .3s; }
 
       .equip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
       .equip-slot { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
@@ -215,8 +232,15 @@ export default {
     function renderTavernBody(tavern) {
       const el = wrap.querySelector('#tavern-body');
       const action = escapeHtml((tavern.currentAction || '').split(' ')[0] || '—');
+      const aluPct = tavern.adventurePointsMax
+        ? Math.max(0, Math.min(100, Math.round((tavern.adventurePoints / tavern.adventurePointsMax) * 100)))
+        : 0;
       el.innerHTML = `
-        <div class="tavern-summary">🍺 ${tavern.beerDrunk}/${tavern.beerMax} · ⚡ Abenteuerlust ${tavern.adventurePoints}/${tavern.adventurePointsMax} · Aktion: ${action}</div>
+        <div class="alu-bar-wrap">
+          <div class="alu-bar-label"><span>⚡ Abenteuerlust</span><span>${tavern.adventurePoints}/${tavern.adventurePointsMax}</span></div>
+          <div class="alu-bar-track"><div class="alu-bar-fill" style="width:${aluPct}%"></div></div>
+        </div>
+        <div class="tavern-summary">🍺 ${tavern.beerDrunk}/${tavern.beerMax} · Aktion: ${action}</div>
         ${tavern.quests.map(q => `
           <div class="tavern-quest-row">
             <span>${escapeHtml(q.location)}</span>
