@@ -72,7 +72,7 @@ CPU liegt dabei praktisch bei null (Load-Average 0,11–0,18 auf 4 Kernen) — R
 | Theoretisches Maximum (Ø 10 MB/Charakter) | ~76 Charaktere |
 | Mit 20 % Sicherheitsmarge | **~60 Charaktere** |
 
-RAM würde also rechnerisch recht viel hergeben. CPU auf einem einzelnen Kern ist dabei die größere Unbekannte — die obige Messung lief auf 4 parallelen Kernen, ein echter Single-Core-Test steht noch aus. Praktische Empfehlung: auf einem 1-vCPU/1-GB-VPS mit **20–30 Accounts starten** und die Load Average beobachten, bevor weiter hochskaliert wird.
+**Bestätigt durch echten Betrieb:** Ein separater Proxmox-LXC-Container mit exakt 1 vCPU / 1 GiB RAM lief mit **30 gleichzeitigen Accounts bei nur 216 MB RAM (21 %) und 2,82 % CPU-Auslastung eines einzelnen Kerns**. Das räumt die vorherige Single-Core-Unsicherheit aus — ein einzelner Kern trägt diese Größenordnung mühelos, und der reale RAM-Verbrauch liegt sogar unter der theoretischen Hochrechnung oben (LXC-Container haben kaum Betriebssystem-Overhead gegenüber einer vollen VM, da kein eigener Kernel nötig ist).
 
 ## Tech-Stack
 
