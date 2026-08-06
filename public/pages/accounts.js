@@ -37,13 +37,47 @@ export default {
   icon: '🗂',
   mount(container, ctx) {
     const css = `
-      .accounts-page .add-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
-      .accounts-page .add-form { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
-      .accounts-page .field { display: flex; flex-direction: column; gap: 4px; }
-      .accounts-page .field label { font-size: 11px; color: var(--muted); }
-      .accounts-page .field input { background: var(--panel-2); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 7px 10px; font-size: 13px; min-width: 200px; }
-      .accounts-page .add-btn { width: auto; padding: 8px 18px; }
-      .accounts-page .add-hint { font-size: 11px; color: var(--muted); margin-top: 8px; }
+      .accounts-page .add-card {
+        background: linear-gradient(180deg, var(--panel), var(--panel-2));
+        border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 20px;
+        position: relative; overflow: hidden;
+      }
+      .accounts-page .add-card::before {
+        content: ''; position: absolute; top: -60px; left: -60px; width: 160px; height: 160px;
+        background: radial-gradient(circle, rgba(79,140,255,0.18), transparent 70%); pointer-events: none;
+      }
+      .accounts-page .add-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; position: relative; }
+      .accounts-page .add-icon {
+        width: 38px; height: 38px; flex-shrink: 0; border-radius: 10px;
+        background: linear-gradient(135deg, var(--accent), #7a5cff);
+        display: flex; align-items: center; justify-content: center; font-size: 18px;
+        box-shadow: 0 4px 12px rgba(79,140,255,0.3);
+      }
+      .accounts-page .add-title { font-weight: 700; font-size: 15px; }
+      .accounts-page .add-subtitle { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+      .accounts-page .add-form { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; position: relative; }
+      .accounts-page .field { display: flex; flex-direction: column; gap: 6px; }
+      .accounts-page .field label { font-size: 10.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+      .accounts-page .field input {
+        background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: var(--text);
+        border-radius: 10px; padding: 9px 12px; font-size: 13px; min-width: 200px;
+        transition: border-color .15s, box-shadow .15s;
+      }
+      .accounts-page .field input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,140,255,0.18); }
+      .accounts-page .password-wrap { position: relative; }
+      .accounts-page .password-wrap input { padding-right: 38px; }
+      .accounts-page .password-toggle {
+        position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+        background: none; border: none; cursor: pointer; font-size: 15px; opacity: 0.6; padding: 4px; line-height: 1;
+      }
+      .accounts-page .password-toggle:hover { opacity: 1; }
+      .accounts-page .add-btn {
+        width: auto; padding: 10px 20px; border: none; border-radius: 10px; font-weight: 700;
+        background: linear-gradient(135deg, var(--accent), #7a5cff); color: #fff;
+        box-shadow: 0 6px 16px rgba(79,140,255,0.28); cursor: pointer; transition: transform .1s, box-shadow .15s;
+      }
+      .accounts-page .add-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(79,140,255,0.38); }
+      .accounts-page .add-hint { font-size: 11px; color: var(--muted); margin-top: 8px; position: relative; }
       .accounts-page .profile-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
       .accounts-page .profile-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; flex-wrap: wrap; }
       .accounts-page .profile-info { flex: 1; min-width: 160px; }
@@ -102,6 +136,13 @@ export default {
     wrap.innerHTML = `
       <h1 class="page-title">Account-Verwaltung</h1>
       <div class="add-card">
+        <div class="add-header">
+          <div class="add-icon">➕</div>
+          <div>
+            <div class="add-title">Neuen Account hinzufügen</div>
+            <div class="add-subtitle">Einmal einloggen — alle Charaktere dieses Logins werden automatisch gefunden</div>
+          </div>
+        </div>
         <div class="add-form">
           <div class="field">
             <label for="acc-username">S&amp;F-Username</label>
@@ -111,7 +152,7 @@ export default {
             <label for="acc-password">Passwort</label>
             <input type="password" id="acc-password" placeholder="Passwort" autocomplete="off" />
           </div>
-          <button class="btn btn-primary add-btn" id="acc-add-btn">Account hinzufügen</button>
+          <button class="add-btn" id="acc-add-btn">Account hinzufügen</button>
         </div>
         <div class="add-hint">Wir loggen einmal automatisiert ein, um alle Charaktere dieses Logins zu finden, und legen für jeden ein fertiges Profil an. Das Passwort wird verschlüsselt gespeichert (AES-256), damit künftige Starts vollautomatisch ablaufen — nie im Klartext, nie im Browser.</div>
         <div class="add-hint" id="acc-add-status"></div>
@@ -119,6 +160,25 @@ export default {
       <div id="profiles-list"></div>
     `;
     container.appendChild(wrap);
+
+    (function addPasswordToggle() {
+      const input = wrap.querySelector('#acc-password');
+      const fieldWrap = document.createElement('div');
+      fieldWrap.className = 'password-wrap';
+      input.parentNode.insertBefore(fieldWrap, input);
+      fieldWrap.appendChild(input);
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'password-toggle';
+      btn.textContent = '👁';
+      btn.setAttribute('aria-label', 'Passwort anzeigen');
+      btn.addEventListener('click', () => {
+        const show = input.type === 'password';
+        input.type = show ? 'text' : 'password';
+        btn.textContent = show ? '🙈' : '👁';
+      });
+      fieldWrap.appendChild(btn);
+    })();
 
     const openTerminals = new Map(); // profileId -> { handle }
 
