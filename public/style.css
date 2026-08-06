@@ -131,6 +131,23 @@ body {
   text-decoration: none;
 }
 .sidebar-footer-kofi:hover { filter: brightness(1.08); }
+.sidebar-footer-github {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  background: #24292e;
+  border: 1px solid #3d4247;
+  border-radius: 8px;
+  padding: 7px 10px;
+  text-decoration: none;
+  margin-top: 6px;
+}
+.sidebar-footer-github svg { width: 14px; height: 14px; fill: #fff; flex-shrink: 0; }
+.sidebar-footer-github:hover { filter: brightness(1.25); }
 .accounts-list-title {
   font-size: 11px;
   color: var(--muted);
