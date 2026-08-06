@@ -1,9 +1,14 @@
 const express = require('express');
-const { state, applyUpdate } = require('../lib/cliUpdate');
+const { state, checkForUpdate, applyUpdate } = require('../lib/cliUpdate');
 
 const router = express.Router();
 
 router.get('/status', (req, res) => {
+  res.json(state);
+});
+
+router.post('/check', async (req, res) => {
+  await checkForUpdate();
   res.json(state);
 });
 

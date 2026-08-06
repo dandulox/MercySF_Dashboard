@@ -407,6 +407,27 @@ document.getElementById('dashboard-update-btn')?.addEventListener('click', async
   }
 });
 
+function wireForceCheckButton(btnId, endpoint, reload) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    btn.classList.add('spinning');
+    try {
+      await fetchJSON(endpoint, { method: 'POST' });
+      await reload();
+    } catch (err) {
+      alert('Prüfung fehlgeschlagen: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.classList.remove('spinning');
+    }
+  });
+}
+
+wireForceCheckButton('cli-force-check-btn', '/api/cli-update/check', loadCliUpdateStatus);
+wireForceCheckButton('dashboard-force-check-btn', '/api/dashboard-update/check', loadDashboardUpdateStatus);
+
 initAnonMode();
 initNotifications();
 initAccessMenu();
