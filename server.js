@@ -7,6 +7,7 @@ const { findDataDir, listAccounts, latestSnapshot, recentLogLines, isProcessRunn
 const logBuffer = require('./lib/logBuffer');
 const authStore = require('./lib/authStore');
 const sessionStore = require('./lib/sessionStore');
+require('./lib/statsCollector');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
