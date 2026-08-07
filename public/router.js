@@ -168,13 +168,14 @@ async function loadDashboardUpdateStatus() {
     pill.className = 'pill pill-warn';
     btn.style.display = 'none';
   } else if (status.updateAvailable) {
-    pill.textContent = 'Update Available';
+    pill.textContent = status.remoteVersion ? `Update auf ${status.remoteVersion}` : 'Update Available';
+    pill.title = status.currentVersion ? `Aktuell: ${status.currentVersion}` : '';
     pill.className = 'pill pill-warn';
     btn.style.display = '';
     btn.disabled = false;
     btn.textContent = 'Update';
   } else {
-    pill.textContent = 'Up To Date';
+    pill.textContent = status.currentVersion ? `Up To Date (${status.currentVersion})` : 'Up To Date';
     pill.className = 'pill pill-on';
     btn.style.display = 'none';
   }
