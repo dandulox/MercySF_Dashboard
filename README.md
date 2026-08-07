@@ -60,16 +60,16 @@ Die CLI bietet keine offizielle Fernsteuerungs-API — sie ist als reines Text-M
 | Metrik | Wert |
 |---|---|
 | CPU-Auslastung | 1,8 % |
-| RAM-Auslastung | ~217,6 MB von 8 GB |
+| RAM-Auslastung | 217,6 MB von 8 GB (2,72 %) |
 | Bootdisk | 13 GB von 49 GB (28 %) |
 
-**Test 2** — 1 vCPU / 1 GiB RAM (Proxmox-LXC-Container), 30 gleichzeitig laufende Accounts:
+**Test 2** — 1 vCPU / 1 GB RAM (Proxmox-LXC-Container), 30 gleichzeitig laufende Accounts:
 
 | Metrik | Wert |
 |---|---|
-| CPU-Auslastung | 2,82 % eines Kerns |
-| RAM-Auslastung | 216,20 MiB von 1,00 GiB (21,11 %) |
-| Bootdisk | 3,68 GiB von 7,78 GiB (47,36 %) |
+| CPU-Auslastung | 2,82 % |
+| RAM-Auslastung | 226,7 MB von 1,07 GB (21,11 %) |
+| Bootdisk | 3,95 GB von 8,35 GB (47,36 %) |
 
 ## Tech-Stack
 
