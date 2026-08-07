@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mercy SF Web-Dashboard</title>
+<meta name="description" content="Web-Dashboard für Mercy SF (Shakes & Fidget Bot) — Übersicht, Steuerung und Analyse für alle Accounts direkt im Browser." />
+<style>
+  :root {
+    --bg: #0e0f13;
+    --panel: #16181f;
+    --panel-2: #1c1f28;
+    --border: #262a35;
+    --text: #e7e9ee;
+    --muted: #8a8f9c;
+    --accent: #4f8cff;
+    --accent-2: #7a5cff;
+    --green: #35c98f;
+    --red: #ef5563;
+    --yellow: #f0b429;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.55;
+  }
+  a { color: var(--accent); }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 0 20px; }
+
+  header.hero {
+    padding: 72px 0 56px;
+    text-align: center;
+    background:
+      radial-gradient(circle at 20% 0%, rgba(79,140,255,0.16), transparent 55%),
+      radial-gradient(circle at 80% 10%, rgba(122,92,255,0.14), transparent 50%);
+    border-bottom: 1px solid var(--border);
+  }
+  .hero-icon { font-size: 44px; margin-bottom: 10px; }
+  .hero h1 { font-size: clamp(28px, 5vw, 42px); margin: 0 0 12px; }
+  .hero p.tagline { color: var(--muted); font-size: clamp(14px, 2.2vw, 17px); max-width: 620px; margin: 0 auto 28px; }
+  .badges { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 28px; }
+  .badge {
+    font-size: 11.5px; font-weight: 600; padding: 5px 12px; border-radius: 999px;
+    background: var(--panel-2); border: 1px solid var(--border); color: var(--muted);
+  }
+  .cta-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
+    font-weight: 600; font-size: 14px; padding: 11px 22px; border-radius: 10px;
+    border: 1px solid var(--border); transition: transform .1s, filter .15s;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; border: none; box-shadow: 0 6px 18px rgba(79,140,255,0.3); }
+  .btn-primary:hover { filter: brightness(1.08); }
+  .btn-secondary { background: var(--panel-2); color: var(--text); }
+  .btn-secondary:hover { background: #23262f; }
+  .btn-kofi { background: #ff5f5f; color: #fff; border: none; }
+  .btn-kofi:hover { filter: brightness(1.08); }
+
+  .warning-banner {
+    background: rgba(240,180,41,0.08); border: 1px solid rgba(240,180,41,0.35);
+    color: var(--text); border-radius: 12px; padding: 16px 18px; font-size: 13.5px;
+    margin: 32px 0;
+  }
+  .warning-banner strong { color: var(--yellow); }
+
+  section { padding: 56px 0; border-bottom: 1px solid var(--border); }
+  section:last-of-type { border-bottom: none; }
+  h2 { font-size: 24px; margin: 0 0 8px; }
+  h2 .num { color: var(--accent); font-variant-numeric: tabular-nums; margin-right: 8px; }
+  .section-sub { color: var(--muted); font-size: 14px; margin: 0 0 30px; max-width: 640px; }
+
+  pre {
+    background: #0b0c10; border: 1px solid var(--border); border-radius: 10px;
+    padding: 16px 18px; overflow-x: auto; font-size: 13px; line-height: 1.6;
+  }
+  code { font-family: "Consolas", "SF Mono", Menlo, monospace; }
+  p code, li code { background: var(--panel-2); border: 1px solid var(--border); border-radius: 5px; padding: 1px 6px; font-size: 0.9em; }
+
+  .install-steps { counter-reset: step; list-style: none; margin: 0; padding: 0; }
+  .install-steps li {
+    counter-increment: step; position: relative; padding-left: 40px; margin-bottom: 22px;
+  }
+  .install-steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 0;
+    width: 26px; height: 26px; border-radius: 50%; background: var(--panel-2); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center; font-size: 12.5px; font-weight: 700; color: var(--accent);
+  }
+  .install-steps h4 { margin: 2px 0 6px; font-size: 15px; }
+  .install-steps p { margin: 0 0 8px; color: var(--muted); font-size: 13.5px; }
+
+  .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+  .feature-card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 20px;
+  }
+  .feature-card .icon { font-size: 22px; margin-bottom: 10px; display: block; }
+  .feature-card h3 { margin: 0 0 8px; font-size: 15px; }
+  .feature-card p { margin: 0; color: var(--muted); font-size: 13.5px; }
+
+  .limits-list { list-style: none; margin: 0; padding: 0; }
+  .limits-list li {
+    display: flex; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--border); font-size: 13.5px; color: var(--text);
+  }
+  .limits-list li:last-child { border-bottom: none; }
+  .limits-list li .dot { flex-shrink: 0; margin-top: 6px; width: 7px; height: 7px; border-radius: 50%; background: var(--yellow); }
+  .limits-list li span.text { color: var(--muted); }
+
+  .bench-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+  .bench-card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+  .bench-card h4 { margin: 0 0 14px; font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  table.bench-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  table.bench-table td { padding: 7px 0; border-bottom: 1px solid var(--border); }
+  table.bench-table td:first-child { color: var(--muted); }
+  table.bench-table td:last-child { text-align: right; font-weight: 600; }
+  table.bench-table tr:last-child td { border-bottom: none; }
+
+  .stack-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+  .stack-pill {
+    background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px 14px; font-size: 13px; font-weight: 600;
+  }
+
+  .thanks-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+  .thanks-card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+  .thanks-card h3 { margin: 0 0 8px; font-size: 15px; }
+  .thanks-card p { margin: 0 0 12px; color: var(--muted); font-size: 13.5px; }
+
+  footer { padding: 40px 0 60px; text-align: center; color: var(--muted); font-size: 12.5px; }
+  footer a { color: var(--muted); text-decoration: underline; }
+  footer a:hover { color: var(--text); }
+  footer .foot-links { margin-top: 10px; display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
+
+  @media (max-width: 600px) {
+    header.hero { padding: 56px 0 40px; }
+    section { padding: 40px 0; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-icon">⚔</div>
+    <h1>Mercy SF Web-Dashboard</h1>
+    <p class="tagline">Ein Browser-Dashboard rund um die <a href="https://mercysf.app" target="_blank" rel="noopener">Mercy SF</a> Shakes&nbsp;&amp;&nbsp;Fidget-CLI — Übersicht, Steuerung, Live-Daten und Analysen für alle Accounts, ohne das Terminal-Menü. Läuft auf einem eigenen Server, voll mobiltauglich.</p>
+    <div class="badges">
+      <span class="badge">Node.js + Express</span>
+      <span class="badge">Kein Build-Step</span>
+      <span class="badge">AES-256 verschlüsselte Zugangsdaten</span>
+      <span class="badge">AGPLv3</span>
+    </div>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="https://github.com/dandulox/MercySF_Dashboard" target="_blank" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+        Zum Repository
+      </a>
+      <a class="btn btn-secondary" href="#installation">Installation ansehen</a>
+      <a class="btn btn-kofi" href="https://ko-fi.com/senseiissei" target="_blank" rel="noopener">☕ Mercy SF unterstützen</a>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="warning-banner">
+    ⚠️ <strong>Experimentell, Nutzung auf eigenes Risiko.</strong> Dieses Dashboard befindet sich in aktiver Entwicklung und kann Fehler enthalten. Automatisiertes Spielen (Botting) verstößt in der Regel gegen die Nutzungsbedingungen von Shakes&nbsp;&amp;&nbsp;Fidget — es besteht grundsätzlich das Risiko einer Account-Sperrung, unabhängig davon, ob die Automatisierung über dieses Dashboard oder direkt über die CLI läuft.
+  </div>
+</div>
+
+<section id="was-ist-das">
+  <div class="wrap">
+    <h2><span class="num">01</span>Was ist das?</h2>
+    <p class="section-sub">Alles läuft auf Basis der offiziellen Mercy&nbsp;SF-CLI — es wird nichts am Bot selbst verändert, nur ein komplettes Web-Interface drumherum gebaut. Zusätzlich holt das Dashboard über <a href="https://github.com/the-marenga/sf-api" target="_blank" rel="noopener">sf-api</a> von the-marenga Live-Daten (Ausrüstung, Gilde, Taverne, Mail) direkt vom Spieleserver.</p>
+  </div>
+</section>
+
+<section id="features">
+  <div class="wrap">
+    <h2><span class="num">02</span>Funktionen</h2>
+    <p class="section-sub">Ein Überblick über alles, was das Dashboard mitbringt.</p>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <span class="icon">▦</span>
+        <h3>Übersicht</h3>
+        <p>Ein-/ausklappbare Karten (Zustand bleibt gespeichert): Accounts-Tabelle, Charakter-Stats, Ausrüstung, Taverne, Gilde, Mail, Activity-Log.</p>
+      </div>
+      <div class="feature-card">
+        <span class="icon">🗂</span>
+        <h3>Account-Verwaltung</h3>
+        <p>Einmal einloggen — alle Charaktere eines Logins werden automatisch über alle Server hinweg gefunden. Passwörter liegen AES-256-verschlüsselt auf der Platte. Start/Stop/Pause pro Account, Bulk-Aktionen pro Login.</p>
+      </div>
+      <div class="feature-card">
+        <span class="icon">⌨</span>
+        <h3>Web-Terminal</h3>
+        <p>Pro Account eine eigene Konsolen-Session im Browser (xterm.js), inklusive automatisiertem Login-Durchklicken bis zum laufenden Bot.</p>
+      </div>
+      <div class="feature-card">
+        <span class="icon">🛡</span>
+        <h3>Live-Spieldaten</h3>
+        <p>Ausrüstung, Gilde, Taverne und Mail direkt vom Spieleserver (read-only, lokaler Rust-Dienst). Abfrage-Intervall frei einstellbar (10&nbsp;Min / 1×Std / 1×Tag).</p>
+      </div>
+      <div class="feature-card">
+        <span class="icon">📈</span>
+        <h3>Analysen & Erträge</h3>
+        <p>SQLite-gestützte Auswertung von EP/Gold/Ehre pro Tag, erkannte Kampf-Fenster, Zeitreihen-Charts für Level, Erfahrung, Gold, Pilze, Ehre, Rang.</p>
+      </div>
+      <div class="feature-card">
+        <span class="icon">⚙</span>
+        <h3>Einstellungen & Vorlagen</h3>
+        <p>Alle Bot-Konfig-Schalter direkt im Browser. Konfiguration als Vorlage speichern und auf andere Charaktere anwenden, oder aus einem Windows-App-Backup importieren.</p>
+      </div>
+      <div class="feature-card">
+        <span class="icon">🔔</span>
+        <h3>Benachrichtigungen</h3>
+        <p>Erkennt Fehler/Warnungen automatisch aus dem Log-Output — Glocke mit Badge und Toast-Popups.</p>
+      </div>
+      <div class="feature-card">
+        <span class="icon">🕶</span>
+        <h3>Anonym-Modus</h3>
+        <p>Charakternamen verpixeln, z.&nbsp;B. für Screenshots oder Streaming — ein Klick, sofort wirksam.</p>
+      </div>
+      <div class="feature-card">
+        <span class="icon">🔁</span>
+        <h3>Auto-Wiederanlauf</h3>
+        <p>Charaktere, die vor einem Neustart/Update aktiv liefen, starten danach automatisch wieder — zeitversetzt, damit nicht alle gleichzeitig einloggen.</p>
+      </div>
+      <div class="feature-card">
+        <span class="icon">📱</span>
+        <h3>Mobil nutzbar</h3>
+        <p>Vollständig responsives Layout — Navigation als Menü, Tabellen und Konsole passen sich der Bildschirmbreite an.</p>
+      </div>
+      <div class="feature-card">
+        <span class="icon">⟳</span>
+        <h3>Auto-Update-Check</h3>
+        <p>CLI und Dashboard zeigen permanent ihren Update-Status; ein Klick installiert automatisch (git pull + Neubau bzw. Binary-Austausch).</p>
+      </div>
+      <div class="feature-card">
+        <span class="icon">🔐</span>
+        <h3>Zugangsschutz</h3>
+        <p>Ein Dashboard-Zugang (Single-Admin) mit Setup-Assistent, 12-Wort-Wiederherstellungsschlüssel und Passwort-Änderung direkt im Interface.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="installation">
+  <div class="wrap">
+    <h2><span class="num">03</span>Installation</h2>
+    <p class="section-sub">Auf einem frischen Debian/Ubuntu-Server, als root.</p>
+    <pre><code>curl -fsSL https://raw.githubusercontent.com/dandulox/MercySF_Dashboard/main/install.sh | bash</code></pre>
+    <ul class="install-steps">
+      <li>
+        <h4>Abhängigkeiten & Dienste</h4>
+        <p>Das Skript installiert Node.js, Rust/Cargo für die sf-api-Bridge, Build-Tools für native Module sowie die Mercy-SF-CLI, richtet ein selbstsigniertes TLS-Zertifikat ein und startet Dashboard sowie sf-api-Bridge als systemd-Dienste.</p>
+      </li>
+      <li>
+        <h4>Erster Aufruf</h4>
+        <p>Danach ist das Dashboard unter <code>https://&lt;server-ip&gt;:8080</code> erreichbar — eine Setup-Seite führt durch das Anlegen des einen Dashboard-Zugangs.</p>
+      </li>
+      <li>
+        <h4>Updates</h4>
+        <p>Erneutes Ausführen des Skripts aktualisiert nur Code und Dependencies — vorhandene Account-Daten, Zertifikate und die installierte CLI-Version bleiben unangetastet.</p>
+      </li>
+    </ul>
+
+    <h4 style="margin-top:32px;font-size:14px;">Deinstallation</h4>
+    <pre><code>curl -fsSL https://raw.githubusercontent.com/dandulox/MercySF_Dashboard/main/install.sh | bash -s -- --uninstall</code></pre>
+    <p class="section-sub" style="margin-top:10px;">Entfernt <strong>alles</strong>: beide systemd-Dienste, den kompletten <code>/opt/mercy</code>-Ordner inkl. Dashboard-Code, Zertifikate, CLI-Binary, gespeicherte Bot-Zugangsdaten, Dashboard-Zugang und die Ertrags-Statistik-Datenbank. Kein Zwischenschritt, keine Rückfrage.</p>
+  </div>
+</section>
+
+<section id="limitations">
+  <div class="wrap">
+    <h2><span class="num">04</span>Bekannte Einschränkungen</h2>
+    <p class="section-sub">Die CLI bietet keine offizielle Fernsteuerungs-API — sie ist als reines Text-Menü für interaktive Terminal-Nutzung gebaut. Alle Login-/Bot-Automatisierung basiert auf Pattern-Matching des Terminal-Outputs. Ändert sich der Wortlaut eines CLI-Menüs, kann die Automatisierung brechen, bis der Code angepasst wird.</p>
+    <ul class="limits-list">
+      <li><span class="dot"></span><span class="text">Kein natives Pause-Kommando — "Pause" schaltet stattdessen alle aktiven <code>auto_*</code>-Konfig-Schalter aus.</span></li>
+      <li><span class="dot"></span><span class="text">Der Linux-Build der CLI schreibt keine <code>logs/</code>- oder <code>battle_history/</code>-Dateien — das Dashboard nutzt einen In-Memory-Ringpuffer aus dem Live-Terminal-Output.</span></li>
+      <li><span class="dot"></span><span class="text">Keine offizielle Versions-API für die CLI — der Update-Check vergleicht MD5-Hashes gegen die öffentliche Download-Datei.</span></li>
+      <li><span class="dot"></span><span class="text">Ein Dashboard-Selbst-Update unterbricht kurz die Verbindung, während sich beide systemd-Dienste neu starten.</span></li>
+      <li><span class="dot"></span><span class="text"><code>sf-api</code> liefert keine lesbaren Item-Namen (nur numerische IDs) — die Ausrüstungs-Anzeige zeigt Slot, Typ, Attribute und Qualität, keine Klarnamen.</span></li>
+      <li><span class="dot"></span><span class="text">Die täglichen Gold-Erträge sind eine Netto-Veränderung pro Zeitfenster (kann Ausgaben enthalten) — EP und Ehre sind exakt.</span></li>
+      <li><span class="dot"></span><span class="text">Kein Rate-Limiting auf Login-/Passwort-Reset-Versuche — relevant vor allem, falls das Dashboard über das eigene LAN hinaus erreichbar gemacht wird.</span></li>
+    </ul>
+  </div>
+</section>
+
+<section id="ressourcen">
+  <div class="wrap">
+    <h2><span class="num">05</span>Ressourcenverbrauch</h2>
+    <p class="section-sub">Zwei reale Testläufe mit unterschiedlicher Hardware und Account-Anzahl.</p>
+    <div class="bench-grid">
+      <div class="bench-card">
+        <h4>4 vCPU / 8 GB RAM — 11 laufende Accounts</h4>
+        <table class="bench-table">
+          <tr><td>CPU-Auslastung</td><td>Load 0,11–0,18 (4 Kerne)</td></tr>
+          <tr><td>RAM-Auslastung</td><td>~217,6 MB von 8 GB</td></tr>
+          <tr><td>Bootdisk</td><td>13 GB von 49 GB (28&nbsp;%)</td></tr>
+        </table>
+      </div>
+      <div class="bench-card">
+        <h4>1 vCPU / 1 GiB RAM (LXC) — 30 laufende Accounts</h4>
+        <table class="bench-table">
+          <tr><td>CPU-Auslastung</td><td>2,82&nbsp;% eines Kerns</td></tr>
+          <tr><td>RAM-Auslastung</td><td>216,20 MiB von 1,00 GiB (21,11&nbsp;%)</td></tr>
+          <tr><td>Bootdisk</td><td>3,68 GiB von 7,78 GiB (47,36&nbsp;%)</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="stack">
+  <div class="wrap">
+    <h2><span class="num">06</span>Tech-Stack</h2>
+    <p class="section-sub">Node.js + Express im Backend, Vanilla JS mit ES-Modulen im Frontend — bewusst ohne Build-Step. Die sf-api-Anbindung ist ein separater, zustandsloser Rust-Dienst, der nur auf <code>127.0.0.1</code> lauscht.</p>
+    <div class="stack-pills">
+      <span class="stack-pill">Node.js + Express</span>
+      <span class="stack-pill">Vanilla JS (ES-Module)</span>
+      <span class="stack-pill">node-pty + xterm.js</span>
+      <span class="stack-pill">Chart.js</span>
+      <span class="stack-pill">WebSocket (ws)</span>
+      <span class="stack-pill">better-sqlite3</span>
+      <span class="stack-pill">Rust + axum + sf-api</span>
+      <span class="stack-pill">AES-256-GCM</span>
+    </div>
+  </div>
+</section>
+
+<section id="danksagung">
+  <div class="wrap">
+    <h2><span class="num">07</span>Danksagung</h2>
+    <p class="section-sub">Dieses Dashboard existiert nur, weil andere die eigentliche Grundlagenarbeit geleistet haben.</p>
+    <div class="thanks-grid">
+      <div class="thanks-card">
+        <h3>Mercy SF — Sensei Issei</h3>
+        <p>Die CLI/den Bot selbst, um den dieses Dashboard herum gebaut ist.</p>
+        <a class="btn btn-secondary" style="padding:8px 16px;font-size:13px;" href="https://mercysf.app" target="_blank" rel="noopener">mercysf.app ↗</a>
+      </div>
+      <div class="thanks-card">
+        <h3>sf-api — the-marenga</h3>
+        <p>Die Rust-Bibliothek, über die dieses Dashboard Live-Daten direkt vom Spieleserver abfragt.</p>
+        <a class="btn btn-secondary" style="padding:8px 16px;font-size:13px;" href="https://github.com/the-marenga/sf-api" target="_blank" rel="noopener">Repository ↗</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>Lizenziert unter <a href="https://github.com/dandulox/MercySF_Dashboard/blob/main/LICENSE" target="_blank" rel="noopener">AGPLv3</a>.</div>
+    <div class="foot-links">
+      <a href="https://github.com/dandulox/MercySF_Dashboard" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/dandulox/MercySF_Dashboard#readme" target="_blank" rel="noopener">README</a>
+      <a href="https://ko-fi.com/senseiissei" target="_blank" rel="noopener">Ko-fi</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
