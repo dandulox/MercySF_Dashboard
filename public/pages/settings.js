@@ -289,6 +289,8 @@ export default {
         <div class="templates-save-row">
           <input type="text" id="template-name-input" placeholder="Name der Vorlage (z. B. &quot;Arena-Fokus&quot;)" />
           <button class="btn btn-primary" id="template-save-btn" style="width:auto;padding:7px 16px;">Aktuelle Einstellungen speichern</button>
+          <button class="btn-secondary" id="template-import-btn" style="width:auto;padding:7px 16px;">📤 Aus Backup-Datei importieren</button>
+          <input type="file" id="template-import-file" accept="application/json,.json" hidden />
         </div>
         <div id="templates-status"></div>
         <div id="templates-list">Lade...</div>
@@ -426,6 +428,37 @@ export default {
         await loadTemplates();
       } catch (err) {
         status.textContent = 'Fehler: ' + err.message;
+      }
+    });
+
+    const importBtn = wrap.querySelector('#template-import-btn');
+    const importFile = wrap.querySelector('#template-import-file');
+    importBtn.addEventListener('click', () => importFile.click());
+    importFile.addEventListener('change', async () => {
+      const file = importFile.files[0];
+      importFile.value = '';
+      if (!file) return;
+      const status = wrap.querySelector('#templates-status');
+      try {
+        const text = await file.text();
+        const parsed = JSON.parse(text);
+        const settings = parsed && typeof parsed.botConfig === 'object' ? parsed.botConfig : parsed;
+        if (!settings || typeof settings !== 'object' || Array.isArray(settings)) {
+          throw new Error('Keine gültige Einstellungs-Struktur in dieser Datei gefunden');
+        }
+        const defaultName = file.name.replace(/\.json$/i, '');
+        const name = prompt('Name für die importierte Vorlage:', defaultName);
+        if (!name || !name.trim()) return;
+        status.textContent = 'Importiere...';
+        await ctx.fetchJSON('/api/settings-templates/import', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: name.trim(), settings }),
+        });
+        status.textContent = `Vorlage "${name.trim()}" importiert.`;
+        await loadTemplates();
+      } catch (err) {
+        status.textContent = 'Import fehlgeschlagen: ' + err.message;
       }
     });
 

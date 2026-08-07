@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const { findDataDir } = require('../lib/data');
+const settingsDefaults = require('../lib/settingsDefaults');
 
 const router = express.Router();
 
@@ -16,6 +17,7 @@ router.get('/:accountId', (req, res) => {
   } catch (e) {
     return res.status(500).json({ error: 'Einstellungen konnten nicht gelesen werden' });
   }
+  settingsDefaults.learnFrom(settings);
   res.json(settings);
 });
 
@@ -42,6 +44,7 @@ router.put('/:accountId', express.json(), (req, res) => {
     return res.status(400).json({ error: `Unbekannte oder typinkompatible Felder: ${rejected.join(', ')}` });
   }
   fs.writeFileSync(filePath, JSON.stringify(current, null, 2));
+  settingsDefaults.learnFrom(current);
   res.json(current);
 });
 

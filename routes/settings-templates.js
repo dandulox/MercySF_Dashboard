@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const { findDataDir } = require('../lib/data');
 const templates = require('../lib/settingsTemplates');
+const settingsDefaults = require('../lib/settingsDefaults');
 
 const router = express.Router();
 
@@ -33,6 +34,28 @@ router.post('/', express.json(), (req, res) => {
   res.json(template);
 });
 
+// Importiert eine Vorlage direkt aus hochgeladenen Rohdaten (z. B. einem Backup-Export der
+// Windows-App), statt sie von einem bestehenden Account abzuleiten. Unbekannte Felder (die es
+// nur in der Windows-App gibt, z. B. mushroom_budget_*) werden verworfen, sobald wir aus echten
+// Accounts bereits eine Referenz gelernt haben — sonst würden sie unverändert in die
+// Linux-CLI-Config geschrieben, die sie schlicht nicht kennt.
+router.post('/import', express.json({ limit: '2mb' }), (req, res) => {
+  const { name, settings } = req.body || {};
+  if (!name || !name.trim()) return res.status(400).json({ error: 'Name erforderlich' });
+  if (!settings || typeof settings !== 'object' || Array.isArray(settings)) {
+    return res.status(400).json({ error: 'Ungültige oder fehlende Einstellungs-Struktur' });
+  }
+  const known = Object.keys(settingsDefaults.getDefaults());
+  const filtered = known.length
+    ? Object.fromEntries(Object.entries(settings).filter(([key]) => known.includes(key)))
+    : settings;
+  if (!Object.keys(filtered).length) {
+    return res.status(400).json({ error: 'Keine bekannten Einstellungsfelder in dieser Datei gefunden' });
+  }
+  const template = templates.create(name.trim(), filtered);
+  res.json(template);
+});
+
 router.delete('/:id', (req, res) => {
   const removed = templates.remove(req.params.id);
   if (!removed) return res.status(404).json({ error: 'Vorlage nicht gefunden' });
@@ -56,6 +79,7 @@ router.post('/:id/apply', express.json(), (req, res) => {
   const charactersDir = path.join(dataDir, 'characters');
   fs.mkdirSync(charactersDir, { recursive: true });
 
+  const defaults = settingsDefaults.getDefaults();
   const applied = [];
   for (const accountId of accountIds) {
     const filePath = path.join(charactersDir, `${accountId}.json`);
@@ -63,7 +87,11 @@ router.post('/:id/apply', express.json(), (req, res) => {
     if (fs.existsSync(filePath)) {
       try { current = JSON.parse(fs.readFileSync(filePath, 'utf8')); } catch (e) { current = {}; }
     }
-    const merged = { ...current, ...template.settings };
+    // Reihenfolge ist wichtig: bekannte Standardwerte als Basis, vorhandener Account-Stand
+    // darüber, Vorlage hat das letzte Wort — so bleibt die geschriebene Datei immer vollständig,
+    // auch wenn die Vorlage (z. B. aus einem älteren Windows-Backup) nur einen Teil der Felder
+    // abdeckt oder der Account komplett neu ist.
+    const merged = { ...defaults, ...current, ...template.settings };
     fs.writeFileSync(filePath, JSON.stringify(merged, null, 2));
     applied.push(accountId);
   }
