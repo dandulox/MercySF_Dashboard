@@ -227,7 +227,7 @@ export default {
       .settings-page #settings-groups { column-count: 2; column-gap: 14px; }
       .settings-page .group { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; break-inside: avoid; display: inline-block; width: 100%; }
       .settings-page .group h3 { margin: 0 0 6px; font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
-      .settings-page .row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 12.5px; }
+      .settings-page .row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 10px; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 12.5px; }
       .settings-page .row:last-child { border-bottom: none; }
       .settings-page .row-label { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
       .settings-page .row-label-text { font-weight: 500; }

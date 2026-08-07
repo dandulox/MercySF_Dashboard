@@ -147,18 +147,19 @@ export default {
       .alu-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent, #4f8cff), #7a5cff); border-radius: 6px; transition: width .3s; }
 
       .equip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
-      .equip-slot { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
+      .equip-slot { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px; min-width: 0; overflow-wrap: break-word; }
       .equip-slot-name { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
       .equip-slot-type { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
       .equip-slot-attrs { font-size: 12px; color: var(--text); line-height: 1.5; }
       .equip-slot-meta { font-size: 11px; color: var(--muted); margin-top: 6px; }
 
-      .guild-summary, .tavern-summary, .mail-summary { font-size: 13px; margin-bottom: 10px; }
+      .guild-summary, .tavern-summary, .mail-summary { font-size: 13px; margin-bottom: 10px; overflow-wrap: break-word; }
       .guild-member-list { max-height: 320px; overflow-y: auto; }
       .guild-member-row, .tavern-quest-row, .mail-row {
-        display: flex; justify-content: space-between; gap: 10px; font-size: 13px;
+        display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 10px; font-size: 13px;
         padding: 6px 0; border-bottom: 1px solid var(--border);
       }
+      .guild-member-row span, .tavern-quest-row span, .mail-row span { overflow-wrap: break-word; min-width: 0; }
       .guild-member-row:last-child, .tavern-quest-row:last-child, .mail-row:last-child { border-bottom: none; }
       .mail-row.unread { font-weight: 600; }
       .link-btn-inline { background: none; border: none; color: var(--accent, #4f8cff); cursor: pointer; font-size: 12px; padding: 8px 0 0; text-decoration: underline; text-underline-offset: 2px; }

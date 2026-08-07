@@ -106,7 +106,8 @@ export default {
       .accounts-page .stat-line { color: var(--text); line-height: 1.7; }
       .accounts-page .stat-line b { color: var(--muted); font-weight: 500; }
       .accounts-page .mini-list { list-style: none; margin: 0; padding: 0; }
-      .accounts-page .mini-list li { display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; color: var(--text); }
+      .accounts-page .mini-list li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 8px; padding: 2px 0; color: var(--text); }
+      .accounts-page .mini-list li span:first-child { min-width: 0; overflow-wrap: break-word; }
       .accounts-page .mini-list .mini-time { color: var(--muted); flex-shrink: 0; }
       .accounts-page .mini-empty { color: var(--muted); }
       .accounts-page .empty-hint { color: var(--muted); font-size: 13px; padding: 20px 0; text-align: center; }

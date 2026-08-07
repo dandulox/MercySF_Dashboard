@@ -15,13 +15,13 @@ export default {
     const css = `
       .console-page .term-card { background: #0b0c10; border: 1px solid var(--border); border-radius: 12px; padding: 10px; height: 560px; }
       .console-page #term-container { width: 100%; height: 100%; }
-      .console-page .status-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+      .console-page .status-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-bottom: 10px; }
       .console-page .status-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
       .console-page .status-dot.connected { background: var(--green); box-shadow: 0 0 6px var(--green); }
       .console-page .status-dot.disconnected { background: var(--red); box-shadow: 0 0 6px var(--red); }
       .console-page .status-dot.connecting { background: var(--yellow); }
       .console-page .status-text { font-size: 13px; color: var(--muted); }
-      .console-page .status-detail { font-size: 12px; color: var(--muted); margin-left: auto; }
+      .console-page .status-detail { font-size: 12px; color: var(--muted); margin-left: auto; overflow-wrap: break-word; }
       .console-page .btn-restart { width: auto; padding: 6px 14px; font-size: 12px; }
       @media (max-width: 480px) {
         .console-page .term-card { height: 420px; }
