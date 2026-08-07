@@ -5,6 +5,12 @@ function fmt(n) {
   return String(n);
 }
 
+// CLI/API liefern den Geldwert in Silber, im Spiel wird aber in Gold gerechnet (100 Silber = 1 Gold).
+function toGold(silver) {
+  if (silver === undefined || silver === null) return null;
+  return Math.round(silver / 100);
+}
+
 function fmtDuration(sec) {
   if (!sec) return '0 Min';
   const h = Math.floor(sec / 3600);
@@ -65,7 +71,7 @@ export default {
           <table class="accounts-table">
             <thead>
               <tr>
-                <th>ACCOUNT</th><th>SERVER</th><th>LEVEL</th><th>SILBER</th><th>PILZE</th>
+                <th>ACCOUNT</th><th>SERVER</th><th>LEVEL</th><th>GOLD</th><th>PILZE</th>
                 <th>EHRE</th><th>RANG</th><th>ARENA HEUTE</th><th>DUNGEON HEUTE</th>
               </tr>
             </thead>
@@ -209,7 +215,7 @@ export default {
           <td class="acc-name char-name">${acc.charName}</td>
           <td>${acc.server}</td>
           <td>${s.level ?? '—'}</td>
-          <td>${fmt(s.silver)}</td>
+          <td>${fmt(toGold(s.silver))}</td>
           <td>${s.mushrooms ?? '—'}</td>
           <td>${fmt(s.honor)}</td>
           <td>${fmt(s.rank)}</td>
@@ -232,7 +238,7 @@ export default {
       grid.innerHTML = '';
       if (!account || !account.stats) return;
       const s = account.stats;
-      [['LEVEL', s.level], ['SILBER', fmt(s.silver)], ['PILZE', s.mushrooms], ['EHRE', fmt(s.honor)], ['RANG', fmt(s.rank)]]
+      [['LEVEL', s.level], ['GOLD', fmt(toGold(s.silver))], ['PILZE', s.mushrooms], ['EHRE', fmt(s.honor)], ['RANG', fmt(s.rank)]]
         .forEach(([label, value]) => {
           const div = document.createElement('div');
           div.className = 'stat-card';
@@ -280,11 +286,12 @@ export default {
             .reduce((acc, d) => acc + (d[field] || 0), 0);
         }
 
-        function tableRow(field, label) {
-          const heute = today[field];
-          const gestern = yesterday[field];
-          const dieseWoche = sumRange(field, thisMonday, tomorrow);
-          const letzteWoche = sumRange(field, lastMonday, thisMonday);
+        function tableRow(field, label, convert) {
+          const conv = convert || (n => n);
+          const heute = conv(today[field]);
+          const gestern = conv(yesterday[field]);
+          const dieseWoche = conv(sumRange(field, thisMonday, tomorrow));
+          const letzteWoche = conv(sumRange(field, lastMonday, thisMonday));
           return `<tr>
             <td class="de-label">${label}</td>
             <td>${signed(heute)}</td>
@@ -303,7 +310,7 @@ export default {
               </thead>
               <tbody>
                 ${tableRow('expGained', 'EP')}
-                ${tableRow('silverGained', 'Silber')}
+                ${tableRow('silverGained', 'Gold', toGold)}
                 ${tableRow('honorGained', 'Ehre')}
               </tbody>
             </table>
@@ -384,7 +391,7 @@ export default {
         ${tavern.quests.map(q => `
           <div class="tavern-quest-row">
             <span>${escapeHtml(q.location)}</span>
-            <span class="muted">${fmt(q.baseSilver)} Silber · ${fmt(q.baseExperience)} XP · ${fmtDuration(q.baseLengthSec)}</span>
+            <span class="muted">${fmt(toGold(q.baseSilver))} Gold · ${fmt(q.baseExperience)} XP · ${fmtDuration(q.baseLengthSec)}</span>
           </div>`).join('')}
       `;
     }

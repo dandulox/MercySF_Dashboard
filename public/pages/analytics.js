@@ -67,7 +67,7 @@ export default {
           labels: daily.map(d => d.date),
           datasets: [
             { label: 'EP', data: daily.map(d => d.expGained), backgroundColor: 'rgba(79,140,255,0.6)' },
-            { label: 'Silber', data: daily.map(d => d.silverGained), backgroundColor: 'rgba(53,201,143,0.6)' },
+            { label: 'Gold', data: daily.map(d => Math.round(d.silverGained / 100)), backgroundColor: 'rgba(53,201,143,0.6)' },
             { label: 'Ehre', data: daily.map(d => d.honorGained), backgroundColor: 'rgba(240,180,41,0.6)' },
           ],
         },
@@ -87,16 +87,19 @@ export default {
       const windows = await ctx.fetchJSON(`/api/stats/${encodeURIComponent(accountId)}/actions?limit=30`);
       if (!windows.length) { el.textContent = 'Noch keine Kämpfe erkannt.'; return; }
       el.innerHTML = `<div class="table-scroll"><table class="actions-table">
-        <thead><tr><th>Zeit</th><th>Typ</th><th>EP</th><th>Silber</th><th>Ehre</th><th>Befehle im Fenster</th></tr></thead>
-        <tbody>${windows.map(w => `
+        <thead><tr><th>Zeit</th><th>Typ</th><th>EP</th><th>Gold</th><th>Ehre</th><th>Befehle im Fenster</th></tr></thead>
+        <tbody>${windows.map(w => {
+          const goldDelta = Math.round(w.silverDelta / 100);
+          return `
           <tr>
             <td>${new Date(w.windowEnd).toLocaleString('de-DE')}</td>
             <td>${w.fightType === 'arena' ? 'Arena' : 'Dungeon'}</td>
             <td class="${w.expDelta >= 0 ? 'positive' : 'negative'}">${w.expDelta >= 0 ? '+' : ''}${w.expDelta}</td>
-            <td class="${w.silverDelta >= 0 ? 'positive' : 'negative'}">${w.silverDelta >= 0 ? '+' : ''}${w.silverDelta}</td>
+            <td class="${goldDelta >= 0 ? 'positive' : 'negative'}">${goldDelta >= 0 ? '+' : ''}${goldDelta}</td>
             <td class="${w.honorDelta >= 0 ? 'positive' : 'negative'}">${w.honorDelta >= 0 ? '+' : ''}${w.honorDelta}</td>
             <td>${w.commands.join(', ')}</td>
-          </tr>`).join('')}</tbody>
+          </tr>`;
+        }).join('')}</tbody>
       </table></div>`;
     }
 
@@ -108,7 +111,7 @@ export default {
         await ensureChartJs();
         const data = await ctx.fetchJSON(`/api/analytics/${encodeURIComponent(accountId)}`);
         destroyCharts();
-        const labelMap = { level: 'Level', silver: 'Silber', honor: 'Ehre', rank: 'Rang', mushrooms: 'Pilze', armor: 'Rüstung', experience: 'Erfahrung' };
+        const labelMap = { level: 'Level', silver: 'Gold', honor: 'Ehre', rank: 'Rang', mushrooms: 'Pilze', armor: 'Rüstung', experience: 'Erfahrung' };
         body.innerHTML = Object.keys(data.series).map(f => `
           <div class="chart-card">
             <h3>${labelMap[f] || f}</h3>
@@ -116,12 +119,14 @@ export default {
           </div>`).join('');
         for (const field of Object.keys(data.series)) {
           const points = data.series[field];
+          // API liefert Geldwerte in Silber, im Spiel wird in Gold gerechnet (100 Silber = 1 Gold).
+          const toValue = field === 'silver' ? (v => Math.round(v / 100)) : (v => v);
           const canvasCtx = wrap.querySelector(`#chart-${field}`).getContext('2d');
           const chart = new window.Chart(canvasCtx, {
             type: 'line',
             data: {
               labels: points.map(p => new Date(p.t).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })),
-              datasets: [{ label: labelMap[field] || field, data: points.map(p => p.v), borderColor: '#4f8cff', backgroundColor: 'rgba(79,140,255,0.15)', tension: 0.2, pointRadius: 0 }],
+              datasets: [{ label: labelMap[field] || field, data: points.map(p => toValue(p.v)), borderColor: '#4f8cff', backgroundColor: 'rgba(79,140,255,0.15)', tension: 0.2, pointRadius: 0 }],
             },
             options: {
               responsive: true,

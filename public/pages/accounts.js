@@ -247,13 +247,13 @@ export default {
             </div>
             <div class="detail-block">
               <h4>Letzte Aktionen</h4>
-              ${history.length ? `<ul class="mini-list char-name">${history.map(h =>
+              ${history.length ? `<ul class="mini-list">${history.map(h =>
                 `<li><span>${escapeHtml(h.label)}</span><span class="mini-time">${fmtRelTime(h.at)}</span></li>`).join('')}</ul>`
                 : '<div class="mini-empty">Noch keine erfasst</div>'}
             </div>
             <div class="detail-block">
               <h4>Zuletzt gescoutet</h4>
-              ${scouted.length ? `<ul class="mini-list char-name">${scouted.map(s =>
+              ${scouted.length ? `<ul class="mini-list">${scouted.map(s =>
                 `<li><span>${escapeHtml(s.name)}</span><span class="mini-time">${fmtRelTime(s.at)}</span></li>`).join('')}</ul>`
                 : '<div class="mini-empty">Noch niemand</div>'}
             </div>
