@@ -1,10 +1,10 @@
 const express = require('express');
 const registry = require('../lib/accountsRegistry');
 const credentialStore = require('../lib/credentialStore');
+const panelSettings = require('../lib/panelSettings');
 
 const router = express.Router();
 const BRIDGE_URL = 'http://127.0.0.1:4001/state';
-const CACHE_TTL_MS = 10 * 60 * 1000;
 const cache = new Map();
 
 router.get('/:profileId', async (req, res) => {
@@ -18,6 +18,7 @@ router.get('/:profileId', async (req, res) => {
   if (cached && cached.expiresAt > Date.now()) {
     return res.json(cached.data);
   }
+  const cacheTtlMs = panelSettings.getIntervalMs();
 
   const password = credentialStore.getPassword(profile.username);
   if (!password) {
@@ -40,7 +41,7 @@ router.get('/:profileId', async (req, res) => {
     return res.status(502).json({ error: data.error || 'sf-api-Bridge-Fehler' });
   }
 
-  cache.set(profile.id, { data, expiresAt: Date.now() + CACHE_TTL_MS });
+  cache.set(profile.id, { data, expiresAt: Date.now() + cacheTtlMs });
   res.json(data);
 });
 

@@ -240,13 +240,60 @@ export default {
       @media (max-width: 900px) {
         .settings-page #settings-groups { column-count: 1; }
       }
+      .settings-page .panel-settings-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; }
+      .settings-page .panel-settings-card h3 { margin: 0 0 4px; font-size: 13px; }
+      .settings-page .panel-settings-desc { font-size: 11.5px; color: var(--muted); margin-bottom: 10px; line-height: 1.4; }
+      .settings-page .panel-settings-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+      .settings-page .panel-settings-row select { background: var(--panel-2); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 6px 10px; font-size: 13px; }
+      .settings-page #panel-settings-status { font-size: 11.5px; color: var(--muted); }
     `;
     ctx.injectStyleOnce('settings', css);
 
     const wrap = document.createElement('div');
     wrap.className = 'settings-page';
-    wrap.innerHTML = `<h1 class="page-title">Einstellungen</h1><div id="settings-body"><div id="settings-groups">Lade...</div></div>`;
+    wrap.innerHTML = `
+      <h1 class="page-title">Einstellungen</h1>
+      <div class="panel-settings-card">
+        <h3>⚙ Panel-Einstellungen</h3>
+        <div class="panel-settings-desc">Wie oft die sf-api-Bridge live abgefragt wird (Ausrüstung, Spielstand). Seltener abfragen reduziert das Risiko zusätzlicher, außerplanmäßiger Logins.</div>
+        <div class="panel-settings-row">
+          <select id="gamestate-interval-select"><option>Lade...</option></select>
+          <button class="btn btn-primary" id="gamestate-interval-save" style="width:auto;padding:7px 16px;">Übernehmen</button>
+          <span id="panel-settings-status"></span>
+        </div>
+      </div>
+      <div id="settings-body"><div id="settings-groups">Lade...</div></div>`;
     container.appendChild(wrap);
+
+    async function loadPanelSettings() {
+      const select = wrap.querySelector('#gamestate-interval-select');
+      const status = wrap.querySelector('#panel-settings-status');
+      try {
+        const data = await ctx.fetchJSON('/api/panel-settings');
+        select.innerHTML = data.presets.map(p =>
+          `<option value="${p.key}" ${p.key === data.current ? 'selected' : ''}>${p.label}</option>`).join('');
+      } catch (err) {
+        status.textContent = 'Fehler: ' + err.message;
+      }
+    }
+
+    wrap.querySelector('#gamestate-interval-save').addEventListener('click', async () => {
+      const select = wrap.querySelector('#gamestate-interval-select');
+      const status = wrap.querySelector('#panel-settings-status');
+      status.textContent = 'Speichere...';
+      try {
+        await ctx.fetchJSON('/api/panel-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ preset: select.value }),
+        });
+        status.textContent = 'Übernommen.';
+      } catch (err) {
+        status.textContent = 'Fehler: ' + err.message;
+      }
+    });
+
+    loadPanelSettings();
 
     let pending = {};
 
