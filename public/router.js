@@ -260,11 +260,12 @@ function renderNotifPanel() {
   }
   list.innerHTML = allNotifications.map(n => `
     <div class="notif-item level-${n.level}">
-      <span class="notif-item-icon">${levelIcon(n.level)}</span>
-      <div class="notif-item-body">
-        <div class="notif-item-message">${escapeHtml(n.message)}</div>
-        <div class="notif-item-meta">${new Date(n.at).toLocaleTimeString('de-DE')}${n.source ? ' · ' + escapeHtml(n.source) : ''}</div>
+      ${n.source ? `<div class="notif-item-char char-name">${escapeHtml(n.source)}</div>` : ''}
+      <div class="notif-item-meta-row">
+        <span class="notif-item-level-badge">${levelIcon(n.level)} ${n.level === 'error' ? 'ERROR' : 'WARN'}</span>
+        <span class="notif-item-time">${new Date(n.at).toLocaleTimeString('de-DE')}</span>
       </div>
+      <div class="notif-item-message">${escapeHtml(n.message)}</div>
     </div>`).join('');
 }
 
@@ -273,7 +274,9 @@ function showToast(n) {
   if (!stack) return;
   const div = document.createElement('div');
   div.className = 'toast level-' + n.level;
-  div.innerHTML = `<div class="notif-item-message">${levelIcon(n.level)} ${escapeHtml(n.message)}</div>`;
+  div.innerHTML = `
+    ${n.source ? `<div class="notif-item-char char-name">${escapeHtml(n.source)}</div>` : ''}
+    <div class="notif-item-message">${levelIcon(n.level)} ${escapeHtml(n.message)}</div>`;
   stack.appendChild(div);
   setTimeout(() => div.remove(), 8000);
 }
