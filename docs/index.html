@@ -271,12 +271,17 @@
       <div class="feature-card">
         <span class="icon">▦</span>
         <h3>Übersicht</h3>
-        <p>Ein-/ausklappbare Karten (Zustand bleibt gespeichert): Accounts-Tabelle, Charakter-Stats, Ausrüstung, Taverne, Gilde, Mail, Activity-Log.</p>
+        <p>Ein-/ausklappbare Karten (Zustand bleibt gespeichert): Accounts-Tabelle, Charakter-Stats, Ausrüstung, Taverne, Gilde, Mail, Kampfhistorie, Activity-Log.</p>
       </div>
       <div class="feature-card">
         <span class="icon">🗂</span>
         <h3>Account-Verwaltung</h3>
-        <p>Einmal einloggen — alle Charaktere eines Logins werden automatisch über alle Server hinweg gefunden. Passwörter liegen AES-256-verschlüsselt auf der Platte. Start/Stop/Pause pro Account, Bulk-Aktionen pro Login.</p>
+        <p>Einmal einloggen — alle Charaktere eines Logins werden automatisch über alle Server hinweg gefunden. Passwörter liegen AES-256-verschlüsselt auf der Platte. Start/Stop/Pause/"Einlösen" pro Account, Bulk-Aktionen pro Login.</p>
+      </div>
+      <div class="feature-card">
+        <span class="icon">⚔</span>
+        <h3>Kampfhistorie</h3>
+        <p>Echte, vom CLI-Prozess lokal aufgezeichnete Kämpfe — Gegner, Arena/Dungeon/Sammelalbum, Sieg/Niederlage, EP/Gold/Ehre — über den nicht-interaktiven CLI-Befehl <code>--history</code>.</p>
       </div>
       <div class="feature-card">
         <span class="icon">⌨</span>
@@ -296,7 +301,7 @@
       <div class="feature-card">
         <span class="icon">⚙</span>
         <h3>Einstellungen & Vorlagen</h3>
-        <p>Alle Bot-Konfig-Schalter direkt im Browser. Konfiguration als Vorlage speichern und auf andere Charaktere anwenden, oder aus einem Windows-App-Backup importieren.</p>
+        <p>Alle Bot-Konfig-Schalter direkt im Browser — Lesen und die offiziell unterstützten <code>auto_*</code>-Schalter über den nicht-interaktiven CLI-Befehl <code>--config</code>. Konfiguration als Vorlage speichern und auf andere Charaktere anwenden, oder aus einem Windows-App-Backup importieren.</p>
       </div>
       <div class="feature-card">
         <span class="icon">🔔</span>
@@ -361,10 +366,10 @@
 <section id="limitations">
   <div class="wrap">
     <h2><span class="num">05</span>Bekannte Einschränkungen</h2>
-    <p class="section-sub">Die CLI bietet keine offizielle Fernsteuerungs-API — sie ist als reines Text-Menü für interaktive Terminal-Nutzung gebaut. Alle Login-/Bot-Automatisierung basiert auf Pattern-Matching des Terminal-Outputs. Ändert sich der Wortlaut eines CLI-Menüs, kann die Automatisierung brechen, bis der Code angepasst wird.</p>
+    <p class="section-sub">Seit Version 2.13.0 bietet die CLI einen dokumentierten, nicht-interaktiven JSON-Modus, den das Dashboard für Einstellungen, Kampfhistorie und "Einlösen" nutzt. Der eigentliche Bot-Start/Login-Ablauf im Web-Terminal läuft aber weiterhin über das klassische interaktive Text-Menü — dafür basiert die Automatisierung dort nach wie vor auf Pattern-Matching des Terminal-Outputs. Ändert sich dort der Wortlaut eines CLI-Menüs, kann die Automatisierung brechen, bis der Code angepasst wird.</p>
     <ul class="limits-list">
       <li><span class="dot"></span><span class="text">Kein natives Pause-Kommando — "Pause" schaltet stattdessen alle aktiven <code>auto_*</code>-Konfig-Schalter aus.</span></li>
-      <li><span class="dot"></span><span class="text">Der Linux-Build der CLI schreibt keine <code>logs/</code>- oder <code>battle_history/</code>-Dateien — das Dashboard nutzt einen In-Memory-Ringpuffer aus dem Live-Terminal-Output.</span></li>
+      <li><span class="dot"></span><span class="text">Nur ~20 <code>auto_*</code>-Schalter sind über die CLI selbst offiziell änderbar (<code>--config --set</code>) — alle übrigen Einstellungsfelder schreibt das Dashboard weiterhin direkt in die Config-Datei.</span></li>
       <li><span class="dot"></span><span class="text">Keine offizielle Versions-API für die CLI — der Update-Check vergleicht MD5-Hashes gegen die öffentliche Download-Datei.</span></li>
       <li><span class="dot"></span><span class="text">Ein Dashboard-Selbst-Update unterbricht kurz die Verbindung, während sich beide systemd-Dienste neu starten.</span></li>
       <li><span class="dot"></span><span class="text"><code>sf-api</code> liefert keine lesbaren Item-Namen (nur numerische IDs) — die Ausrüstungs-Anzeige zeigt Slot, Typ, Attribute und Qualität, keine Klarnamen.</span></li>
