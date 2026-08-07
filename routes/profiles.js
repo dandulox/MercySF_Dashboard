@@ -93,11 +93,13 @@ router.delete('/:id', (req, res) => {
 
 router.post('/:id/start', (req, res) => {
   ptyManager.ensurePty(req.params.id);
+  registry.setAutoStart(req.params.id, true);
   res.json(ptyManager.getStatus(req.params.id));
 });
 
 router.post('/:id/stop', (req, res) => {
   ptyManager.killPty(req.params.id);
+  registry.setAutoStart(req.params.id, false);
   res.json(ptyManager.getStatus(req.params.id));
 });
 

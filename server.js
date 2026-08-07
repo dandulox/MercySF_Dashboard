@@ -7,6 +7,8 @@ const { findDataDir, listAccounts, latestSnapshot, recentLogLines, isProcessRunn
 const logBuffer = require('./lib/logBuffer');
 const authStore = require('./lib/authStore');
 const sessionStore = require('./lib/sessionStore');
+const accountsRegistry = require('./lib/accountsRegistry');
+const ptyManager = require('./lib/ptyManager');
 require('./lib/statsCollector');
 
 const app = express();
@@ -89,7 +91,23 @@ if (fs.existsSync(routesDir)) {
   }
 }
 
+// Startet Charaktere, die beim letzten Stop/Neustart noch als "gestartet" markiert waren,
+// automatisch wieder — sonst müsste man nach jedem Server-/Dashboard-Neustart (Update, Reboot,
+// Absturz) jeden Account manuell erneut anklicken. Läuft zeitversetzt statt alle auf einmal,
+// damit nicht 20+ CLI-Prozesse gleichzeitig gegen den Spieleserver einloggen.
+function restoreAutoStartedProfiles() {
+  const toStart = accountsRegistry.list().filter(p => p.autoStart);
+  toStart.forEach((profile, i) => {
+    setTimeout(() => {
+      console.log(`[autostart] starte ${profile.nickname || profile.id} (${i + 1}/${toStart.length})`);
+      ptyManager.ensurePty(profile.id);
+    }, i * 4000);
+  });
+  if (toStart.length) console.log(`[autostart] ${toStart.length} zuletzt laufende Charakter(e) werden gestaffelt neu gestartet`);
+}
+
 httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`Mercy Dashboard (${useTls ? 'HTTPS' : 'HTTP'}) listening on :${PORT}`);
   console.log(`Resolved data dir: ${findDataDir() || '(none found yet)'}`);
+  restoreAutoStartedProfiles();
 });
