@@ -7,6 +7,7 @@ const credentialStore = require('../lib/credentialStore');
 const discoveryLogin = require('../lib/discoveryLogin');
 const { findDataDir } = require('../lib/data');
 const logBuffer = require('../lib/logBuffer');
+const cli = require('../lib/cliExec');
 
 const router = express.Router();
 
@@ -105,6 +106,24 @@ router.post('/:id/stop', (req, res) => {
 
 router.get('/:id/status', (req, res) => {
   res.json(ptyManager.getStatus(req.params.id));
+});
+
+// Kalender, Tagesaufgaben, ausstehende Freischaltungen einmalig abholen — nutzt den
+// nicht-interaktiven CLI-Modus (--claim), unabhängig davon, ob der Bot gerade über die PTY läuft.
+router.post('/:id/claim', async (req, res) => {
+  const profile = registry.list().find(p => p.id === req.params.id);
+  if (!profile) return res.status(404).json({ error: 'Profil nicht gefunden' });
+  if (!profile.server || !profile.characterName) {
+    return res.status(400).json({ error: 'Noch kein Charakter für dieses Profil bekannt' });
+  }
+  const password = credentialStore.getPassword(profile.username);
+  if (!password) return res.status(400).json({ error: 'Kein gespeichertes Passwort für diesen Account' });
+  try {
+    const result = await cli.runCli(cli.buildArgs(profile, ['--claim']), { password });
+    res.json({ ok: true, claimed: !!result.claimed });
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
 });
 
 function loadCharacterSettings(profile) {

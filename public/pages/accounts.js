@@ -283,6 +283,7 @@ export default {
               <button class="btn-secondary" data-action="stop" ${p.status.running ? '' : 'disabled'}>Stop</button>
               <button class="btn-secondary" data-action="pause" ${hasCharacter && !paused ? '' : 'disabled'} title="Schaltet alle Automatisierungen aus (kein garantierter Sofort-Effekt, nur Konfiguration)">${paused ? 'Pausiert' : 'Pause'}</button>
               <button class="btn-secondary" data-action="resume" ${paused ? '' : 'disabled'}>Fortsetzen</button>
+              <button class="btn-secondary" data-action="claim" ${hasCharacter && p.hasPassword ? '' : 'disabled'} title="Kalender, Tagesaufgaben und ausstehende Freischaltungen abholen">Einlösen</button>
               <button class="btn-secondary" data-action="toggle-term">Konsole</button>
               <button class="btn-danger" data-action="delete">Löschen</button>
             </div>
@@ -363,6 +364,24 @@ export default {
             alert('Fortsetzen fehlgeschlagen: ' + err.message);
           }
         });
+        const claimBtn = card.querySelector('[data-action="claim"]');
+        if (claimBtn) {
+          claimBtn.addEventListener('click', async () => {
+            const original = claimBtn.textContent;
+            claimBtn.disabled = true;
+            claimBtn.textContent = 'Löse ein…';
+            try {
+              await ctx.fetchJSON(`/api/profiles/${encodeURIComponent(id)}/claim`, { method: 'POST' });
+              claimBtn.textContent = 'Eingelöst ✓';
+            } catch (err) {
+              claimBtn.textContent = original;
+              alert('Einlösen fehlgeschlagen: ' + err.message);
+            } finally {
+              setTimeout(() => { claimBtn.disabled = false; claimBtn.textContent = original; }, 2500);
+            }
+          });
+        }
+
         card.querySelector('[data-action="delete"]').addEventListener('click', async () => {
           if (!confirm(`Account-Profil "${profile.nickname}" wirklich löschen? Läuft die CLI gerade, wird sie gestoppt. Deine Spieldaten (Statistiken, Kampfhistorie) bleiben erhalten, verschwinden aber aus der Übersicht.`)) return;
           closeTerminal(id);

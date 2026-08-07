@@ -120,6 +120,13 @@ export default {
           <div id="mail-body" class="muted">Wähle einen Account, um die Mail zu sehen.</div>
         </section>
       </div>
+      <section class="card collapsible-card" id="battle-history-card">
+        <div class="card-header">
+          <span>⚔ Kampfhistorie</span>
+          <button class="icon-btn" id="battle-history-refresh-btn" title="Kampfhistorie aktualisieren">⟳</button>
+        </div>
+        <div id="battle-history-body" class="muted">Wähle einen Account, um die Kampfhistorie zu sehen.</div>
+      </section>
       <section class="card collapsible-card" id="activity-log-card">
         <div class="card-header"><span>📜 Activity Log</span></div>
         <div id="activity-log" class="activity-log">Wähle einen Account, um das Log zu sehen.</div>
@@ -183,6 +190,17 @@ export default {
       }
       .daily-earnings-table td.de-label { text-align: left; color: var(--muted); font-weight: 400; }
       .daily-levelups { margin-top: 10px; font-size: 12.5px; color: var(--muted); }
+      .battle-history-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+      .battle-history-table th {
+        text-align: left; color: var(--muted); font-weight: 600; font-size: 11px;
+        letter-spacing: 0.03em; padding: 6px 10px; border-bottom: 1px solid var(--border);
+      }
+      .battle-history-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+      .battle-history-table tr:last-child td { border-bottom: none; }
+      .battle-result { font-weight: 700; font-size: 11px; padding: 2px 8px; border-radius: 999px; }
+      .battle-result.win { background: rgba(53,201,143,0.15); color: var(--green); }
+      .battle-result.loss { background: rgba(239,85,99,0.15); color: var(--red); }
+      .battle-history-note { font-size: 11px; color: var(--muted); margin-top: 8px; }
       .positive { color: var(--green); }
       .negative { color: var(--red); }
     `);
@@ -330,6 +348,38 @@ export default {
       logEl.innerHTML = lines.map(l => `<div class="line">${highlightCharName(escapeHtml(l), charName)}</div>`).join('');
     }
 
+    const BATTLE_KIND_LABELS = { arena: 'Arena', dungeon: 'Dungeon', scrapbook: 'Sammelalbum' };
+
+    async function renderBattleHistory(accountId) {
+      const el = wrap.querySelector('#battle-history-body');
+      if (!accountId) { el.textContent = 'Wähle einen Account, um die Kampfhistorie zu sehen.'; return; }
+      el.textContent = 'Lade…';
+      try {
+        const data = await ctx.fetchJSON(`/api/history/${encodeURIComponent(accountId)}?limit=20`);
+        if (!data.battles.length) { el.textContent = 'Noch keine Kämpfe aufgezeichnet.'; return; }
+        el.innerHTML = `
+          <div class="table-scroll">
+            <table class="battle-history-table">
+              <thead><tr><th>Zeit</th><th>Gegner</th><th>Typ</th><th>Ergebnis</th><th>EP</th><th>Silber</th><th>Ehre</th></tr></thead>
+              <tbody>${data.battles.map(b => `
+                <tr>
+                  <td class="muted">${new Date(b.timestamp).toLocaleString('de-DE')}</td>
+                  <td class="char-name">${escapeHtml(b.enemy_name || '—')}</td>
+                  <td>${BATTLE_KIND_LABELS[b.kind] || escapeHtml(b.kind || '—')}</td>
+                  <td><span class="battle-result ${b.won ? 'win' : 'loss'}">${b.won ? 'Sieg' : 'Niederlage'}</span></td>
+                  <td class="${b.xp >= 0 ? 'positive' : 'negative'}">${b.xp >= 0 ? '+' : ''}${b.xp}</td>
+                  <td class="${b.silver >= 0 ? 'positive' : 'negative'}">${b.silver >= 0 ? '+' : ''}${b.silver}</td>
+                  <td class="${b.honor >= 0 ? 'positive' : 'negative'}">${b.honor >= 0 ? '+' : ''}${b.honor}</td>
+                </tr>`).join('')}</tbody>
+            </table>
+          </div>
+          <div class="battle-history-note">${data.returned} von ${data.total} aufgezeichneten Kämpfen — lokal von der CLI erfasst, nicht vom Spieleserver.</div>
+        `;
+      } catch (err) {
+        el.textContent = 'Fehler: ' + err.message;
+      }
+    }
+
     let lastAccounts = [];
     function getCurrentProfileId() {
       const accountId = ctx.getAccountId();
@@ -459,6 +509,12 @@ export default {
     const unsubGameState = ctx.onAccountChange(() => renderGameState(getCurrentProfileId()));
     wrap.querySelector('#gamestate-refresh-btn').addEventListener('click', () => renderGameState(getCurrentProfileId()));
 
+    // Eigener Login-Roundtrip pro Abruf (CLI --history) — bewusst nicht Teil des 5s-Polls von
+    // render(), sonst würde bei offener Overview-Seite alle 5 Sekunden neu eingeloggt.
+    renderBattleHistory(ctx.getAccountId());
+    const unsubBattleHistory = ctx.onAccountChange(renderBattleHistory);
+    wrap.querySelector('#battle-history-refresh-btn').addEventListener('click', () => renderBattleHistory(ctx.getAccountId()));
+
     const pageSizeSelect = wrap.querySelector('#accounts-pagesize');
     pageSizeSelect.value = accountsPageSize;
     pageSizeSelect.addEventListener('change', () => {
@@ -478,6 +534,6 @@ export default {
 
     wrap.querySelectorAll('.collapsible-card').forEach(cardEl => makeCollapsible(cardEl, cardEl.id));
 
-    return () => { unsub(); unsubGameState(); clearInterval(interval); };
+    return () => { unsub(); unsubGameState(); unsubBattleHistory(); clearInterval(interval); };
   }
 };
