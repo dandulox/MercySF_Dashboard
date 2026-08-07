@@ -163,10 +163,14 @@ export default {
 
       .daily-earnings { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
       .daily-earnings-title { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px; }
-      .daily-stat { display: flex; align-items: baseline; gap: 8px; font-size: 13px; padding: 3px 0; }
+      .daily-stat { padding: 5px 0; border-bottom: 1px solid var(--border); }
+      .daily-stat:last-child { border-bottom: none; }
+      .daily-stat-main { display: flex; align-items: baseline; gap: 8px; font-size: 13px; }
       .daily-stat-label { color: var(--muted); min-width: 70px; }
       .daily-stat-value { font-weight: 600; }
-      .daily-stat-cmp { font-size: 11px; margin-left: auto; }
+      .daily-stat-sub { display: flex; flex-wrap: wrap; gap: 10px; font-size: 10.5px; color: var(--muted); margin-top: 2px; }
+      .daily-stat-avg { color: var(--muted); }
+      .daily-stat-cmp { }
       .positive { color: var(--green); }
       .negative { color: var(--red); }
     `);
@@ -231,26 +235,49 @@ export default {
         });
     }
 
+    function signed(n) {
+      return `${n >= 0 ? '+' : ''}${n}`;
+    }
+
     async function renderDailyEarnings(accountId) {
       const el = wrap.querySelector('#daily-earnings-body');
       if (!accountId) { el.innerHTML = ''; return; }
       try {
-        const daily = await ctx.fetchJSON(`/api/stats/${encodeURIComponent(accountId)}/daily?days=2`);
+        const daily = await ctx.fetchJSON(`/api/stats/${encodeURIComponent(accountId)}/daily?days=7`);
         const todayDate = new Date().toISOString().slice(0, 10);
         const yesterdayDate = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
         const empty = { expGained: 0, silverGained: 0, honorGained: 0, levelsGained: 0 };
         const today = daily.find(d => d.date === todayDate) || empty;
         const yesterday = daily.find(d => d.date === yesterdayDate) || null;
 
+        function weeklyAvg(field) {
+          if (!daily.length) return 0;
+          const sum = daily.reduce((acc, d) => acc + (d[field] || 0), 0);
+          return sum / daily.length;
+        }
+
         function row(field, label, value) {
-          let cmp = '';
+          let cmp = '<span class="daily-stat-cmp muted">– keine Vortagesdaten</span>';
           if (yesterday) {
-            const diff = value - yesterday[field];
+            const prev = yesterday[field];
+            const diff = value - prev;
             const arrow = diff > 0 ? '▲' : diff < 0 ? '▼' : '▪';
             const cls = diff > 0 ? 'positive' : diff < 0 ? 'negative' : 'muted';
-            cmp = `<span class="daily-stat-cmp ${cls}">${arrow} ${diff >= 0 ? '+' : ''}${diff} ggü. gestern</span>`;
+            const pctText = prev ? ` (${signed(Math.round((diff / Math.abs(prev)) * 100))}%)` : '';
+            cmp = `<span class="daily-stat-cmp ${cls}">${arrow} ${signed(diff)}${pctText} ggü. gestern</span>`;
           }
-          return `<div class="daily-stat"><span class="daily-stat-label">${label}</span><span class="daily-stat-value">+${value}</span>${cmp}</div>`;
+          const avg = weeklyAvg(field);
+          return `
+            <div class="daily-stat">
+              <div class="daily-stat-main">
+                <span class="daily-stat-label">${label}</span>
+                <span class="daily-stat-value">${signed(value)}</span>
+              </div>
+              <div class="daily-stat-sub">
+                <span class="daily-stat-avg">Ø ${daily.length}T: ${signed(Math.round(avg))}</span>
+                ${cmp}
+              </div>
+            </div>`;
         }
 
         el.innerHTML = `
