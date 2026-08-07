@@ -59,7 +59,7 @@ Die CLI bietet keine offizielle Fernsteuerungs-API — sie ist als reines Text-M
 
 | Metrik | Wert |
 |---|---|
-| CPU-Auslastung | Load-Average 0,11–0,18 (4 Kerne) |
+| CPU-Auslastung | 1,8 % |
 | RAM-Auslastung | ~217,6 MB von 8 GB |
 | Bootdisk | 13 GB von 49 GB (28 %) |
 
