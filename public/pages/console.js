@@ -23,6 +23,9 @@ export default {
       .console-page .status-text { font-size: 13px; color: var(--muted); }
       .console-page .status-detail { font-size: 12px; color: var(--muted); margin-left: auto; }
       .console-page .btn-restart { width: auto; padding: 6px 14px; font-size: 12px; }
+      @media (max-width: 480px) {
+        .console-page .term-card { height: 420px; }
+      }
     `;
     ctx.injectStyleOnce('console', css);
 

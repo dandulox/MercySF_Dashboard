@@ -61,15 +61,17 @@ export default {
           <span>👥 Accounts</span>
           <span id="accounts-running" class="muted"></span>
         </div>
-        <table class="accounts-table">
-          <thead>
-            <tr>
-              <th>ACCOUNT</th><th>SERVER</th><th>LEVEL</th><th>SILBER</th><th>PILZE</th>
-              <th>EHRE</th><th>RANG</th><th>ARENA HEUTE</th><th>DUNGEON HEUTE</th>
-            </tr>
-          </thead>
-          <tbody id="accounts-table-body"></tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="accounts-table">
+            <thead>
+              <tr>
+                <th>ACCOUNT</th><th>SERVER</th><th>LEVEL</th><th>SILBER</th><th>PILZE</th>
+                <th>EHRE</th><th>RANG</th><th>ARENA HEUTE</th><th>DUNGEON HEUTE</th>
+              </tr>
+            </thead>
+            <tbody id="accounts-table-body"></tbody>
+          </table>
+        </div>
         <div class="accounts-pagination">
           <div class="pagination-pagesize">
             <label for="accounts-pagesize">Pro Seite</label>
@@ -293,16 +295,18 @@ export default {
 
         el.innerHTML = `
           <div class="daily-earnings-title">📅 Erträge</div>
-          <table class="daily-earnings-table">
-            <thead>
-              <tr><th></th><th>Heute</th><th>Gestern</th><th>Diese Woche</th><th>Letzte Woche</th></tr>
-            </thead>
-            <tbody>
-              ${tableRow('expGained', 'EP')}
-              ${tableRow('silverGained', 'Silber')}
-              ${tableRow('honorGained', 'Ehre')}
-            </tbody>
-          </table>
+          <div class="table-scroll">
+            <table class="daily-earnings-table">
+              <thead>
+                <tr><th></th><th>Heute</th><th>Gestern</th><th>Diese Woche</th><th>Letzte Woche</th></tr>
+              </thead>
+              <tbody>
+                ${tableRow('expGained', 'EP')}
+                ${tableRow('silverGained', 'Silber')}
+                ${tableRow('honorGained', 'Ehre')}
+              </tbody>
+            </table>
+          </div>
           <div class="daily-levelups">Level-Ups heute: <strong>${today.levelsGained}</strong></div>
         `;
       } catch (err) {

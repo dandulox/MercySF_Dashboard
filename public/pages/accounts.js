@@ -128,6 +128,12 @@ export default {
       .accounts-page .login-group-body { border: 1px solid var(--border); border-top: none; border-radius: 0 0 10px 10px; padding: 10px; }
       .accounts-page .login-group-body .profile-card:last-child { margin-bottom: 0; }
       .accounts-page .login-group-status { font-size: 11px; color: var(--muted); width: 100%; margin-top: 4px; }
+      @media (max-width: 480px) {
+        .accounts-page .profile-term { height: 320px; }
+        .accounts-page .field input { min-width: 0; width: 100%; }
+        .accounts-page .add-form { flex-direction: column; align-items: stretch; }
+        .accounts-page .add-btn { width: 100%; }
+      }
     `;
     ctx.injectStyleOnce('accounts', css);
 

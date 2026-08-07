@@ -373,6 +373,31 @@ function initAccessMenu() {
   });
 }
 
+function initMobileNav() {
+  const sidebar = document.getElementById('sidebar');
+  const backdrop = document.getElementById('sidebar-backdrop');
+  const toggleBtn = document.getElementById('sidebar-toggle-btn');
+  if (!sidebar || !backdrop || !toggleBtn) return;
+
+  function open() {
+    sidebar.classList.add('open');
+    backdrop.classList.add('visible');
+  }
+  function close() {
+    sidebar.classList.remove('open');
+    backdrop.classList.remove('visible');
+  }
+  toggleBtn.addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    sidebar.classList.contains('open') ? close() : open();
+  });
+  backdrop.addEventListener('click', close);
+  sidebar.addEventListener('click', (ev) => {
+    if (ev.target.closest('.nav-item') || ev.target.closest('.account-item')) close();
+  });
+  window.addEventListener('hashchange', close);
+}
+
 window.addEventListener('hashchange', renderRoute);
 
 document.getElementById('refresh-btn')?.addEventListener('click', () => {
@@ -435,6 +460,7 @@ wireForceCheckButton('dashboard-force-check-btn', '/api/dashboard-update/check',
 initAnonMode();
 initNotifications();
 initAccessMenu();
+initMobileNav();
 renderNav();
 loadStatus();
 loadCliUpdateStatus();

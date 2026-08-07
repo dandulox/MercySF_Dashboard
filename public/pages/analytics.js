@@ -86,7 +86,7 @@ export default {
       const el = wrap.querySelector('#actions-body');
       const windows = await ctx.fetchJSON(`/api/stats/${encodeURIComponent(accountId)}/actions?limit=30`);
       if (!windows.length) { el.textContent = 'Noch keine Kämpfe erkannt.'; return; }
-      el.innerHTML = `<table class="actions-table">
+      el.innerHTML = `<div class="table-scroll"><table class="actions-table">
         <thead><tr><th>Zeit</th><th>Typ</th><th>EP</th><th>Silber</th><th>Ehre</th><th>Befehle im Fenster</th></tr></thead>
         <tbody>${windows.map(w => `
           <tr>
@@ -97,7 +97,7 @@ export default {
             <td class="${w.honorDelta >= 0 ? 'positive' : 'negative'}">${w.honorDelta >= 0 ? '+' : ''}${w.honorDelta}</td>
             <td>${w.commands.join(', ')}</td>
           </tr>`).join('')}</tbody>
-      </table>`;
+      </table></div>`;
     }
 
     async function load() {

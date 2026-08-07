@@ -59,22 +59,52 @@ function redact(text, terms) {
  * @param {string[]} [opts.redactTerms] - Begriffe, die im Anonym-Modus durch Blöcke ersetzt werden
  * @returns {{ dispose(): void, restart(): void, write(data: string): void }}
  */
+const TERM_FONT_SIZE = 13;
+
+// Kein Fit-Addon im Vendor-Bundle — grobe Zeichenmetrik-Näherung reicht, um das Terminal an die
+// tatsächliche Kartengröße anzupassen (wichtig auf Mobile, wo die Karte deutlich schmaler ist als
+// die früher fest angenommenen 80 Spalten).
+function computeFitSize(container) {
+  const charWidth = TERM_FONT_SIZE * 0.6;
+  const charHeight = TERM_FONT_SIZE * 1.2;
+  const cols = Math.max(20, Math.floor(container.clientWidth / charWidth) - 1);
+  const rows = Math.max(8, Math.floor(container.clientHeight / charHeight) - 1);
+  return { cols, rows };
+}
+
 export function connectTerminal({ container, profileId, onStatus, onPrompt, redactTerms }) {
   let ws = null;
   let term = null;
   let disposed = false;
   let promptBuffer = '';
   let lastPromptKind = null;
+  let resizeObserver = null;
+
+  function applyFit() {
+    if (!term || !container.clientWidth || !container.clientHeight) return;
+    const { cols, rows } = computeFitSize(container);
+    if (cols !== term.cols || rows !== term.rows) {
+      term.resize(cols, rows);
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'resize', cols, rows }));
+      }
+    }
+  }
 
   ensureXterm().then(() => {
     if (disposed) return;
     container.textContent = '';
     term = new window.Terminal({
       theme: { background: '#0b0c10', foreground: '#e7e9ee' },
-      fontSize: 13,
+      fontSize: TERM_FONT_SIZE,
       cursorBlink: true,
     });
     term.open(container);
+
+    if (window.ResizeObserver) {
+      resizeObserver = new ResizeObserver(() => applyFit());
+      resizeObserver.observe(container);
+    }
 
     const proto = location.protocol === 'https:' ? 'wss' : 'ws';
     const query = profileId ? `?profile=${encodeURIComponent(profileId)}` : '';
@@ -108,7 +138,9 @@ export function connectTerminal({ container, profileId, onStatus, onPrompt, reda
       lastPromptKind = null;
     });
     ws.onopen = () => {
-      ws.send(JSON.stringify({ type: 'resize', cols: term.cols, rows: term.rows }));
+      const { cols, rows } = computeFitSize(container);
+      term.resize(cols, rows);
+      ws.send(JSON.stringify({ type: 'resize', cols, rows }));
     };
     ws.onclose = () => { if (onStatus) onStatus({ running: null, lastExitInfo: null }); };
   });
@@ -116,6 +148,7 @@ export function connectTerminal({ container, profileId, onStatus, onPrompt, reda
   return {
     dispose() {
       disposed = true;
+      if (resizeObserver) resizeObserver.disconnect();
       if (ws) ws.close();
       if (term) term.dispose();
     },
