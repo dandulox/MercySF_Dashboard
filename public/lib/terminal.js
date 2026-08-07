@@ -85,7 +85,10 @@ export function connectTerminal({ container, profileId, onStatus, onPrompt, reda
       if (msg.type === 'data') {
         term.write(redact(msg.data, redactTerms));
         if (onPrompt) {
-          promptBuffer = (promptBuffer + msg.data.replace(ANSI_RE, '')).slice(-2000);
+          // Größeres Fenster (war 2000) — bei Logins mit vielen Charakteren fiel sonst die
+          // erste Zeile der Auswahlliste ("[0] ...") aus dem Puffer, bevor der Prompt vollständig
+          // erkannt wurde. Gleicher Fix wie server-seitig in ptyManager.js.
+          promptBuffer = (promptBuffer + msg.data.replace(ANSI_RE, '')).slice(-8000);
           const prompt = detectPrompt(promptBuffer);
           const kind = prompt ? prompt.kind : null;
           if (kind && kind !== lastPromptKind) {
