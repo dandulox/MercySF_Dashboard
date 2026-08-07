@@ -92,6 +92,19 @@
   .install-steps h4 { margin: 2px 0 6px; font-size: 15px; }
   .install-steps p { margin: 0 0 8px; color: var(--muted); font-size: 13.5px; }
 
+  .shot-group { margin-bottom: 36px; }
+  .shot-group:last-child { margin-bottom: 0; }
+  .shot-group h4 { margin: 0 0 14px; font-size: 12.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; text-align: center; }
+  .shot-grid-desktop { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+  .shot-grid-mobile { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; max-width: 560px; margin: 0 auto; justify-items: center; }
+  .shot-frame {
+    display: block; border-radius: 10px; overflow: hidden; border: 1px solid var(--border);
+    background: var(--panel); line-height: 0; transition: border-color .15s, transform .1s;
+  }
+  .shot-frame:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .shot-frame img { width: 100%; height: auto; display: block; }
+  .shot-caption { margin-top: 8px; font-size: 12px; color: var(--muted); text-align: center; }
+
   .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
   .feature-card {
     background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 20px;
@@ -176,9 +189,64 @@
   </div>
 </section>
 
+<section id="screenshots">
+  <div class="wrap">
+    <h2><span class="num">02</span>Screenshots</h2>
+    <p class="section-sub">Live aus einem laufenden Dashboard mit 30 Accounts — Anonym-Modus an, daher sind Charakternamen verpixelt.</p>
+
+    <div class="shot-group">
+      <h4>Desktop</h4>
+      <div class="shot-grid-desktop">
+        <div>
+          <a class="shot-frame" href="screenshots/desktop-overview.png" target="_blank" rel="noopener">
+            <img src="screenshots/desktop-overview.png" alt="Overview-Seite: Accounts-Tabelle, Charakter-Stats, Ausrüstung, Taverne, Gilde" loading="lazy" />
+          </a>
+          <div class="shot-caption">Overview</div>
+        </div>
+        <div>
+          <a class="shot-frame" href="screenshots/desktop-accounts.png" target="_blank" rel="noopener">
+            <img src="screenshots/desktop-accounts.png" alt="Account-Verwaltung: laufende Charaktere mit Session-Stats, letzten Aktionen und gescouteten Spielern" loading="lazy" />
+          </a>
+          <div class="shot-caption">Account-Verwaltung</div>
+        </div>
+        <div>
+          <a class="shot-frame" href="screenshots/desktop-analytics.png" target="_blank" rel="noopener">
+            <img src="screenshots/desktop-analytics.png" alt="Analysen-Seite mit Zeitreihen-Charts und täglichen Erträgen" loading="lazy" />
+          </a>
+          <div class="shot-caption">Analysen</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="shot-group">
+      <h4>Mobil</h4>
+      <div class="shot-grid-mobile">
+        <div>
+          <a class="shot-frame" href="screenshots/mobile-overview.png" target="_blank" rel="noopener">
+            <img src="screenshots/mobile-overview.png" alt="Overview-Seite in der mobilen Ansicht" loading="lazy" />
+          </a>
+          <div class="shot-caption">Overview</div>
+        </div>
+        <div>
+          <a class="shot-frame" href="screenshots/mobile-accounts.png" target="_blank" rel="noopener">
+            <img src="screenshots/mobile-accounts.png" alt="Account-Verwaltung in der mobilen Ansicht" loading="lazy" />
+          </a>
+          <div class="shot-caption">Account-Verwaltung</div>
+        </div>
+        <div>
+          <a class="shot-frame" href="screenshots/mobile-analytics.png" target="_blank" rel="noopener">
+            <img src="screenshots/mobile-analytics.png" alt="Analysen-Seite in der mobilen Ansicht" loading="lazy" />
+          </a>
+          <div class="shot-caption">Analysen</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section id="features">
   <div class="wrap">
-    <h2><span class="num">02</span>Funktionen</h2>
+    <h2><span class="num">03</span>Funktionen</h2>
     <p class="section-sub">Ein Überblick über alles, was das Dashboard mitbringt.</p>
     <div class="feature-grid">
       <div class="feature-card">
@@ -247,7 +315,7 @@
 
 <section id="installation">
   <div class="wrap">
-    <h2><span class="num">03</span>Installation</h2>
+    <h2><span class="num">04</span>Installation</h2>
     <p class="section-sub">Auf einem frischen Debian/Ubuntu-Server, als root.</p>
     <pre><code>curl -fsSL https://raw.githubusercontent.com/dandulox/MercySF_Dashboard/main/install.sh | bash</code></pre>
     <ul class="install-steps">
@@ -273,7 +341,7 @@
 
 <section id="limitations">
   <div class="wrap">
-    <h2><span class="num">04</span>Bekannte Einschränkungen</h2>
+    <h2><span class="num">05</span>Bekannte Einschränkungen</h2>
     <p class="section-sub">Die CLI bietet keine offizielle Fernsteuerungs-API — sie ist als reines Text-Menü für interaktive Terminal-Nutzung gebaut. Alle Login-/Bot-Automatisierung basiert auf Pattern-Matching des Terminal-Outputs. Ändert sich der Wortlaut eines CLI-Menüs, kann die Automatisierung brechen, bis der Code angepasst wird.</p>
     <ul class="limits-list">
       <li><span class="dot"></span><span class="text">Kein natives Pause-Kommando — "Pause" schaltet stattdessen alle aktiven <code>auto_*</code>-Konfig-Schalter aus.</span></li>
@@ -289,7 +357,7 @@
 
 <section id="ressourcen">
   <div class="wrap">
-    <h2><span class="num">05</span>Ressourcenverbrauch</h2>
+    <h2><span class="num">06</span>Ressourcenverbrauch</h2>
     <p class="section-sub">Zwei reale Testläufe mit unterschiedlicher Hardware und Account-Anzahl.</p>
     <div class="bench-grid">
       <div class="bench-card">
@@ -314,7 +382,7 @@
 
 <section id="stack">
   <div class="wrap">
-    <h2><span class="num">06</span>Tech-Stack</h2>
+    <h2><span class="num">07</span>Tech-Stack</h2>
     <p class="section-sub">Node.js + Express im Backend, Vanilla JS mit ES-Modulen im Frontend — bewusst ohne Build-Step. Die sf-api-Anbindung ist ein separater, zustandsloser Rust-Dienst, der nur auf <code>127.0.0.1</code> lauscht.</p>
     <div class="stack-pills">
       <span class="stack-pill">Node.js + Express</span>
@@ -331,7 +399,7 @@
 
 <section id="danksagung">
   <div class="wrap">
-    <h2><span class="num">07</span>Danksagung</h2>
+    <h2><span class="num">08</span>Danksagung</h2>
     <p class="section-sub">Dieses Dashboard existiert nur, weil andere die eigentliche Grundlagenarbeit geleistet haben.</p>
     <div class="thanks-grid">
       <div class="thanks-card">
