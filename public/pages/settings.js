@@ -246,6 +246,27 @@ export default {
       .settings-page .panel-settings-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
       .settings-page .panel-settings-row select { background: var(--panel-2); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 6px 10px; font-size: 13px; }
       .settings-page #panel-settings-status { font-size: 11.5px; color: var(--muted); }
+
+      .settings-page .templates-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; }
+      .settings-page .templates-card h3 { margin: 0 0 4px; font-size: 13px; }
+      .settings-page .templates-desc { font-size: 11.5px; color: var(--muted); margin-bottom: 10px; line-height: 1.4; }
+      .settings-page .templates-save-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+      .settings-page .templates-save-row input[type="text"] { flex: 1; min-width: 160px; width: auto; background: var(--panel-2); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 7px 10px; font-size: 13px; }
+      .settings-page #templates-status { font-size: 11.5px; color: var(--muted); margin-bottom: 8px; }
+      .settings-page .template-row { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
+      .settings-page .template-row:last-child { margin-bottom: 0; }
+      .settings-page .template-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; }
+      .settings-page .template-name { font-weight: 600; font-size: 13px; }
+      .settings-page .template-meta { font-size: 11px; margin-left: 8px; }
+      .settings-page .template-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+      .settings-page .template-actions button { width: auto; padding: 5px 12px; font-size: 11.5px; }
+      .settings-page .template-apply-panel { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+      .settings-page .template-apply-panel.open { display: block; }
+      .settings-page .template-target-list { display: flex; flex-direction: column; gap: 4px; max-height: 180px; overflow-y: auto; margin-bottom: 8px; }
+      .settings-page .template-target-list label { display: flex; align-items: center; gap: 8px; font-size: 12.5px; cursor: pointer; }
+      .settings-page .templates-empty { color: var(--muted); font-size: 12.5px; }
+      .settings-page .btn-secondary { background: var(--panel-2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; cursor: pointer; }
+      .settings-page .btn-danger { background: transparent; border: 1px solid var(--red); color: var(--red); border-radius: 8px; cursor: pointer; }
     `;
     ctx.injectStyleOnce('settings', css);
 
@@ -261,6 +282,16 @@ export default {
           <button class="btn btn-primary" id="gamestate-interval-save" style="width:auto;padding:7px 16px;">Übernehmen</button>
           <span id="panel-settings-status"></span>
         </div>
+      </div>
+      <div class="templates-card">
+        <h3>📋 Einstellungs-Vorlagen</h3>
+        <div class="templates-desc">Speichere die aktuellen Einstellungen eines Charakters als Vorlage und wende sie auf andere Charaktere an — legt deren Einstellungen dabei auch neu an, falls sie noch nie gestartet wurden.</div>
+        <div class="templates-save-row">
+          <input type="text" id="template-name-input" placeholder="Name der Vorlage (z. B. &quot;Arena-Fokus&quot;)" />
+          <button class="btn btn-primary" id="template-save-btn" style="width:auto;padding:7px 16px;">Aktuelle Einstellungen speichern</button>
+        </div>
+        <div id="templates-status"></div>
+        <div id="templates-list">Lade...</div>
       </div>
       <div id="settings-body"><div id="settings-groups">Lade...</div></div>`;
     container.appendChild(wrap);
@@ -295,23 +326,128 @@ export default {
 
     loadPanelSettings();
 
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    }
+
+    let allAccounts = [];
+    let hasCurrentSettings = false;
+
+    function fmtDate(iso) {
+      return new Date(iso).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    }
+
+    async function loadTemplates() {
+      const listEl = wrap.querySelector('#templates-list');
+      let list;
+      try {
+        [list, allAccounts] = await Promise.all([
+          ctx.fetchJSON('/api/settings-templates'),
+          ctx.fetchJSON('/api/accounts'),
+        ]);
+      } catch (err) {
+        listEl.textContent = 'Fehler: ' + err.message;
+        return;
+      }
+      if (!list.length) {
+        listEl.innerHTML = '<div class="templates-empty">Noch keine Vorlagen gespeichert.</div>';
+        return;
+      }
+      listEl.innerHTML = list.map(t => `
+        <div class="template-row" data-id="${t.id}">
+          <div class="template-head">
+            <span><span class="template-name char-name">${escapeHtml(t.name)}</span><span class="muted template-meta">${t.fieldCount} Felder · ${fmtDate(t.createdAt)}</span></span>
+            <div class="template-actions">
+              <button class="btn-secondary" data-action="toggle-apply">Anwenden</button>
+              <button class="btn-danger" data-action="delete">Löschen</button>
+            </div>
+          </div>
+          <div class="template-apply-panel" data-role="apply-panel">
+            <div class="template-target-list">
+              ${allAccounts.map(acc => `
+                <label><input type="checkbox" value="${escapeHtml(acc.id)}" /> <span class="char-name">${escapeHtml(acc.charName)}</span> <span class="muted">(${escapeHtml(acc.server)})</span></label>
+              `).join('') || '<span class="muted">Keine Accounts vorhanden.</span>'}
+            </div>
+            <button class="btn btn-primary" data-action="confirm-apply" style="width:auto;padding:6px 14px;font-size:12px;">Auf ausgewählte anwenden</button>
+            <span data-role="apply-status" class="muted" style="margin-left:8px;font-size:11.5px;"></span>
+          </div>
+        </div>`).join('');
+
+      listEl.querySelectorAll('.template-row').forEach(row => {
+        const id = row.dataset.id;
+        row.querySelector('[data-action="toggle-apply"]').addEventListener('click', () => {
+          row.querySelector('[data-role="apply-panel"]').classList.toggle('open');
+        });
+        row.querySelector('[data-action="delete"]').addEventListener('click', async () => {
+          if (!confirm('Diese Vorlage wirklich löschen?')) return;
+          try {
+            await ctx.fetchJSON(`/api/settings-templates/${encodeURIComponent(id)}`, { method: 'DELETE' });
+            await loadTemplates();
+          } catch (err) {
+            alert('Löschen fehlgeschlagen: ' + err.message);
+          }
+        });
+        row.querySelector('[data-action="confirm-apply"]').addEventListener('click', async () => {
+          const statusEl = row.querySelector('[data-role="apply-status"]');
+          const accountIds = [...row.querySelectorAll('.template-target-list input:checked')].map(cb => cb.value);
+          if (!accountIds.length) { statusEl.textContent = 'Bitte mindestens einen Charakter wählen.'; return; }
+          statusEl.textContent = 'Wende an...';
+          try {
+            await ctx.fetchJSON(`/api/settings-templates/${encodeURIComponent(id)}/apply`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ accountIds }),
+            });
+            statusEl.textContent = `Auf ${accountIds.length} Charakter(e) angewendet.`;
+            if (accountIds.includes(ctx.getAccountId())) load();
+          } catch (err) {
+            statusEl.textContent = 'Fehler: ' + err.message;
+          }
+        });
+      });
+    }
+
+    wrap.querySelector('#template-save-btn').addEventListener('click', async () => {
+      const status = wrap.querySelector('#templates-status');
+      const nameInput = wrap.querySelector('#template-name-input');
+      const accountId = ctx.getAccountId();
+      const name = nameInput.value.trim();
+      if (!name) { status.textContent = 'Bitte einen Namen für die Vorlage angeben.'; return; }
+      if (!accountId || !hasCurrentSettings) { status.textContent = 'Kein Account mit geladenen Einstellungen ausgewählt.'; return; }
+      status.textContent = 'Speichere...';
+      try {
+        await ctx.fetchJSON('/api/settings-templates', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, accountId }),
+        });
+        status.textContent = `Vorlage "${name}" gespeichert.`;
+        nameInput.value = '';
+        await loadTemplates();
+      } catch (err) {
+        status.textContent = 'Fehler: ' + err.message;
+      }
+    });
+
+    loadTemplates();
+
     let pending = {};
 
     async function load() {
       const accountId = ctx.getAccountId();
       const body = wrap.querySelector('#settings-body');
       pending = {};
+      hasCurrentSettings = false;
       if (!accountId) { body.textContent = 'Kein Account ausgewählt.'; return; }
       try {
         const settings = await ctx.fetchJSON(`/api/settings/${encodeURIComponent(accountId)}`);
+        hasCurrentSettings = true;
         render(body, settings);
       } catch (err) {
-        body.textContent = 'Fehler: ' + err.message;
+        body.innerHTML = /Keine Einstellungen/i.test(err.message)
+          ? `<p class="muted">Für diesen Account gibt es noch keine gespeicherten Einstellungen — er wurde vermutlich noch nie gestartet. Wende oben eine Vorlage darauf an, um ihn direkt einsatzbereit zu machen.</p>`
+          : `<p class="muted">Fehler: ${escapeHtml(err.message)}</p>`;
       }
-    }
-
-    function escapeHtml(s) {
-      return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     }
 
     function renderField(key, value) {
