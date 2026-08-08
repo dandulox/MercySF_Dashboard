@@ -1,0 +1,15 @@
+[Unit]
+Description=Mercy SF Node-Agent
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/mercy/dashboard/node-agent
+ExecStart=/usr/bin/node /opt/mercy/dashboard/node-agent/server.js
+Restart=on-failure
+RestartSec=3
+User=root
+Environment=PORT=8090
+
+[Install]
+WantedBy=multi-user.target

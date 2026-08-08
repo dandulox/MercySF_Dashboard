@@ -5,8 +5,15 @@ const { findDataDir, findProfileByAccountId } = require('../lib/data');
 const settingsDefaults = require('../lib/settingsDefaults');
 const credentialStore = require('../lib/credentialStore');
 const cli = require('../lib/cliExec');
+const nodeRegistry = require('../lib/nodeRegistry');
+const nodeClient = require('../lib/nodeClient');
 
 const router = express.Router();
+
+function remoteNodeFor(profile) {
+  if (!profile || !profile.nodeId) return null;
+  return nodeRegistry.get(profile.nodeId);
+}
 
 function readFile(accountId) {
   const dataDir = findDataDir();
@@ -27,6 +34,17 @@ function readFile(accountId) {
 // nicht nicht-interaktiv aufrufen, also bleibt es bei direktem Datei-Zugriff wie bisher.
 router.get('/:accountId', async (req, res) => {
   const profile = findProfileByAccountId(req.params.accountId);
+  const node = remoteNodeFor(profile);
+  if (node) {
+    try {
+      const result = await nodeClient.call(node, `/profiles/${encodeURIComponent(profile.id)}/settings`, { timeoutMs: 15000 });
+      settingsDefaults.learnFrom(result.config);
+      return res.json(result.config);
+    } catch (err) {
+      return res.status(502).json({ error: err.message });
+    }
+  }
+
   const password = profile && credentialStore.getPassword(profile.username);
 
   if (profile && password) {
@@ -51,6 +69,17 @@ router.get('/:accountId', async (req, res) => {
 router.put('/:accountId', express.json(), async (req, res) => {
   const updates = req.body || {};
   const profile = findProfileByAccountId(req.params.accountId);
+  const node = remoteNodeFor(profile);
+  if (node) {
+    try {
+      const merged = await nodeClient.call(node, `/profiles/${encodeURIComponent(profile.id)}/settings`, { method: 'PUT', body: updates, timeoutMs: 15000 });
+      settingsDefaults.learnFrom(merged);
+      return res.json(merged);
+    } catch (err) {
+      return res.status(err.status || 502).json({ error: err.message });
+    }
+  }
+
   const password = profile && credentialStore.getPassword(profile.username);
 
   if (profile && password) {

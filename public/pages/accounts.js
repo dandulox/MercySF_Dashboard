@@ -64,6 +64,15 @@ export default {
         transition: border-color .15s, box-shadow .15s;
       }
       .accounts-page .field input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,140,255,0.18); }
+      .accounts-page .field select {
+        background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: var(--text);
+        border-radius: 10px; padding: 9px 12px; font-size: 13px; min-width: 160px;
+      }
+      .accounts-page .node-select {
+        background: var(--panel-2); border: 1px solid var(--border); color: var(--text);
+        border-radius: 8px; padding: 5px 8px; font-size: 12px;
+      }
+      .accounts-page .node-badge { display: inline-block; font-size: 10.5px; color: var(--accent); border: 1px solid var(--accent); border-radius: 6px; padding: 1px 6px; margin-left: 6px; }
       .accounts-page .password-wrap { position: relative; }
       .accounts-page .password-wrap input { padding-right: 38px; }
       .accounts-page .password-toggle {
@@ -159,6 +168,10 @@ export default {
             <label for="acc-password">Passwort</label>
             <input type="password" id="acc-password" placeholder="Passwort" autocomplete="off" />
           </div>
+          <div class="field">
+            <label for="acc-node">Node</label>
+            <select id="acc-node"><option value="">Lokal (dieser Server)</option></select>
+          </div>
           <button class="add-btn" id="acc-add-btn">Account hinzufügen</button>
         </div>
         <div class="add-hint">Wir loggen einmal automatisiert ein, um alle Charaktere dieses Logins zu finden, und legen für jeden ein fertiges Profil an. Das Passwort wird verschlüsselt gespeichert (AES-256), damit künftige Starts vollautomatisch ablaufen — nie im Klartext, nie im Browser.</div>
@@ -187,6 +200,25 @@ export default {
       fieldWrap.appendChild(btn);
     })();
 
+    let nodesById = new Map();
+
+    async function loadNodeOptions() {
+      let nodes = [];
+      try { nodes = await ctx.fetchJSON('/api/nodes'); } catch (e) { /* Nodes-Feature evtl. nicht verfügbar, still lokal weiterlaufen */ }
+      nodesById = new Map(nodes.map(n => [n.id, n]));
+      const select = wrap.querySelector('#acc-node');
+      const current = select.value;
+      select.innerHTML = '<option value="">Lokal (dieser Server)</option>' +
+        nodes.map(n => `<option value="${n.id}">${escapeHtml(n.name)}</option>`).join('');
+      select.value = current;
+      return nodes;
+    }
+
+    function nodeOptionsHtml(selectedId) {
+      return '<option value="">Lokal (dieser Server)</option>' +
+        [...nodesById.values()].map(n => `<option value="${n.id}" ${n.id === selectedId ? 'selected' : ''}>${escapeHtml(n.name)}</option>`).join('');
+    }
+
     const openTerminals = new Map(); // profileId -> { handle }
 
     function closeTerminal(id) {
@@ -195,10 +227,11 @@ export default {
     }
 
     function metaLine(p) {
+      const nodeBadge = p.nodeId ? `<span class="node-badge">🖧 ${escapeHtml(nodesById.get(p.nodeId)?.name || '?')}</span>` : '';
       if (p.server && p.characterName) {
-        return `${escapeHtml(p.username)} · ${escapeHtml(p.characterName)} @ ${escapeHtml(p.server)}`;
+        return `${escapeHtml(p.username)} · ${escapeHtml(p.characterName)} @ ${escapeHtml(p.server)}${nodeBadge}`;
       }
-      return `${escapeHtml(p.username)} · noch nicht eingeloggt`;
+      return `${escapeHtml(p.username)} · noch nicht eingeloggt${nodeBadge}`;
     }
 
     function statusInfo(botState, currentActivity) {
@@ -212,6 +245,7 @@ export default {
 
     async function loadProfiles() {
       const list = wrap.querySelector('#profiles-list');
+      await loadNodeOptions();
       let profiles;
       try {
         profiles = await ctx.fetchJSON('/api/profiles');
@@ -285,6 +319,7 @@ export default {
               <button class="btn-secondary" data-action="resume" ${paused ? '' : 'disabled'}>Fortsetzen</button>
               <button class="btn-secondary" data-action="claim" ${hasCharacter && p.hasPassword ? '' : 'disabled'} title="Kalender, Tagesaufgaben und ausstehende Freischaltungen abholen">Einlösen</button>
               <button class="btn-secondary" data-action="toggle-term">Konsole</button>
+              <select class="node-select" data-action="move-node" title="Auf einen anderen Node verschieben">${nodeOptionsHtml(p.nodeId)}</select>
               <button class="btn-danger" data-action="delete">Löschen</button>
             </div>
           </div>
@@ -381,6 +416,27 @@ export default {
             }
           });
         }
+
+        card.querySelector('[data-action="move-node"]').addEventListener('change', async (ev) => {
+          const nodeId = ev.target.value || null;
+          const targetName = nodeId ? (nodesById.get(nodeId)?.name || nodeId) : 'lokal (diesen Server)';
+          if (!confirm(`Account "${profile.nickname}" auf ${targetName} verschieben? Läuft er gerade, wird er dabei gestoppt und muss dort neu gestartet werden.`)) {
+            ev.target.value = profile.nodeId || '';
+            return;
+          }
+          closeTerminal(id);
+          try {
+            await ctx.fetchJSON(`/api/profiles/${encodeURIComponent(id)}/node`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ nodeId }),
+            });
+            await loadProfiles();
+          } catch (err) {
+            alert('Verschieben fehlgeschlagen: ' + err.message);
+            ev.target.value = profile.nodeId || '';
+          }
+        });
 
         card.querySelector('[data-action="delete"]').addEventListener('click', async () => {
           if (!confirm(`Account-Profil "${profile.nickname}" wirklich löschen? Läuft die CLI gerade, wird sie gestoppt. Deine Spieldaten (Statistiken, Kampfhistorie) bleiben erhalten, verschwinden aber aus der Übersicht.`)) return;
@@ -548,6 +604,7 @@ export default {
     wrap.querySelector('#acc-add-btn').addEventListener('click', async () => {
       const username = wrap.querySelector('#acc-username').value.trim();
       const password = wrap.querySelector('#acc-password').value;
+      const nodeId = wrap.querySelector('#acc-node').value || undefined;
       const status = wrap.querySelector('#acc-add-status');
       if (!username || !password) {
         status.textContent = 'Bitte Username und Passwort angeben.';
@@ -558,7 +615,7 @@ export default {
         const result = await ctx.fetchJSON('/api/profiles', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password }),
+          body: JSON.stringify({ username, password, nodeId }),
         });
         wrap.querySelector('#acc-username').value = '';
         wrap.querySelector('#acc-password').value = '';

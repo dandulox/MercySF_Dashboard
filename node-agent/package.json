@@ -1,0 +1,14 @@
+{
+  "name": "mercy-node-agent",
+  "version": "0.1.0",
+  "private": true,
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "node-pty": "^1.1.0",
+    "ws": "^8.21.2"
+  }
+}
