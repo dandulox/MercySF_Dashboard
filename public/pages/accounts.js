@@ -244,27 +244,6 @@ export default {
       }
     }
 
-    // Klasse wird einmalig automatisch ermittelt (sf-api-bridge-Login), nacheinander statt
-    // parallel, um nicht mehrere echte Spiele-Logins gleichzeitig auszulösen. Best-effort:
-    // Fehler (z. B. Bridge gerade offline) werden ignoriert, die Karte zeigt dann weiterhin
-    // keine Klasse an, der manuelle "🔄 Klasse"-Button bleibt als Fallback.
-    let backfillRunning = false;
-    async function backfillMissingClasses(profiles) {
-      if (backfillRunning) return;
-      const targets = profiles.filter(p => p.server && p.characterName && p.hasPassword && !p.characterClass);
-      if (!targets.length) return;
-      backfillRunning = true;
-      let any = false;
-      for (const p of targets) {
-        try {
-          await ctx.fetchJSON(`/api/gamestate/${encodeURIComponent(p.id)}`);
-          any = true;
-        } catch (err) { /* still-offline bridge or login failure — retry next page visit */ }
-      }
-      backfillRunning = false;
-      if (any) await loadProfiles();
-    }
-
     async function loadProfiles() {
       const list = wrap.querySelector('#profiles-list');
       await loadNodeOptions();
@@ -453,7 +432,7 @@ export default {
               detectClassBtn.textContent = original;
               alert('Klassenerkennung fehlgeschlagen: ' + err.message);
             } finally {
-              detectClassBtn.disabled = !(hasCharacter && p.hasPassword);
+              detectClassBtn.disabled = !(profile.server && profile.characterName && profile.hasPassword);
             }
           });
         }
@@ -640,8 +619,6 @@ export default {
           await loadProfiles();
         });
       });
-
-      backfillMissingClasses(profiles);
     }
 
     wrap.querySelector('#acc-add-btn').addEventListener('click', async () => {

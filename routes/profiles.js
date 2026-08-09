@@ -10,6 +10,7 @@ const logBuffer = require('../lib/logBuffer');
 const cli = require('../lib/cliExec');
 const nodeRegistry = require('../lib/nodeRegistry');
 const nodeClient = require('../lib/nodeClient');
+const { detectAndStoreCharacterClass } = require('../lib/characterClassDetector');
 
 const router = express.Router();
 
@@ -136,6 +137,11 @@ router.post('/', express.json(), async (req, res) => {
         }
       }
       created.push(profile);
+      // Nicht blockierend — die Spielklasse ändert sich nie mehr, ein einmaliger Best-effort-
+      // Versuch direkt beim Anlegen reicht (siehe lib/characterClassDetector.js). Wartet nicht auf
+      // die Antwort, damit das Anlegen mehrerer Charaktere nicht durch N sequenzielle
+      // Bridge-Logins verzögert wird.
+      detectAndStoreCharacterClass(profile, password).catch(() => {});
     } catch (err) {
       skipped.push({ characterName: c.name, reason: err.message });
     }

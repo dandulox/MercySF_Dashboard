@@ -3,6 +3,7 @@ const registry = require('../lib/accountsRegistry');
 const ptyManager = require('../lib/ptyManager');
 const credentialStore = require('../lib/credentialStore');
 const discoveryLogin = require('../lib/discoveryLogin');
+const { detectAndStoreCharacterClass } = require('../lib/characterClassDetector');
 
 const router = express.Router();
 
@@ -39,6 +40,7 @@ router.post('/:username/refresh', async (req, res) => {
         nickname: c.name,
       });
       created.push(profile);
+      detectAndStoreCharacterClass(profile, password).catch(() => {});
     } catch (err) {
       // Schon vorhanden — kein Fehler, einfach überspringen.
     }
