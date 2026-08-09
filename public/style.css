@@ -292,6 +292,12 @@ body {
   font-size: 15px;
 }
 .icon-btn:hover { background: var(--panel-hover); }
+.lang-toggle-btn {
+  width: auto;
+  padding: 0 8px;
+  font-weight: 700;
+  font-size: 11px;
+}
 
 .page-title { font-size: 18px; margin: 0 0 12px; }
 
