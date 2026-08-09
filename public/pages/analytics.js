@@ -9,20 +9,24 @@ function ensureChartJs() {
   });
 }
 
+function themeVar(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
 export default {
   id: 'analytics',
   label: 'Analysen',
   icon: '📈',
   mount(container, ctx) {
     const css = `
-      .analytics-page #analytics-body { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-      .analytics-page .chart-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px; min-width: 0; }
+      .analytics-page #analytics-body { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .analytics-page .chart-card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px; min-width: 0; }
       .analytics-page .chart-card h3 { margin: 0 0 8px; font-size: 13px; }
       .analytics-page canvas { max-height: 200px; }
       @media (max-width: 900px) {
         .analytics-page #analytics-body { grid-template-columns: 1fr; }
       }
-      .analytics-page .earnings-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-top: 16px; }
+      .analytics-page .earnings-card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px; margin-top: 10px; }
       .analytics-page .earnings-card h3 { margin: 0 0 8px; font-size: 13px; }
       .analytics-page .earnings-chart canvas { max-height: 220px; }
       .analytics-page .actions-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
@@ -57,6 +61,20 @@ export default {
       if (earningsChart) { earningsChart.destroy(); earningsChart = null; }
     }
 
+    function applyChartTheme() {
+      const muted = themeVar('--muted');
+      const border = themeVar('--border');
+      [...charts, earningsChart].filter(Boolean).forEach(chart => {
+        if (chart.options.plugins?.legend?.labels) chart.options.plugins.legend.labels.color = muted;
+        for (const scale of Object.values(chart.options.scales || {})) {
+          if (scale.ticks) scale.ticks.color = muted;
+          if (scale.grid) scale.grid.color = border;
+        }
+        chart.update();
+      });
+    }
+    window.addEventListener('mercy-theme-change', applyChartTheme);
+
     async function loadEarnings(accountId) {
       const daily = await ctx.fetchJSON(`/api/stats/${encodeURIComponent(accountId)}/daily?days=14`);
       if (earningsChart) { earningsChart.destroy(); earningsChart = null; }
@@ -73,10 +91,10 @@ export default {
         },
         options: {
           responsive: true,
-          plugins: { legend: { labels: { color: '#8a8f9c' } } },
+          plugins: { legend: { labels: { color: themeVar('--muted') } } },
           scales: {
-            x: { ticks: { color: '#8a8f9c' }, grid: { color: '#262a35' } },
-            y: { ticks: { color: '#8a8f9c' }, grid: { color: '#262a35' } },
+            x: { ticks: { color: themeVar('--muted') }, grid: { color: themeVar('--border') } },
+            y: { ticks: { color: themeVar('--muted') }, grid: { color: themeVar('--border') } },
           },
         },
       });
@@ -126,14 +144,14 @@ export default {
             type: 'line',
             data: {
               labels: points.map(p => new Date(p.t).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })),
-              datasets: [{ label: labelMap[field] || field, data: points.map(p => toValue(p.v)), borderColor: '#4f8cff', backgroundColor: 'rgba(79,140,255,0.15)', tension: 0.2, pointRadius: 0 }],
+              datasets: [{ label: labelMap[field] || field, data: points.map(p => toValue(p.v)), borderColor: themeVar('--accent'), backgroundColor: 'rgba(79,140,255,0.15)', tension: 0.2, pointRadius: 0 }],
             },
             options: {
               responsive: true,
               plugins: { legend: { display: false } },
               scales: {
-                x: { ticks: { color: '#8a8f9c' }, grid: { color: '#262a35' } },
-                y: { ticks: { color: '#8a8f9c' }, grid: { color: '#262a35' } },
+                x: { ticks: { color: themeVar('--muted') }, grid: { color: themeVar('--border') } },
+                y: { ticks: { color: themeVar('--muted') }, grid: { color: themeVar('--border') } },
               },
             },
           });
@@ -148,6 +166,6 @@ export default {
 
     load();
     const unsub = ctx.onAccountChange(load);
-    return () => { unsub(); destroyCharts(); };
+    return () => { unsub(); destroyCharts(); window.removeEventListener('mercy-theme-change', applyChartTheme); };
   }
 };

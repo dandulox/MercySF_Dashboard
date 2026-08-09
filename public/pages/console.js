@@ -13,7 +13,7 @@ export default {
   icon: '⌨',
   mount(container, ctx) {
     const css = `
-      .console-page .term-card { background: #0b0c10; border: 1px solid var(--border); border-radius: 12px; padding: 10px; height: 560px; }
+      .console-page .term-card { background: var(--surface-sunken); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 10px; height: 560px; }
       .console-page #term-container { width: 100%; height: 100%; }
       .console-page .status-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-bottom: 10px; }
       .console-page .status-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }

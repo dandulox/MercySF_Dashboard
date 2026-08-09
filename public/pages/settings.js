@@ -225,7 +225,7 @@ export default {
   mount(container, ctx) {
     const css = `
       .settings-page #settings-groups { column-count: 2; column-gap: 14px; }
-      .settings-page .group { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; break-inside: avoid; display: inline-block; width: 100%; }
+      .settings-page .group { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 10px 12px; margin-bottom: 10px; break-inside: avoid; display: inline-block; width: 100%; }
       .settings-page .group h3 { margin: 0 0 6px; font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
       .settings-page .row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 10px; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 12.5px; }
       .settings-page .row:last-child { border-bottom: none; }
@@ -240,14 +240,14 @@ export default {
       @media (max-width: 900px) {
         .settings-page #settings-groups { column-count: 1; }
       }
-      .settings-page .panel-settings-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; }
+      .settings-page .panel-settings-card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px 14px; margin-bottom: 10px; }
       .settings-page .panel-settings-card h3 { margin: 0 0 4px; font-size: 13px; }
       .settings-page .panel-settings-desc { font-size: 11.5px; color: var(--muted); margin-bottom: 10px; line-height: 1.4; }
       .settings-page .panel-settings-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
       .settings-page .panel-settings-row select { background: var(--panel-2); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 6px 10px; font-size: 13px; }
       .settings-page #panel-settings-status { font-size: 11.5px; color: var(--muted); }
 
-      .settings-page .templates-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; }
+      .settings-page .templates-card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px 14px; margin-bottom: 10px; }
       .settings-page .templates-card h3 { margin: 0 0 4px; font-size: 13px; }
       .settings-page .templates-desc { font-size: 11.5px; color: var(--muted); margin-bottom: 10px; line-height: 1.4; }
       .settings-page .templates-save-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }

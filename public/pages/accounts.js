@@ -39,7 +39,7 @@ export default {
     const css = `
       .accounts-page .add-card {
         background: linear-gradient(180deg, var(--panel), var(--panel-2));
-        border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 20px;
+        border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 14px;
         position: relative; overflow: hidden;
       }
       .accounts-page .add-card::before {
@@ -59,14 +59,14 @@ export default {
       .accounts-page .field { display: flex; flex-direction: column; gap: 6px; }
       .accounts-page .field label { font-size: 10.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
       .accounts-page .field input {
-        background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: var(--text);
-        border-radius: 10px; padding: 9px 12px; font-size: 13px; min-width: 200px;
+        background: var(--input-bg); border: 1px solid var(--border); color: var(--text);
+        border-radius: var(--radius-lg); padding: 9px 12px; font-size: 13px; min-width: 200px;
         transition: border-color .15s, box-shadow .15s;
       }
       .accounts-page .field input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,140,255,0.18); }
       .accounts-page .field select {
-        background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: var(--text);
-        border-radius: 10px; padding: 9px 12px; font-size: 13px; min-width: 160px;
+        background: var(--input-bg); border: 1px solid var(--border); color: var(--text);
+        border-radius: var(--radius-lg); padding: 9px 12px; font-size: 13px; min-width: 160px;
       }
       .accounts-page .node-select {
         background: var(--panel-2); border: 1px solid var(--border); color: var(--text);
@@ -87,8 +87,8 @@ export default {
       }
       .accounts-page .add-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(79,140,255,0.38); }
       .accounts-page .add-hint { font-size: 11px; color: var(--muted); margin-top: 8px; position: relative; }
-      .accounts-page .profile-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
-      .accounts-page .profile-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; flex-wrap: wrap; }
+      .accounts-page .profile-card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-lg); margin-bottom: 10px; overflow: hidden; }
+      .accounts-page .profile-head { display: flex; align-items: center; gap: 12px; padding: 12px 14px; flex-wrap: wrap; }
       .accounts-page .profile-info { flex: 1; min-width: 160px; }
       .accounts-page .profile-nickname-row { display: flex; align-items: center; gap: 6px; }
       .accounts-page .profile-nickname { font-weight: 600; font-size: 14px; }
@@ -107,7 +107,7 @@ export default {
       .accounts-page .status-dot.connecting { background: var(--yellow); }
       .accounts-page .status-dot.offline { background: var(--muted); }
       .accounts-page .status-text { font-size: 11px; color: var(--muted); white-space: nowrap; }
-      .accounts-page .profile-term { display: none; border-top: 1px solid var(--border); padding: 10px; background: #0b0c10; height: 420px; }
+      .accounts-page .profile-term { display: none; border-top: 1px solid var(--border); padding: 10px; background: var(--surface-sunken); height: 420px; }
       .accounts-page .profile-term.open { display: block; }
       .accounts-page .profile-details { display: flex; gap: 18px; flex-wrap: wrap; padding: 0 16px 14px; font-size: 11.5px; }
       .accounts-page .detail-block { min-width: 160px; flex: 1; }
@@ -127,7 +127,7 @@ export default {
       .accounts-page .login-helper input[type="password"], .accounts-page .login-helper input[type="text"] { flex: 1; background: var(--panel); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 7px 10px; font-size: 13px; }
       .accounts-page .char-btn { display: block; width: 100%; text-align: left; background: var(--panel); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 9px 12px; cursor: pointer; margin-bottom: 6px; font-size: 13px; }
       .accounts-page .char-btn:last-child { margin-bottom: 0; }
-      .accounts-page .char-btn:hover { background: #23262f; border-color: var(--accent); }
+      .accounts-page .char-btn:hover { background: var(--panel-hover); border-color: var(--accent); }
       .accounts-page .char-btn .char-url { color: var(--muted); font-size: 11px; margin-left: 6px; }
       .accounts-page .login-group { margin-bottom: 20px; }
       .accounts-page .login-group-header { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px 10px 0 0; flex-wrap: wrap; }

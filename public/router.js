@@ -333,6 +333,23 @@ function initAnonMode() {
   });
 }
 
+function initThemeToggle() {
+  const btn = document.getElementById('theme-toggle-btn');
+  if (!btn) return;
+  const apply = (t) => {
+    document.documentElement.setAttribute('data-theme', t);
+    btn.textContent = t === 'light' ? '🌙' : '☀';
+    btn.title = t === 'light' ? 'Dunkelmodus aktivieren' : 'Hellmodus aktivieren';
+  };
+  apply(document.documentElement.getAttribute('data-theme') || 'dark');
+  btn.addEventListener('click', () => {
+    const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    localStorage.setItem('mercy-theme', next);
+    apply(next);
+    window.dispatchEvent(new CustomEvent('mercy-theme-change', { detail: { theme: next } }));
+  });
+}
+
 function initAccessMenu() {
   const btn = document.getElementById('access-btn');
   const panel = document.getElementById('access-panel');
@@ -459,6 +476,7 @@ wireForceCheckButton('cli-force-check-btn', '/api/cli-update/check', loadCliUpda
 wireForceCheckButton('dashboard-force-check-btn', '/api/dashboard-update/check', loadDashboardUpdateStatus);
 
 initAnonMode();
+initThemeToggle();
 initNotifications();
 initAccessMenu();
 initMobileNav();

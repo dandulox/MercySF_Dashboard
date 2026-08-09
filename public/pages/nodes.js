@@ -18,7 +18,7 @@ export default {
     const css = `
       .nodes-page .add-card {
         background: linear-gradient(180deg, var(--panel), var(--panel-2));
-        border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 20px;
+        border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 14px;
       }
       .nodes-page .add-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
       .nodes-page .add-icon {
@@ -32,8 +32,8 @@ export default {
       .nodes-page .field { display: flex; flex-direction: column; gap: 6px; }
       .nodes-page .field label { font-size: 10.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
       .nodes-page .field input {
-        background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: var(--text);
-        border-radius: 10px; padding: 9px 12px; font-size: 13px; min-width: 160px;
+        background: var(--input-bg); border: 1px solid var(--border); color: var(--text);
+        border-radius: var(--radius-lg); padding: 9px 12px; font-size: 13px; min-width: 160px;
       }
       .nodes-page .field input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,140,255,0.18); }
       .nodes-page .field.code input { min-width: 120px; text-transform: uppercase; letter-spacing: 0.08em; }
@@ -42,7 +42,7 @@ export default {
         background: linear-gradient(135deg, var(--accent), #7a5cff); color: #fff; cursor: pointer;
       }
       .nodes-page .add-hint { font-size: 11px; color: var(--muted); margin-top: 8px; }
-      .nodes-page .node-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; }
+      .nodes-page .node-card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px 14px; margin-bottom: 10px; }
       .nodes-page .node-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
       .nodes-page .node-info { flex: 1; min-width: 200px; }
       .nodes-page .node-name-row { display: flex; align-items: center; gap: 8px; }

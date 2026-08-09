@@ -142,7 +142,7 @@ export default {
     container.appendChild(wrap);
 
     ctx.injectStyleOnce('overview-gamestate', `
-      .gamestate-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+      .gamestate-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
       .gamestate-grid .span-2 { grid-column: 1 / -1; }
       .gamestate-grid .stat-grid { grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); margin-bottom: 0; }
       @media (max-width: 900px) {
@@ -166,8 +166,8 @@ export default {
       .alu-bar-track { background: var(--panel-2); border: 1px solid var(--border); border-radius: 6px; height: 10px; overflow: hidden; }
       .alu-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent, #4f8cff), #7a5cff); border-radius: 6px; transition: width .3s; }
 
-      .equip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
-      .equip-slot { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px; min-width: 0; overflow-wrap: break-word; }
+      .equip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+      .equip-slot { background: var(--panel-2); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 8px 10px; min-width: 0; overflow-wrap: break-word; }
       .equip-slot-name { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
       .equip-slot-type { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
       .equip-slot-attrs { font-size: 12px; color: var(--text); line-height: 1.5; }
