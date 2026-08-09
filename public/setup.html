@@ -166,26 +166,27 @@
     <div class="auth-header">
       <div class="auth-icon">⚔</div>
       <div>
-        <h1 class="auth-title">Zugang einrichten</h1>
-        <p class="auth-subtitle">Noch kein Zugang vorhanden — lege jetzt den einzigen Admin-Zugang für dieses Dashboard an.</p>
+        <h1 class="auth-title" data-i18n="setup.title">Zugang einrichten</h1>
+        <p class="auth-subtitle" data-i18n="setup.subtitle">Noch kein Zugang vorhanden — lege jetzt den einzigen Admin-Zugang für dieses Dashboard an.</p>
       </div>
     </div>
     <form id="setup-form">
       <div class="field">
-        <label for="username">Benutzername</label>
+        <label for="username" data-i18n="setup.username">Benutzername</label>
         <input type="text" id="username" required autocomplete="username" />
       </div>
       <div class="field">
-        <label for="password">Passwort</label>
+        <label for="password" data-i18n="setup.password">Passwort</label>
         <input type="password" id="password" required minlength="8" autocomplete="new-password" />
       </div>
       <div class="field">
-        <label for="password2">Passwort wiederholen</label>
+        <label for="password2" data-i18n="setup.passwordRepeat">Passwort wiederholen</label>
         <input type="password" id="password2" required minlength="8" autocomplete="new-password" />
       </div>
       <div id="setup-error" class="error-text" hidden></div>
-      <button type="submit" class="btn-primary-lg">Zugang anlegen</button>
+      <button type="submit" class="btn-primary-lg" data-i18n="setup.submit">Zugang anlegen</button>
     </form>
+    <button type="button" class="icon-btn lang-toggle-btn" id="lang-toggle-btn" style="position:absolute;top:14px;right:14px;">DE</button>
   </div>
   <script type="module" src="/setup.js"></script>
 </body>

@@ -1,3 +1,5 @@
+import { t, initI18nLocal, setLanguageLocal, getLanguage, onLanguageChange } from '/lib/i18n.js';
+
 async function fetchJSON(url, opts) {
   const res = await fetch(url, opts);
   if (!res.ok) {
@@ -24,7 +26,7 @@ function addPasswordToggles(root = document) {
     btn.type = 'button';
     btn.className = 'password-toggle';
     btn.textContent = '👁';
-    btn.setAttribute('aria-label', 'Passwort anzeigen');
+    btn.setAttribute('aria-label', t('common.showPassword'));
     btn.addEventListener('click', () => {
       const show = input.type === 'password';
       input.type = show ? 'text' : 'password';
@@ -42,20 +44,33 @@ function initCopyButtons(root = document) {
       try {
         await navigator.clipboard.writeText(targetEl.textContent);
         const original = btn.textContent;
-        btn.textContent = 'Kopiert ✓';
+        btn.textContent = t('common.copied');
         btn.classList.add('copied');
         setTimeout(() => {
           btn.textContent = original;
           btn.classList.remove('copied');
         }, 1800);
       } catch (e) {
-        btn.textContent = 'Fehler';
+        btn.textContent = t('common.copyError');
       }
     });
   });
 }
 
+function initLangToggle() {
+  const btn = document.getElementById('lang-toggle-btn');
+  if (!btn) return;
+  const apply = (lang) => { btn.textContent = lang === 'de' ? 'EN' : 'DE'; };
+  apply(getLanguage());
+  onLanguageChange(apply);
+  btn.addEventListener('click', () => {
+    setLanguageLocal(getLanguage() === 'de' ? 'en' : 'de');
+  });
+}
+
 async function init() {
+  initI18nLocal();
+  initLangToggle();
   const status = await fetchJSON('/api/auth/status');
   if (status.hasAccess) {
     location.href = '/login.html';
@@ -74,7 +89,7 @@ async function onSubmit(ev) {
   errorEl.hidden = true;
 
   if (password !== password2) {
-    errorEl.textContent = 'Passwörter stimmen nicht überein.';
+    errorEl.textContent = t('common.passwordMismatch');
     errorEl.hidden = false;
     return;
   }
@@ -102,23 +117,23 @@ function showSecrets(aesKey, recoveryPhrase) {
     <div class="auth-header">
       <div class="auth-icon">🔑</div>
       <div>
-        <h1 class="auth-title">Zugang angelegt</h1>
-        <p class="auth-subtitle">Speichere beide Schlüssel jetzt an einem sicheren Ort. Sie werden nach dem Verlassen dieser Seite nicht mehr angezeigt.</p>
+        <h1 class="auth-title">${t('setup.doneTitle')}</h1>
+        <p class="auth-subtitle">${t('setup.doneSubtitle')}</p>
       </div>
     </div>
 
     <div class="secret-block">
       <div class="secret-block-header">
-        <h3>AES-Schlüssel (Bot-Zugangsdaten)</h3>
-        <button type="button" class="copy-btn" data-copy-target="aes-key">Kopieren</button>
+        <h3>${t('setup.aesKeyTitle')}</h3>
+        <button type="button" class="copy-btn" data-copy-target="aes-key">${t('common.copyBtn')}</button>
       </div>
       <div class="secret-value" id="aes-key">${escapeHtml(aesKey)}</div>
     </div>
 
     <div class="secret-block">
       <div class="secret-block-header">
-        <h3>12-Wort-Wiederherstellungsschlüssel</h3>
-        <button type="button" class="copy-btn" data-copy-target="recovery-phrase-plain">Kopieren</button>
+        <h3>${t('setup.recoveryTitle')}</h3>
+        <button type="button" class="copy-btn" data-copy-target="recovery-phrase-plain">${t('common.copyBtn')}</button>
       </div>
       <div class="word-grid">${wordGridHtml}</div>
       <div id="recovery-phrase-plain" style="display:none;">${escapeHtml(recoveryPhrase.join(' '))}</div>
@@ -126,16 +141,16 @@ function showSecrets(aesKey, recoveryPhrase) {
 
     <div class="warning-banner no-print">
       <span class="icon">⚠️</span>
-      <span>Beide Schlüssel lassen sich danach nirgends erneut anzeigen. Der Recovery-Schlüssel setzt bei Verlust dein Passwort zurück — bewahre ihn wie ein echtes Passwort auf.</span>
+      <span>${t('setup.warning')}</span>
     </div>
 
-    <button type="button" class="btn-secondary no-print" id="print-btn">🖨 Drucken</button>
+    <button type="button" class="btn-secondary no-print" id="print-btn">${t('setup.printBtn')}</button>
 
     <div class="confirm-row no-print">
       <input type="checkbox" id="confirm-saved" />
-      <label for="confirm-saved">Ich habe beide Schlüssel sicher gespeichert.</label>
+      <label for="confirm-saved">${t('setup.confirmSaved')}</label>
     </div>
-    <button type="button" class="btn-primary-lg no-print" id="continue-btn" disabled style="margin-top:14px;">Weiter zum Dashboard</button>
+    <button type="button" class="btn-primary-lg no-print" id="continue-btn" disabled style="margin-top:14px;">${t('setup.continueToDashboard')}</button>
   `;
 
   document.getElementById('print-btn').addEventListener('click', () => window.print());
