@@ -1,10 +1,13 @@
 import { connectTerminal } from '/lib/terminal.js';
+import { t } from '/lib/i18n.js';
 
 function fmtExitInfo(info) {
   if (!info) return '';
   const time = new Date(info.at).toLocaleTimeString('de-DE');
-  if (info.reason === 'spawn_failed') return `Start fehlgeschlagen (${time}): ${info.message}`;
-  return `Beendet (${time}), exitCode=${info.exitCode}${info.signal ? ', signal=' + info.signal : ''}`;
+  if (info.reason === 'spawn_failed') return t('console.spawnFailed', { time, message: info.message });
+  return info.signal
+    ? t('console.exitedWithSignal', { time, exitCode: info.exitCode, signal: info.signal })
+    : t('console.exited', { time, exitCode: info.exitCode });
 }
 
 export default {
@@ -32,15 +35,15 @@ export default {
     const wrap = document.createElement('div');
     wrap.className = 'console-page';
     wrap.innerHTML = `
-      <h1 class="page-title">Konsole</h1>
-      <p class="muted" style="margin: -6px 0 12px; font-size: 12px;">Globale Standard-Konsole. Für einzelne Accounts siehe <a href="#/accounts">Account-Verwaltung</a>.</p>
+      <h1 class="page-title">${t('console.title')}</h1>
+      <p class="muted" style="margin: -6px 0 12px; font-size: 12px;">${t('console.intro')}</p>
       <div class="status-bar">
         <span class="status-dot connecting" id="status-dot"></span>
-        <span class="status-text" id="status-text">Verbinde...</span>
+        <span class="status-text" id="status-text">${t('console.connecting')}</span>
         <span class="status-detail" id="status-detail"></span>
-        <button class="btn btn-primary btn-restart" id="restart-btn">CLI neu starten</button>
+        <button class="btn btn-primary btn-restart" id="restart-btn">${t('console.restartBtn')}</button>
       </div>
-      <div class="term-card"><div id="term-container">Lade Terminal...</div></div>
+      <div class="term-card"><div id="term-container">${t('console.loadingTerminal')}</div></div>
     `;
     container.appendChild(wrap);
 
@@ -54,18 +57,18 @@ export default {
     const termHandle = connectTerminal({
       container: wrap.querySelector('#term-container'),
       onStatus: (status) => {
-        if (status.running === true) setStatus('connected', 'Verbunden — CLI läuft');
-        else if (status.running === false) setStatus('disconnected', 'CLI läuft nicht', fmtExitInfo(status.lastExitInfo));
-        else setStatus('disconnected', 'Nicht verbunden (WebSocket getrennt)');
+        if (status.running === true) setStatus('connected', t('console.connected'));
+        else if (status.running === false) setStatus('disconnected', t('console.notRunning'), fmtExitInfo(status.lastExitInfo));
+        else setStatus('disconnected', t('console.disconnected'));
       },
     });
 
     wrap.querySelector('#restart-btn').addEventListener('click', async () => {
-      setStatus('connecting', 'Starte CLI neu...');
+      setStatus('connecting', t('console.restarting'));
       try {
         await ctx.fetchJSON('/api/console/restart', { method: 'POST' });
       } catch (err) {
-        setStatus('disconnected', 'Neustart fehlgeschlagen: ' + err.message);
+        setStatus('disconnected', t('console.restartFailed', { message: err.message }));
       }
     });
 
