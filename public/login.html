@@ -160,40 +160,41 @@
     <div class="auth-header">
       <div class="auth-icon">⚔</div>
       <div>
-        <h1 class="auth-title">Anmelden</h1>
-        <p class="auth-subtitle">Mercy SF Web-Dashboard</p>
+        <h1 class="auth-title" data-i18n="login.title">Anmelden</h1>
+        <p class="auth-subtitle" data-i18n="login.subtitle">Mercy SF Web-Dashboard</p>
       </div>
     </div>
     <form id="login-form">
       <div class="field">
-        <label for="username">Benutzername</label>
+        <label for="username" data-i18n="login.username">Benutzername</label>
         <input type="text" id="username" required autocomplete="username" />
       </div>
       <div class="field">
-        <label for="password">Passwort</label>
+        <label for="password" data-i18n="login.password">Passwort</label>
         <input type="password" id="password" required autocomplete="current-password" />
       </div>
       <div id="login-error" class="error-text" hidden></div>
-      <button type="submit" class="btn-primary-lg">Anmelden</button>
+      <button type="submit" class="btn-primary-lg" data-i18n="login.submit">Anmelden</button>
     </form>
-    <button type="button" class="link-btn" id="forgot-btn">Zugangsdaten vergessen?</button>
+    <button type="button" class="link-btn" id="forgot-btn" data-i18n="login.forgot">Zugangsdaten vergessen?</button>
 
     <form id="reset-form" hidden>
-      <div class="divider">WIEDERHERSTELLUNG</div>
-      <p class="muted">Gib deinen 12-Wort-Wiederherstellungsschlüssel ein.</p>
+      <div class="divider" data-i18n="login.resetDivider">WIEDERHERSTELLUNG</div>
+      <p class="muted" data-i18n="login.resetIntro">Gib deinen 12-Wort-Wiederherstellungsschlüssel ein.</p>
       <div class="word-grid" id="word-grid"></div>
       <div class="field" style="margin-top:16px;">
-        <label for="new-password">Neues Passwort</label>
+        <label for="new-password" data-i18n="login.newPassword">Neues Passwort</label>
         <input type="password" id="new-password" required minlength="8" autocomplete="new-password" />
       </div>
       <div class="field">
-        <label for="new-password2">Neues Passwort wiederholen</label>
+        <label for="new-password2" data-i18n="login.newPasswordRepeat">Neues Passwort wiederholen</label>
         <input type="password" id="new-password2" required minlength="8" autocomplete="new-password" />
       </div>
       <div id="reset-error" class="error-text" hidden></div>
-      <button type="submit" class="btn-primary-lg">Passwort zurücksetzen</button>
-      <button type="button" class="link-btn" id="back-to-login-btn">Zurück zum Login</button>
+      <button type="submit" class="btn-primary-lg" data-i18n="login.resetSubmit">Passwort zurücksetzen</button>
+      <button type="button" class="link-btn" id="back-to-login-btn" data-i18n="login.backToLogin">Zurück zum Login</button>
     </form>
+    <button type="button" class="icon-btn lang-toggle-btn" id="lang-toggle-btn" style="position:absolute;top:14px;right:14px;">DE</button>
   </div>
   <script type="module" src="/login.js"></script>
 </body>

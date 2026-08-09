@@ -1,3 +1,5 @@
+import { t, initI18nLocal, setLanguageLocal, getLanguage, onLanguageChange } from '/lib/i18n.js';
+
 async function fetchJSON(url, opts) {
   const res = await fetch(url, opts);
   if (!res.ok) {
@@ -24,7 +26,7 @@ function addPasswordToggles(root = document) {
     btn.type = 'button';
     btn.className = 'password-toggle';
     btn.textContent = '👁';
-    btn.setAttribute('aria-label', 'Passwort anzeigen');
+    btn.setAttribute('aria-label', t('common.showPassword'));
     btn.addEventListener('click', () => {
       const show = input.type === 'password';
       input.type = show ? 'text' : 'password';
@@ -42,20 +44,33 @@ function initCopyButtons(root = document) {
       try {
         await navigator.clipboard.writeText(targetEl.textContent);
         const original = btn.textContent;
-        btn.textContent = 'Kopiert ✓';
+        btn.textContent = t('common.copied');
         btn.classList.add('copied');
         setTimeout(() => {
           btn.textContent = original;
           btn.classList.remove('copied');
         }, 1800);
       } catch (e) {
-        btn.textContent = 'Fehler';
+        btn.textContent = t('common.copyError');
       }
     });
   });
 }
 
+function initLangToggle() {
+  const btn = document.getElementById('lang-toggle-btn');
+  if (!btn) return;
+  const apply = (lang) => { btn.textContent = lang === 'de' ? 'EN' : 'DE'; };
+  apply(getLanguage());
+  onLanguageChange(apply);
+  btn.addEventListener('click', () => {
+    setLanguageLocal(getLanguage() === 'de' ? 'en' : 'de');
+  });
+}
+
 async function init() {
+  initI18nLocal();
+  initLangToggle();
   const status = await fetchJSON('/api/auth/status');
   if (!status.hasAccess) {
     location.href = '/setup.html';
@@ -111,6 +126,17 @@ async function onLogin(ev) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password }),
     });
+    // Carry a pre-auth language choice into the authenticated app if the server has none yet.
+    try {
+      const settings = await fetchJSON('/api/panel-settings');
+      if (!settings.language) {
+        await fetchJSON('/api/panel-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ language: getLanguage() }),
+        });
+      }
+    } catch (e) { /* non-fatal — sync attempt only */ }
     location.href = '/';
   } catch (err) {
     errorEl.textContent = err.message;
@@ -128,12 +154,12 @@ async function onReset(ev) {
   errorEl.hidden = true;
 
   if (recoveryPhrase.some(w => !w)) {
-    errorEl.textContent = 'Bitte alle 12 Wörter ausfüllen.';
+    errorEl.textContent = t('login.fillAllWords');
     errorEl.hidden = false;
     return;
   }
   if (newPassword !== newPassword2) {
-    errorEl.textContent = 'Passwörter stimmen nicht überein.';
+    errorEl.textContent = t('common.passwordMismatch');
     errorEl.hidden = false;
     return;
   }
@@ -161,15 +187,15 @@ function showNewRecoveryPhrase(recoveryPhrase) {
     <div class="auth-header">
       <div class="auth-icon">🔑</div>
       <div>
-        <h1 class="auth-title">Passwort zurückgesetzt</h1>
-        <p class="auth-subtitle">Dein alter Wiederherstellungsschlüssel ist jetzt ungültig.</p>
+        <h1 class="auth-title">${t('login.resetDoneTitle')}</h1>
+        <p class="auth-subtitle">${t('login.resetDoneSubtitle')}</p>
       </div>
     </div>
 
     <div class="secret-block">
       <div class="secret-block-header">
-        <h3>Neuer 12-Wort-Wiederherstellungsschlüssel</h3>
-        <button type="button" class="copy-btn" data-copy-target="recovery-phrase-plain">Kopieren</button>
+        <h3>${t('login.newRecoveryTitle')}</h3>
+        <button type="button" class="copy-btn" data-copy-target="recovery-phrase-plain">${t('common.copyBtn')}</button>
       </div>
       <div class="word-grid" style="grid-template-columns:repeat(3,1fr);">${wordGridHtml}</div>
       <div id="recovery-phrase-plain" style="display:none;">${escapeHtml(recoveryPhrase.join(' '))}</div>
@@ -177,14 +203,14 @@ function showNewRecoveryPhrase(recoveryPhrase) {
 
     <div class="warning-banner">
       <span class="icon">⚠️</span>
-      <span>Speichere den neuen Schlüssel jetzt an einem sicheren Ort — er wird nur dieses eine Mal angezeigt.</span>
+      <span>${t('login.saveWarning')}</span>
     </div>
 
     <div class="confirm-row">
       <input type="checkbox" id="confirm-saved" />
-      <label for="confirm-saved">Ich habe den neuen Schlüssel sicher gespeichert.</label>
+      <label for="confirm-saved">${t('login.confirmSavedNew')}</label>
     </div>
-    <button type="button" class="btn-primary-lg" id="continue-btn" disabled style="margin-top:14px;">Weiter zum Login</button>
+    <button type="button" class="btn-primary-lg" id="continue-btn" disabled style="margin-top:14px;">${t('login.continueToLogin')}</button>
   `;
 
   document.getElementById('confirm-saved').addEventListener('change', (ev) => {
