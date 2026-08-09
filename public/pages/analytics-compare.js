@@ -1,10 +1,12 @@
+import { t } from '/lib/i18n.js';
+
 function ensureChartJs() {
   if (window.Chart) return Promise.resolve();
   return new Promise((resolve, reject) => {
     const script = document.createElement('script');
     script.src = '/vendor/chart.js';
     script.onload = () => resolve();
-    script.onerror = () => reject(new Error('Chart.js konnte nicht geladen werden'));
+    script.onerror = () => reject(new Error(t('analytics.chartLoadError')));
     document.head.appendChild(script);
   });
 }
@@ -13,9 +15,25 @@ function themeVar(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
 
-const FIELD_LABELS = { level: 'Level', silver: 'Gold', honor: 'Ehre', rank: 'Rang', mushrooms: 'Pilze', armor: 'Rüstung', experience: 'Erfahrung' };
-const FIELD_KEYS = Object.keys(FIELD_LABELS);
-const RANGE_LABELS = { '24h': '24 Std', '7d': '7 Tage', '30d': '30 Tage' };
+function fieldLabels() {
+  return {
+    level: t('analytics.fieldLevel'),
+    silver: t('analytics.fieldSilver'),
+    honor: t('analytics.fieldHonor'),
+    rank: t('analytics.fieldRank'),
+    mushrooms: t('analytics.fieldMushrooms'),
+    armor: t('analytics.fieldArmor'),
+    experience: t('analytics.fieldExperience'),
+  };
+}
+function rangeLabels() {
+  return {
+    '24h': t('analyticsCompare.range24h'),
+    '7d': t('analyticsCompare.range7d'),
+    '30d': t('analyticsCompare.range30d'),
+  };
+}
+const FIELD_KEYS = ['level', 'silver', 'honor', 'rank', 'mushrooms', 'armor', 'experience'];
 
 // Deterministische Farbpalette statt Zufallsfarben, damit Serien beim Neuladen/Ändern stabil
 // erkennbar bleiben (Chart.js hat keine eingebaute Kategorie-Palette für Liniendiagramme).
@@ -50,21 +68,21 @@ export default {
     const wrap = document.createElement('div');
     wrap.className = 'analytics-compare-page';
     wrap.innerHTML = `
-      <h1 class="page-title">Account-Analyse</h1>
+      <h1 class="page-title">${t('analyticsCompare.title')}</h1>
       <div class="filter-card">
         <div class="filter-row">
-          <label>Zeitraum</label>
+          <label>${t('analyticsCompare.rangeLabel')}</label>
           <select id="range-select">
-            ${Object.entries(RANGE_LABELS).map(([v, l]) => `<option value="${v}">${l}</option>`).join('')}
+            ${Object.entries(rangeLabels()).map(([v, l]) => `<option value="${v}">${l}</option>`).join('')}
           </select>
-          <label style="margin-left:16px;"><input type="checkbox" id="normalize-toggle"> Werte als Index anzeigen (Start = 100)</label>
+          <label style="margin-left:16px;"><input type="checkbox" id="normalize-toggle"> ${t('analyticsCompare.normalizeLabel')}</label>
         </div>
         <div class="series-list" id="series-list"></div>
-        <button class="add-series-btn" id="add-series-btn">+ Serie hinzufügen</button>
+        <button class="add-series-btn" id="add-series-btn">${t('analyticsCompare.addSeriesBtn')}</button>
       </div>
       <div class="chart-card">
         <canvas id="compare-chart"></canvas>
-        <div class="empty-hint" id="compare-empty" hidden>Füge mindestens eine Serie hinzu, um ein Chart zu sehen.</div>
+        <div class="empty-hint" id="compare-empty" hidden>${t('analyticsCompare.emptyHint')}</div>
       </div>
     `;
     container.appendChild(wrap);
@@ -100,7 +118,8 @@ export default {
     }
 
     function fieldOptionsHtml(selected) {
-      return FIELD_KEYS.map(f => `<option value="${f}" ${f === selected ? 'selected' : ''}>${FIELD_LABELS[f]}</option>`).join('');
+      const labels = fieldLabels();
+      return FIELD_KEYS.map(f => `<option value="${f}" ${f === selected ? 'selected' : ''}>${labels[f]}</option>`).join('');
     }
 
     function renderSeriesList() {
@@ -109,12 +128,12 @@ export default {
         <div class="series-row" data-uid="${s.uid}">
           <span class="series-swatch" style="background:${SERIES_COLORS[idx % SERIES_COLORS.length]}"></span>
           <select data-role="type">
-            <option value="account" ${s.type === 'account' ? 'selected' : ''}>Charakter</option>
-            <option value="class" ${s.type === 'class' ? 'selected' : ''}>Klasse</option>
+            <option value="account" ${s.type === 'account' ? 'selected' : ''}>${t('analyticsCompare.typeAccount')}</option>
+            <option value="class" ${s.type === 'class' ? 'selected' : ''}>${t('analyticsCompare.typeClass')}</option>
           </select>
           <select data-role="target">${targetOptionsHtml(s.type, s.targetId)}</select>
           <select data-role="field">${fieldOptionsHtml(s.field)}</select>
-          <button class="series-remove" data-role="remove" title="Serie entfernen">✕</button>
+          <button class="series-remove" data-role="remove" title="${t('analyticsCompare.removeSeriesTitle')}">✕</button>
         </div>
       `).join('');
 
@@ -170,7 +189,7 @@ export default {
       const canvas = wrap.querySelector('#compare-chart');
       if (!lastResponse || !lastResponse.series.length) {
         destroyChart();
-        emptyHint.textContent = 'Füge mindestens eine Serie hinzu, um ein Chart zu sehen.';
+        emptyHint.textContent = t('analyticsCompare.emptyHint');
         emptyHint.hidden = false;
         canvas.hidden = true;
         return;
@@ -191,7 +210,7 @@ export default {
         const targetLabel = s.type === 'class' ? `${s.targetLabel} (Σ)` : s.targetLabel;
         const color = SERIES_COLORS[idx % SERIES_COLORS.length];
         return {
-          label: `${targetLabel} – ${FIELD_LABELS[s.field]}`,
+          label: `${targetLabel} – ${fieldLabels()[s.field]}`,
           data: normalize ? normalizeValues(s.values) : s.values,
           borderColor: color,
           backgroundColor: color + '26',
@@ -244,7 +263,7 @@ export default {
       } catch (err) {
         destroyChart();
         const emptyHint = wrap.querySelector('#compare-empty');
-        emptyHint.textContent = 'Fehler: ' + err.message;
+        emptyHint.textContent = t('analytics.loadError', { message: err.message });
         emptyHint.hidden = false;
         wrap.querySelector('#compare-chart').hidden = true;
       }

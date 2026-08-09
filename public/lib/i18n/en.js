@@ -121,6 +121,18 @@ export default {
   'analytics.fieldExperience': 'Experience',
   'analytics.loadError': 'Error: {{message}}',
 
+  'analyticsCompare.title': 'Account Analysis',
+  'analyticsCompare.rangeLabel': 'Time range',
+  'analyticsCompare.range24h': '24h',
+  'analyticsCompare.range7d': '7 days',
+  'analyticsCompare.range30d': '30 days',
+  'analyticsCompare.normalizeLabel': 'Show values as index (start = 100)',
+  'analyticsCompare.addSeriesBtn': '+ Add series',
+  'analyticsCompare.emptyHint': 'Add at least one series to see a chart.',
+  'analyticsCompare.typeAccount': 'Character',
+  'analyticsCompare.typeClass': 'Class',
+  'analyticsCompare.removeSeriesTitle': 'Remove series',
+
   'console.title': 'Console',
   'console.intro': 'Global default console. For individual accounts, see <a href="#/accounts">Account Management</a>.',
   'console.connecting': 'Connecting...',

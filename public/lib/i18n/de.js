@@ -129,6 +129,19 @@ export default {
   'analytics.fieldExperience': 'Erfahrung',
   'analytics.loadError': 'Fehler: {{message}}',
 
+  // analytics-compare.js (public/pages/analytics-compare.js)
+  'analyticsCompare.title': 'Account-Analyse',
+  'analyticsCompare.rangeLabel': 'Zeitraum',
+  'analyticsCompare.range24h': '24 Std',
+  'analyticsCompare.range7d': '7 Tage',
+  'analyticsCompare.range30d': '30 Tage',
+  'analyticsCompare.normalizeLabel': 'Werte als Index anzeigen (Start = 100)',
+  'analyticsCompare.addSeriesBtn': '+ Serie hinzufügen',
+  'analyticsCompare.emptyHint': 'Füge mindestens eine Serie hinzu, um ein Chart zu sehen.',
+  'analyticsCompare.typeAccount': 'Charakter',
+  'analyticsCompare.typeClass': 'Klasse',
+  'analyticsCompare.removeSeriesTitle': 'Serie entfernen',
+
   // console.js (public/pages/console.js)
   'console.title': 'Konsole',
   'console.intro': 'Globale Standard-Konsole. Für einzelne Accounts siehe <a href="#/accounts">Account-Verwaltung</a>.',
