@@ -43,6 +43,7 @@ const ctx = { fetchJSON, getAccountId, onAccountChange, injectStyleOnce };
 const PAGES = [
   { id: 'overview', label: 'Overview', icon: '▦' },
   { id: 'accounts', label: 'Account-Verwaltung', icon: '🗂' },
+  { id: 'nodes', label: 'Nodes', icon: '🖧' },
   { id: 'analytics', label: 'Analysen', icon: '📈' },
   { id: 'settings', label: 'Einstellungen', icon: '⚙' },
   { id: 'console', label: 'Konsole', icon: '⌨' },

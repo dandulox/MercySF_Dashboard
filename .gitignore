@@ -1,5 +1,7 @@
 node_modules/
 data/*
 !data/.gitkeep
+node-agent/data/*
+!node-agent/data/.gitkeep
 public/vendor/
 *.log
