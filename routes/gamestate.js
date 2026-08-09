@@ -41,6 +41,13 @@ router.get('/:profileId', async (req, res) => {
     return res.status(502).json({ error: data.error || 'sf-api-Bridge-Fehler' });
   }
 
+  // Die Spielklasse ändert sich nie — einmal erkannt, dauerhaft im Profil speichern, damit die
+  // Account-Analyse-Seite Charaktere nach Klasse gruppieren kann, ohne bei jedem Laden erneut
+  // die Bridge (und damit einen echten Spiele-Login) aufrufen zu müssen.
+  if (data.characterClass && profile.characterClass !== data.characterClass) {
+    registry.setCharacterClass(profile.id, data.characterClass);
+  }
+
   cache.set(profile.id, { data, expiresAt: Date.now() + cacheTtlMs });
   res.json(data);
 });
