@@ -11,9 +11,13 @@ const profileStore = require('./lib/profileStore');
 const credentialStore = require('./lib/credentialStore');
 const ptyManager = require('./lib/ptyManager');
 const cli = require('./lib/cliExec');
-const { findDataDir, accountIdFor } = require('./lib/dataDir');
+const { findDataDir, accountIdFor, latestSnapshot } = require('./lib/dataDir');
 const { requireToken, readBearer } = require('./lib/auth');
 const pairingLib = require('./lib/pairing');
+const cliUpdate = require('./lib/cliUpdate');
+const selfUpdate = require('./lib/selfUpdate');
+const statsDb = require('./lib/statsDb');
+require('./lib/statsCollector');
 
 const app = express();
 const PORT = process.env.PORT || process.env.NODE_AGENT_PORT || 8090;
@@ -61,8 +65,39 @@ app.post('/identity/rename', (req, res) => {
   res.json(identity.rename(name));
 });
 
+app.get('/cli/status', (req, res) => res.json(cliUpdate.state));
+app.post('/cli/check', async (req, res) => res.json(await cliUpdate.checkForUpdate()));
+app.post('/cli/apply', async (req, res) => {
+  if (cliUpdate.state.applying) return res.status(409).json({ error: 'Update läuft bereits' });
+  if (!cliUpdate.state.updateAvailable) return res.status(400).json({ error: 'Kein Update verfügbar' });
+  try {
+    const currentHash = await cliUpdate.applyUpdate();
+    res.json({ ok: true, currentHash });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/self-update/status', (req, res) => res.json(selfUpdate.state));
+app.post('/self-update/check', async (req, res) => res.json(await selfUpdate.checkForUpdate()));
+app.post('/self-update/apply', async (req, res) => {
+  if (selfUpdate.state.applying) return res.status(409).json({ error: 'Update läuft bereits' });
+  if (!selfUpdate.state.updateAvailable) return res.status(400).json({ error: 'Kein Update verfügbar' });
+  try {
+    await selfUpdate.applyUpdate();
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/profiles', (req, res) => {
-  res.json(profileStore.list().map(p => ({ ...p, status: ptyManager.getStatus(p.id) })));
+  const dataDir = findDataDir();
+  res.json(profileStore.list().map(p => ({
+    ...p,
+    status: ptyManager.getStatus(p.id),
+    snapshot: (dataDir && p.server && p.characterName) ? latestSnapshot(dataDir, accountIdFor(p.server, p.characterName)) : null,
+  })));
 });
 
 // Idempotentes Anlegen/Aktualisieren — das Dashboard ruft das bei jeder Zuweisung eines Accounts
@@ -258,6 +293,58 @@ app.get('/profiles/:id/history', async (req, res) => {
   } catch (err) {
     res.status(502).json({ error: err.message });
   }
+});
+
+const ANALYTICS_FIELDS = ['level', 'experience', 'silver', 'mushrooms', 'honor', 'rank', 'armor'];
+const ANALYTICS_BUCKET_MS = 5 * 60 * 1000;
+const ANALYTICS_MAX_BUCKETS = 288;
+
+// Gleiche Bucket-Logik wie routes/analytics.js im Dashboard — liest die rohen, von der lokal
+// laufenden CLI geschriebenen Snapshots direkt von der Platte, kein Zwischenspeicher nötig.
+app.get('/profiles/:id/analytics', (req, res) => {
+  const profile = profileStore.get(req.params.id);
+  if (!profile) return res.status(404).json({ error: 'Profil nicht gefunden' });
+  if (!profile.server || !profile.characterName) return res.status(400).json({ error: 'Noch kein Charakter für dieses Profil bekannt' });
+  const dataDir = findDataDir();
+  if (!dataDir) return res.status(404).json({ error: 'Kein Datenverzeichnis gefunden' });
+  const filePath = path.join(dataDir, 'analytics', `${accountIdFor(profile.server, profile.characterName)}.json`);
+  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Keine Analysedaten für diesen Account' });
+  let data;
+  try {
+    data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch (e) {
+    return res.status(500).json({ error: 'Analysedaten konnten nicht gelesen werden' });
+  }
+  const snapshots = data.snapshots || [];
+  const buckets = new Map();
+  for (const snap of snapshots) {
+    const ms = Date.parse(snap.timestamp);
+    if (Number.isNaN(ms)) continue;
+    const bucketKey = Math.floor(ms / ANALYTICS_BUCKET_MS) * ANALYTICS_BUCKET_MS;
+    buckets.set(bucketKey, snap);
+  }
+  const bucketKeys = [...buckets.keys()].sort((a, b) => a - b).slice(-ANALYTICS_MAX_BUCKETS);
+  const series = {};
+  for (const field of ANALYTICS_FIELDS) {
+    series[field] = bucketKeys.map(key => ({ t: new Date(key).toISOString(), v: buckets.get(key)[field] }));
+  }
+  res.json({ fields: ANALYTICS_FIELDS, series });
+});
+
+app.get('/profiles/:id/stats/daily', (req, res) => {
+  const profile = profileStore.get(req.params.id);
+  if (!profile) return res.status(404).json({ error: 'Profil nicht gefunden' });
+  if (!profile.server || !profile.characterName) return res.json([]);
+  const days = Math.min(parseInt(req.query.days, 10) || 14, 90);
+  res.json(statsDb.getDailyStats(accountIdFor(profile.server, profile.characterName), days));
+});
+
+app.get('/profiles/:id/stats/actions', (req, res) => {
+  const profile = profileStore.get(req.params.id);
+  if (!profile) return res.status(404).json({ error: 'Profil nicht gefunden' });
+  if (!profile.server || !profile.characterName) return res.json([]);
+  const limit = Math.min(parseInt(req.query.limit, 10) || 50, 200);
+  res.json(statsDb.getRecentActionWindows(accountIdFor(profile.server, profile.characterName), profile.characterName, limit));
 });
 
 app.use((err, req, res, next) => {

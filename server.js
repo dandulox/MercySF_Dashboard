@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 const http = require('http');
-const { findDataDir, listAccounts, latestSnapshot, recentLogLines, isProcessRunning } = require('./lib/data');
+const { findDataDir, listAccounts, listRemoteAccounts, latestSnapshot, recentLogLines, isProcessRunning, accountIdFor } = require('./lib/data');
 const logBuffer = require('./lib/logBuffer');
 const authStore = require('./lib/authStore');
 const sessionStore = require('./lib/sessionStore');
@@ -41,23 +41,28 @@ app.get('/api/status', (req, res) => {
   res.json({ dataDir, botRunning: isProcessRunning(), version: dashboardVersion });
 });
 
-app.get('/api/accounts', (req, res) => {
+app.get('/api/accounts', async (req, res) => {
   const dataDir = findDataDir();
-  if (!dataDir) return res.json([]);
-  const accounts = listAccounts(dataDir).map(acc => ({
+  const localAccounts = dataDir ? listAccounts(dataDir).map(acc => ({
     ...acc,
     stats: latestSnapshot(dataDir, acc.id),
     currentActivity: logBuffer.getLastActivity(acc.charName),
-  }));
-  res.json(accounts);
+  })) : [];
+  const remoteAccounts = await listRemoteAccounts();
+  res.json([...localAccounts, ...remoteAccounts]);
 });
 
 app.get('/api/account/:id/logs', (req, res) => {
   const dataDir = findDataDir();
-  if (!dataDir) return res.json([]);
-  const accounts = listAccounts(dataDir);
-  const acc = accounts.find(a => a.id === req.params.id);
-  if (!acc) return res.status(404).json([]);
+  const acc = dataDir ? listAccounts(dataDir).find(a => a.id === req.params.id) : null;
+  if (!acc) {
+    // Kein lokaler Treffer — entweder unbekannter Account (404) oder einer, der auf einem Node
+    // läuft: dessen PTY-Output läuft nicht durch den lokalen logBuffer, das Activity-Log bleibt
+    // für Node-Accounts vorerst leer statt einen Fehler zu werfen.
+    const profile = accountsRegistry.list().find(p => p.server && p.characterName && accountIdFor(p.server, p.characterName) === req.params.id);
+    if (profile && profile.nodeId) return res.json([]);
+    return res.status(404).json([]);
+  }
   const fileLines = recentLogLines(dataDir, acc.charName);
   // Diese Linux-Builds der CLI schreiben keine Log-Dateien auf die Platte — Fallback auf
   // den Live-Ringpuffer aus dem PTY-Output der eingebauten Konsole (routes/console.js).

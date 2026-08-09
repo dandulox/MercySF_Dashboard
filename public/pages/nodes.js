@@ -42,7 +42,8 @@ export default {
         background: linear-gradient(135deg, var(--accent), #7a5cff); color: #fff; cursor: pointer;
       }
       .nodes-page .add-hint { font-size: 11px; color: var(--muted); margin-top: 8px; }
-      .nodes-page .node-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+      .nodes-page .node-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; }
+      .nodes-page .node-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
       .nodes-page .node-info { flex: 1; min-width: 200px; }
       .nodes-page .node-name-row { display: flex; align-items: center; gap: 8px; }
       .nodes-page .node-name { font-weight: 600; font-size: 14px; }
@@ -51,6 +52,12 @@ export default {
       .nodes-page .node-meta { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
       .nodes-page .node-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
       .nodes-page .node-actions button { width: auto; padding: 6px 12px; font-size: 12px; }
+      .nodes-page .node-updates { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+      .nodes-page .update-row { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+      .nodes-page .update-row .update-label { color: var(--muted); }
+      .nodes-page .update-row button { width: auto; padding: 3px 10px; font-size: 11px; }
+      .nodes-page .icon-btn-tiny { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 12px; padding: 2px; }
+      .nodes-page .icon-btn-tiny:hover { color: var(--text); }
       .nodes-page .btn-danger { background: transparent; border: 1px solid var(--red); color: var(--red); border-radius: 8px; cursor: pointer; }
       .nodes-page .btn-secondary { background: var(--panel-2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; cursor: pointer; }
       .nodes-page .status-wrap { display: flex; align-items: center; gap: 6px; }
@@ -119,19 +126,35 @@ export default {
       }
       list.innerHTML = nodes.map(n => `
         <div class="node-card" data-id="${n.id}">
-          <div class="status-wrap">
-            <span class="status-dot ${n.lastStatus === 'online' ? 'online' : 'offline'}" data-role="dot"></span>
-          </div>
-          <div class="node-info">
-            <div class="node-name-row">
-              <span class="node-name char-name" data-role="name">${escapeHtml(n.name)}</span>
-              <button class="rename-btn" data-action="rename" title="Umbenennen">✏️</button>
+          <div class="node-head">
+            <div class="status-wrap">
+              <span class="status-dot ${n.lastStatus === 'online' ? 'online' : 'offline'}" data-role="dot"></span>
             </div>
-            <div class="node-meta" data-role="meta">${escapeHtml(n.host)}:${n.port} · CLI ${escapeHtml(n.cliVersion || '?')} · ${n.accountCount} Account${n.accountCount === 1 ? '' : 's'} · zuletzt gesehen ${fmtRelTime(n.lastSeen)}</div>
+            <div class="node-info">
+              <div class="node-name-row">
+                <span class="node-name char-name" data-role="name">${escapeHtml(n.name)}</span>
+                <button class="rename-btn" data-action="rename" title="Umbenennen">✏️</button>
+              </div>
+              <div class="node-meta" data-role="meta">${escapeHtml(n.host)}:${n.port} · ${n.accountCount} Account${n.accountCount === 1 ? '' : 's'} · zuletzt gesehen ${fmtRelTime(n.lastSeen)}</div>
+            </div>
+            <div class="node-actions">
+              <button class="btn-secondary" data-action="ping">Ping</button>
+              <button class="btn-danger" data-action="remove">Entfernen</button>
+            </div>
           </div>
-          <div class="node-actions">
-            <button class="btn-secondary" data-action="ping">Ping</button>
-            <button class="btn-danger" data-action="remove">Entfernen</button>
+          <div class="node-updates">
+            <div class="update-row">
+              <span class="update-label">CLI</span>
+              <span class="pill pill-off" data-role="cli-pill">Prüfe…</span>
+              <button class="icon-btn-tiny" data-action="cli-check" title="Jetzt prüfen">⟳</button>
+              <button class="btn btn-primary" data-action="cli-apply" style="display:none;">Update</button>
+            </div>
+            <div class="update-row">
+              <span class="update-label">Node-Agent</span>
+              <span class="pill pill-off" data-role="agent-pill">Prüfe…</span>
+              <button class="icon-btn-tiny" data-action="agent-check" title="Jetzt prüfen">⟳</button>
+              <button class="btn btn-primary" data-action="agent-apply" style="display:none;">Update</button>
+            </div>
           </div>
         </div>
       `).join('');
@@ -169,6 +192,86 @@ export default {
           if (!confirm(`Node "${node.name}" wirklich entfernen? Alle diesem Node zugewiesenen Accounts fallen auf "lokal" zurück (die CLI läuft dort nicht automatisch weiter).`)) return;
           await ctx.fetchJSON(`/api/nodes/${encodeURIComponent(id)}`, { method: 'DELETE' });
           await loadNodes();
+        });
+
+        function wireUpdateBlock({ statusPath, checkPath, applyPath, pillSelector, checkSelector, applySelector, applyConfirm, versionLabel }) {
+          const pill = card.querySelector(pillSelector);
+          const checkBtn = card.querySelector(checkSelector);
+          const applyBtn = card.querySelector(applySelector);
+
+          function render(status) {
+            if (status.applying) {
+              pill.textContent = 'Installiere…';
+              pill.className = 'pill pill-warn';
+              applyBtn.style.display = 'none';
+            } else if (status.updateAvailable) {
+              pill.textContent = 'Update verfügbar';
+              pill.className = 'pill pill-warn';
+              applyBtn.style.display = '';
+              applyBtn.disabled = false;
+              applyBtn.textContent = 'Update';
+            } else if (status.lastError) {
+              pill.textContent = 'Fehler';
+              pill.className = 'pill pill-warn';
+              pill.title = status.lastError;
+              applyBtn.style.display = 'none';
+            } else {
+              pill.textContent = versionLabel(status);
+              pill.className = 'pill pill-on';
+              applyBtn.style.display = 'none';
+            }
+          }
+
+          async function load() {
+            try {
+              render(await ctx.fetchJSON(`/api/nodes/${encodeURIComponent(id)}${statusPath}`));
+            } catch (err) {
+              pill.textContent = 'Node nicht erreichbar';
+              pill.className = 'pill pill-off';
+              applyBtn.style.display = 'none';
+            }
+          }
+
+          checkBtn.addEventListener('click', async () => {
+            checkBtn.classList.add('spinning');
+            try {
+              render(await ctx.fetchJSON(`/api/nodes/${encodeURIComponent(id)}${checkPath}`, { method: 'POST' }));
+            } catch (err) {
+              alert('Prüfung fehlgeschlagen: ' + err.message);
+            } finally {
+              checkBtn.classList.remove('spinning');
+            }
+          });
+
+          applyBtn.addEventListener('click', async () => {
+            if (applyConfirm && !confirm(applyConfirm)) return;
+            applyBtn.disabled = true;
+            applyBtn.textContent = 'Installiere…';
+            try {
+              await ctx.fetchJSON(`/api/nodes/${encodeURIComponent(id)}${applyPath}`, { method: 'POST' });
+              await load();
+            } catch (err) {
+              alert('Update fehlgeschlagen: ' + err.message);
+              applyBtn.disabled = false;
+              applyBtn.textContent = 'Update';
+            }
+          });
+
+          load();
+        }
+
+        wireUpdateBlock({
+          statusPath: '/cli/status', checkPath: '/cli/check', applyPath: '/cli/apply',
+          pillSelector: '[data-role="cli-pill"]', checkSelector: '[data-action="cli-check"]', applySelector: '[data-action="cli-apply"]',
+          applyConfirm: 'CLI auf diesem Node aktualisieren? Laufende Konsolen-Sessions dort werden neu gestartet.',
+          versionLabel: status => status.currentHash ? `Aktuell (${status.currentHash.slice(0, 8)})` : 'Unbekannt',
+        });
+
+        wireUpdateBlock({
+          statusPath: '/self-update/status', checkPath: '/self-update/check', applyPath: '/self-update/apply',
+          pillSelector: '[data-role="agent-pill"]', checkSelector: '[data-action="agent-check"]', applySelector: '[data-action="agent-apply"]',
+          applyConfirm: 'Node-Agent-Software auf diesem Node aktualisieren? Der Node-Agent-Dienst startet dabei kurz neu.',
+          versionLabel: status => status.currentVersion ? `Aktuell (${status.currentVersion})` : 'Aktuell',
         });
       });
 

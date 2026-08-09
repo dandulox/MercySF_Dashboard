@@ -18,16 +18,27 @@ Das Skript installiert alle Abhängigkeiten (Node.js, Rust/Cargo für die sf-api
 
 Erneutes Ausführen des Skripts aktualisiert nur Code und Dependencies — vorhandene Account-Daten, Zertifikate und die installierte CLI-Version bleiben unangetastet.
 
+### Mehrere Server (Nodes)
+
+Ein Dashboard kann Accounts auf mehreren, physisch getrennten Servern steuern, statt nur auf dem, auf dem es selbst installiert ist. Dafür läuft auf jedem weiteren Server ein schlanker **Node-Agent** (kein eigenes Web-UI, keine sf-api-Bridge) — Installation genauso einfach wie das Dashboard selbst:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/dandulox/MercySF_Dashboard/main/install.sh | bash -s -- --node
+```
+
+Am Ende zeigt das Skript die IP-Adresse und einen 15 Minuten gültigen Pairing-Code an (bei Bedarf erneut einsehbar über `journalctl -u mercy-node-agent`). Im Dashboard unter **Nodes** → „Node pairen“ IP, Port (Standard `8090`) und Code eingeben — danach lässt sich beim Anlegen eines Accounts (oder nachträglich über das Dropdown an jedem Account-Profil) auswählen, auf welchem Node er läuft. Start/Stop/Status/Einstellungen/Kampfhistorie/„Einlösen“/Web-Terminal/Statistiken/Analysen funktionieren für Node-Accounts identisch zu lokalen Accounts, laufen aber transparent über den jeweiligen Node-Agent. Auf der **Nodes**-Seite lässt sich außerdem pro Node die CLI-Version prüfen/aktualisieren und der Node-Agent selbst per Klick aktualisieren (`git pull` + Neustart des Dienstes) — beides ohne SSH-Zugriff auf den jeweiligen Server. Die Übersichtsseite zeigt zusätzlich eine Node-Karte: Klick auf einen Node blendet dessen Accounts mit Level/Gold/Ehre direkt ein.
+
 ### Deinstallation
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/dandulox/MercySF_Dashboard/main/install.sh | bash -s -- --uninstall
 ```
 
-Entfernt **alles**: beide systemd-Dienste, den kompletten `/opt/mercy`-Ordner inkl. Dashboard-Code, Zertifikate, CLI-Binary, gespeicherte Bot-Zugangsdaten, Dashboard-Zugang und die Ertrags-Statistik-Datenbank. Kein Zwischenschritt, keine Rückfrage — vor dem Ausführen sicher sein, dass wirklich alles weg soll.
+Entfernt **alles**: alle systemd-Dienste (Dashboard, sf-api-Bridge und/oder Node-Agent, je nachdem was installiert ist), den kompletten `/opt/mercy`-Ordner inkl. Code, Zertifikate, CLI-Binary, gespeicherte Bot-Zugangsdaten, Dashboard-Zugang und die Ertrags-Statistik-Datenbank. Kein Zwischenschritt, keine Rückfrage — vor dem Ausführen sicher sein, dass wirklich alles weg soll. Läuft derselbe Befehl auf einem Node-Server, entfernt er dort entsprechend nur den Node-Agent.
 
 ## Funktionen
 
+- **Nodes (Multi-Server)** — Accounts müssen nicht auf dem Server laufen, auf dem das Dashboard selbst installiert ist: weitere Server bekommen einen schlanken Node-Agent, werden per IP + zeitlich begrenztem Pairing-Code mit dem Dashboard verbunden und tauchen danach als Zielauswahl beim Anlegen/Verschieben eines Accounts auf. Steuerung, Konsole, Einstellungen, Kampfhistorie, tägliche Erträge und Analysen laufen für Node-Accounts genauso wie für lokale, transparent über den jeweiligen Node-Agent abgefragt. CLI-Version und Node-Agent-Software lassen sich pro Node direkt aus dem Dashboard heraus prüfen und aktualisieren, ohne SSH. Die Übersichtsseite zeigt zusätzlich eine Node-Karte mit Online/Offline-Status, die sich pro Node zu einer Mini-Accountliste (Level/Gold/Ehre) aufklappen lässt
 - **Übersicht** — modulare, ein-/ausklappbare Karten (Zustand bleibt gespeichert): Accounts-Tabelle, Charakter-Stats, Ausrüstung, Taverne (inkl. Abenteuerlust als Balkenanzeige), Gilde, Mail, Kampfhistorie, Activity-Log
 - **Account-Verwaltung** — einmal einloggen, alle Charaktere eines Logins werden automatisch über alle Server hinweg gefunden und als eigene Profile angelegt; Passwörter liegen AES-256-verschlüsselt auf der Platte; pro Account: Start/Stop/Pause, "Einlösen" (Kalender/Tagesaufgaben/ausstehende Freischaltungen). Charaktere, die beim letzten Neustart/Update noch liefen, starten danach automatisch wieder (zeitversetzt, damit nicht alle gleichzeitig einloggen)
 - **Eingebautes Web-Terminal** — pro Account eine eigene Konsolen-Session im Browser (xterm.js), inklusive automatisiertem Login-Durchklicken
@@ -53,6 +64,9 @@ Seit Version 2.13.0 bietet die CLI einen dokumentierten, nicht-interaktiven JSON
 - `sf-api` liefert keine lesbaren Item-Namen (nur numerische IDs/Enum-Typen) — die Ausrüstungs-Anzeige zeigt Slot, Item-Typ, Attribute und Qualität, keine Klarnamen
 - Die täglichen Erträge sind bei Gold eine **Netto-Veränderung** pro Zeitfenster (kann Ausgaben wie Reparaturen/Shop-Käufe enthalten) — EP und Ehre sind exakt, da sie sich nur durch Kämpfe/Quests ändern; welche CLI-Befehle im selben Fenster liefen, wird zusätzlich angezeigt
 - Kein Rate-Limiting auf Login/Passwort-Reset-Versuche — kein Schutz gegen Brute-Force, relevant vor allem falls das Dashboard je über das eigene LAN hinaus erreichbar gemacht wird
+- Das Activity-Log auf der Übersichtsseite bleibt für Node-Accounts leer — der PTY-Output eines Nodes läuft nicht durch den lokalen Log-Ringpuffer des Dashboards. Analysen, tägliche Erträge und die Node-Karte auf der Übersicht funktionieren dagegen auch für Node-Accounts, da diese Daten aktiv vom jeweiligen Node abgefragt werden, nicht aus dem PTY-Log mitgelesen
+- Ein Node-Agent akzeptiert immer nur genau ein gepairtes Dashboard gleichzeitig — erneutes Pairen (z. B. mit einem neuen Code) trennt ein zuvor verbundenes Dashboard kommentarlos
+- Ein Node-Agent-Selbst-Update prüft den aktuell ausgecheckten Git-Branch gegen GitHub — das setzt voraus, dass dieser Branch auch tatsächlich auf GitHub existiert (bei einem lokalen/nicht gepushten Branch schlägt die Prüfung fehl, statt „kein Update“ zu melden)
 
 ## Ressourcenverbrauch
 
@@ -74,7 +88,7 @@ Seit Version 2.13.0 bietet die CLI einen dokumentierten, nicht-interaktiven JSON
 
 ## Tech-Stack
 
-Node.js + Express (Backend), Vanilla JS mit ES-Modulen (Frontend, kein Build-Step), `node-pty` + `xterm.js` (Konsole), `chart.js` (Analysen/Erträge), `ws` (WebSocket), `better-sqlite3` (Ertrags-Tracking), `crypto` (Node-Bordmittel für Login-/Session-Hashing, keine zusätzliche Auth-Bibliothek). Die sf-api-Anbindung ist ein separater, zustandsloser Rust-Dienst (`sfapi-bridge/`, `axum` + [`sf-api`](https://github.com/the-marenga/sf-api)), der nur auf `127.0.0.1` lauscht.
+Node.js + Express (Backend), Vanilla JS mit ES-Modulen (Frontend, kein Build-Step), `node-pty` + `xterm.js` (Konsole), `chart.js` (Analysen/Erträge), `ws` (WebSocket), `better-sqlite3` (Ertrags-Tracking), `crypto` (Node-Bordmittel für Login-/Session-Hashing, keine zusätzliche Auth-Bibliothek). Die sf-api-Anbindung ist ein separater, zustandsloser Rust-Dienst (`sfapi-bridge/`, `axum` + [`sf-api`](https://github.com/the-marenga/sf-api)), der nur auf `127.0.0.1` lauscht. Für Multi-Server-Setups gibt es zusätzlich `node-agent/` — eine eigenständige, minimale Node.js + Express/`ws`-App (eigenes `package.json`, kein Rust, kein Frontend), die auf entfernten Servern läuft und sich per IP + Pairing-Code mit dem Dashboard verbindet (Bearer-Token-Auth nach dem Pairing).
 
 ## Danksagung
 

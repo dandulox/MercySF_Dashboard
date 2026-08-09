@@ -1,6 +1,7 @@
 const pty = require('node-pty');
 const profileStore = require('./profileStore');
 const credentialStore = require('./credentialStore');
+const actionLog = require('./actionLog');
 
 // Angepasste Kopie von MercySF_Dashboard/lib/ptyManager.js für den Node-Agent: gleiche
 // Autofill-/Status-Erkennungslogik, aber ohne Abhängigkeit auf das dortige notifications-/
@@ -159,6 +160,10 @@ function ensurePty(id) {
     const clean = data.replace(ANSI_RE, '');
     s.commandsSent += (clean.match(/Sending command:/g) || []).length;
     s.errorsSeen += (clean.match(/\b(WARN|ERROR)\b/g) || []).length;
+    for (const line of clean.split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (trimmed) actionLog.maybeRecordAction(trimmed);
+    }
     s.scrollback = (s.scrollback + data).slice(-SCROLLBACK_MAX_CHARS);
     for (const ws of s.sockets) {
       if (ws.readyState === ws.OPEN) ws.send(JSON.stringify({ type: 'data', data }));

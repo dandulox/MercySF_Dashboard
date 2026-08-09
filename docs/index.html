@@ -269,6 +269,11 @@
     <p class="section-sub">Ein Überblick über alles, was das Dashboard mitbringt.</p>
     <div class="feature-grid">
       <div class="feature-card">
+        <span class="icon">🖧</span>
+        <h3>Nodes (Multi-Server)</h3>
+        <p>Accounts müssen nicht auf dem Server laufen, auf dem das Dashboard selbst installiert ist. Weitere Server bekommen einen schlanken Node-Agent, per IP + zeitlich begrenztem Pairing-Code verbunden — Steuerung, Konsole, Statistiken sowie CLI-/Node-Agent-Updates laufen transparent über den jeweiligen Node.</p>
+      </div>
+      <div class="feature-card">
         <span class="icon">▦</span>
         <h3>Übersicht</h3>
         <p>Ein-/ausklappbare Karten (Zustand bleibt gespeichert): Accounts-Tabelle, Charakter-Stats, Ausrüstung, Taverne, Gilde, Mail, Kampfhistorie, Activity-Log.</p>
@@ -355,6 +360,11 @@
         <h4>Updates</h4>
         <p>Erneutes Ausführen des Skripts aktualisiert nur Code und Dependencies — vorhandene Account-Daten, Zertifikate und die installierte CLI-Version bleiben unangetastet.</p>
       </li>
+      <li>
+        <h4>Mehrere Server (Nodes)</h4>
+        <p>Auf jedem weiteren Server reicht ein schlanker Node-Agent statt des vollen Dashboards — installierbar mit demselben Skript und dem Flag <code>--node</code>. Am Ende zeigt es IP und einen 15&nbsp;Minuten gültigen Pairing-Code an, den man im Dashboard unter „Nodes“ eingibt.</p>
+        <pre style="margin-top:8px;"><code>curl -fsSL https://raw.githubusercontent.com/dandulox/MercySF_Dashboard/main/install.sh | bash -s -- --node</code></pre>
+      </li>
     </ul>
 
     <h4 style="margin-top:32px;font-size:14px;">Deinstallation</h4>
@@ -375,6 +385,8 @@
       <li><span class="dot"></span><span class="text"><code>sf-api</code> liefert keine lesbaren Item-Namen (nur numerische IDs) — die Ausrüstungs-Anzeige zeigt Slot, Typ, Attribute und Qualität, keine Klarnamen.</span></li>
       <li><span class="dot"></span><span class="text">Die täglichen Gold-Erträge sind eine Netto-Veränderung pro Zeitfenster (kann Ausgaben enthalten) — EP und Ehre sind exakt.</span></li>
       <li><span class="dot"></span><span class="text">Kein Rate-Limiting auf Login-/Passwort-Reset-Versuche — relevant vor allem, falls das Dashboard über das eigene LAN hinaus erreichbar gemacht wird.</span></li>
+      <li><span class="dot"></span><span class="text">Das Activity-Log auf der Übersichtsseite bleibt für Node-Accounts leer, da deren PTY-Output nicht durch den lokalen Log-Puffer des Dashboards läuft — Analysen, Erträge und der Node-Status funktionieren dagegen auch für Node-Accounts.</span></li>
+      <li><span class="dot"></span><span class="text">Ein Node-Agent akzeptiert immer nur genau ein gepairtes Dashboard gleichzeitig — erneutes Pairen trennt ein zuvor verbundenes Dashboard kommentarlos.</span></li>
     </ul>
   </div>
 </section>
@@ -417,6 +429,7 @@
       <span class="stack-pill">better-sqlite3</span>
       <span class="stack-pill">Rust + axum + sf-api</span>
       <span class="stack-pill">AES-256-GCM</span>
+      <span class="stack-pill">node-agent (Multi-Server)</span>
     </div>
   </div>
 </section>

@@ -62,6 +62,13 @@ export default {
       <section class="card" id="no-data-card" style="display:none">
         <p>Noch keine Account-Daten gefunden. Logg dich über die Konsole ein — sobald ein Account läuft, erscheinen hier automatisch echte Live-Daten.</p>
       </section>
+      <section class="card collapsible-card" id="nodes-overview-card" style="display:none">
+        <div class="card-header">
+          <span>🖧 Nodes</span>
+          <span id="nodes-overview-count" class="muted"></span>
+        </div>
+        <div id="nodes-overview-list"></div>
+      </section>
       <section class="card collapsible-card accounts-card" id="accounts-card">
         <div class="card-header">
           <span>👥 Accounts</span>
@@ -203,6 +210,26 @@ export default {
       .battle-history-note { font-size: 11px; color: var(--muted); margin-top: 8px; }
       .positive { color: var(--green); }
       .negative { color: var(--red); }
+
+      .node-overview-row {
+        display: flex; align-items: center; gap: 12px; padding: 10px 4px; cursor: pointer;
+        border-bottom: 1px solid var(--border);
+      }
+      .node-overview-row:last-child { border-bottom: none; }
+      .node-overview-row:hover { background: var(--panel-2); }
+      .node-overview-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
+      .node-overview-dot.online { background: var(--green); box-shadow: 0 0 6px var(--green); }
+      .node-overview-dot.offline { background: var(--red); }
+      .node-overview-name { font-weight: 600; font-size: 13.5px; flex: 1; }
+      .node-overview-meta { font-size: 11.5px; color: var(--muted); }
+      .node-overview-caret { font-size: 11px; color: var(--muted); transition: transform .15s; }
+      .node-overview-row.expanded .node-overview-caret { transform: rotate(90deg); }
+      .node-overview-accounts { display: none; padding: 0 4px 10px 24px; }
+      .node-overview-accounts.open { display: block; }
+      .node-overview-accounts table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+      .node-overview-accounts th { text-align: left; color: var(--muted); font-size: 10.5px; text-transform: uppercase; padding: 4px 8px; }
+      .node-overview-accounts td { padding: 4px 8px; }
+      .node-overview-empty { padding: 4px 8px; color: var(--muted); font-size: 12px; }
     `);
 
     let accountsPage = 0;
@@ -380,6 +407,65 @@ export default {
       }
     }
 
+    const expandedNodes = new Set();
+
+    async function renderNodesOverview(accounts) {
+      const card = wrap.querySelector('#nodes-overview-card');
+      const list = wrap.querySelector('#nodes-overview-list');
+      let nodes;
+      try {
+        nodes = await ctx.fetchJSON('/api/nodes');
+      } catch (err) {
+        card.style.display = 'none';
+        return;
+      }
+      if (!nodes.length) { card.style.display = 'none'; return; }
+      card.style.display = '';
+      wrap.querySelector('#nodes-overview-count').textContent = `${nodes.length} Node${nodes.length === 1 ? '' : 's'}`;
+
+      list.innerHTML = nodes.map(n => {
+        const nodeAccounts = accounts.filter(a => a.nodeId === n.id);
+        const expanded = expandedNodes.has(n.id);
+        return `
+          <div class="node-overview-row ${expanded ? 'expanded' : ''}" data-id="${n.id}">
+            <span class="node-overview-caret">▸</span>
+            <span class="node-overview-dot ${n.lastStatus === 'online' ? 'online' : 'offline'}"></span>
+            <span class="node-overview-name char-name">${escapeHtml(n.name)}</span>
+            <span class="node-overview-meta">${nodeAccounts.length} Account${nodeAccounts.length === 1 ? '' : 's'}</span>
+          </div>
+          <div class="node-overview-accounts ${expanded ? 'open' : ''}" data-accounts-for="${n.id}">
+            ${nodeAccounts.length ? `
+              <table>
+                <thead><tr><th>Account</th><th>Level</th><th>Gold</th><th>Ehre</th></tr></thead>
+                <tbody>${nodeAccounts.map(a => `
+                  <tr>
+                    <td class="char-name">${escapeHtml(a.charName)}</td>
+                    <td>${a.stats?.level ?? '—'}</td>
+                    <td>${fmt(toGold(a.stats?.silver))}</td>
+                    <td>${fmt(a.stats?.honor)}</td>
+                  </tr>`).join('')}</tbody>
+              </table>` : '<div class="node-overview-empty">Noch keine Daten von diesem Node — Account dort starten, um Statistiken zu sehen.</div>'}
+          </div>
+        `;
+      }).join('');
+
+      list.querySelectorAll('.node-overview-row').forEach(row => {
+        row.addEventListener('click', () => {
+          const id = row.dataset.id;
+          const accountsEl = list.querySelector(`[data-accounts-for="${id}"]`);
+          if (expandedNodes.has(id)) {
+            expandedNodes.delete(id);
+            row.classList.remove('expanded');
+            accountsEl.classList.remove('open');
+          } else {
+            expandedNodes.add(id);
+            row.classList.add('expanded');
+            accountsEl.classList.add('open');
+          }
+        });
+      });
+    }
+
     let lastAccounts = [];
     function getCurrentProfileId() {
       const accountId = ctx.getAccountId();
@@ -496,6 +582,7 @@ export default {
       wrap.querySelector('#no-data-card').style.display = accounts.length ? 'none' : 'block';
       const accountId = ctx.getAccountId();
       await renderAccountsTable(accounts);
+      await renderNodesOverview(accounts);
       const current = accounts.find(a => a.id === accountId);
       renderStatCards(current);
       await renderDailyEarnings(accountId);
