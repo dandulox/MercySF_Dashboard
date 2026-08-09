@@ -17,6 +17,7 @@ const pairingLib = require('./lib/pairing');
 const cliUpdate = require('./lib/cliUpdate');
 const selfUpdate = require('./lib/selfUpdate');
 const statsDb = require('./lib/statsDb');
+const logBuffer = require('./lib/logBuffer');
 require('./lib/statsCollector');
 
 const app = express();
@@ -97,6 +98,9 @@ app.get('/profiles', (req, res) => {
     ...p,
     status: ptyManager.getStatus(p.id),
     snapshot: (dataDir && p.server && p.characterName) ? latestSnapshot(dataDir, accountIdFor(p.server, p.characterName)) : null,
+    currentActivity: p.characterName ? logBuffer.getLastActivity(p.characterName) : null,
+    activityHistory: p.characterName ? logBuffer.getActivityHistory(p.characterName) : [],
+    scoutedPlayers: p.characterName ? logBuffer.getScoutedPlayers(p.characterName) : [],
   })));
 });
 

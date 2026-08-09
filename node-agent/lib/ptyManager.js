@@ -1,12 +1,12 @@
 const pty = require('node-pty');
 const profileStore = require('./profileStore');
 const credentialStore = require('./credentialStore');
-const actionLog = require('./actionLog');
+const logBuffer = require('./logBuffer');
 
 // Angepasste Kopie von MercySF_Dashboard/lib/ptyManager.js für den Node-Agent: gleiche
-// Autofill-/Status-Erkennungslogik, aber ohne Abhängigkeit auf das dortige notifications-/
-// logBuffer-Modul (Warnungen/Fehler landen hier nur im lokalen Prozess-Log, das Dashboard sieht
-// den Zustand über den Status-Broadcast bzw. beim nächsten WS-Connect).
+// Autofill-/Status-Erkennungslogik und eigener logBuffer (Aktivitäten/gescoutete Spieler), aber
+// ohne das dortige notifications-Modul (Warnungen/Fehler landen hier nur im lokalen Prozess-Log,
+// das Dashboard sieht den Zustand über den Status-Broadcast bzw. beim nächsten WS-Connect).
 const CLI_PATH = process.env.MERCY_CLI_PATH || '/opt/mercy/mercy-cli-linux-x64';
 const CWD = process.env.MERCY_CLI_CWD || '/opt/mercy';
 
@@ -155,15 +155,12 @@ function ensurePty(id) {
   s.errorsSeen = 0;
 
   s.proc.onData(data => {
+    logBuffer.pushChunk(data);
     if (s.autofill) handleAutofill(s, data);
     updateBotState(s, data);
     const clean = data.replace(ANSI_RE, '');
     s.commandsSent += (clean.match(/Sending command:/g) || []).length;
     s.errorsSeen += (clean.match(/\b(WARN|ERROR)\b/g) || []).length;
-    for (const line of clean.split(/\r?\n/)) {
-      const trimmed = line.trim();
-      if (trimmed) actionLog.maybeRecordAction(trimmed);
-    }
     s.scrollback = (s.scrollback + data).slice(-SCROLLBACK_MAX_CHARS);
     for (const ws of s.sockets) {
       if (ws.readyState === ws.OPEN) ws.send(JSON.stringify({ type: 'data', data }));

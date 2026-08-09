@@ -36,13 +36,17 @@ function remoteNodeFor(profile) {
   return node;
 }
 
-async function fetchRemoteStatuses(nodeId) {
+// Liefert pro Node-Account nicht nur den Laufstatus, sondern das komplette vom Node-Agent
+// gemeldete Profil (inkl. currentActivity/activityHistory/scoutedPlayers aus dessen eigenem
+// logBuffer, siehe node-agent/server.js) — ein einziger Aufruf pro Node statt einer Anfrage
+// pro Account.
+async function fetchRemoteProfiles(nodeId) {
   const node = nodeRegistry.get(nodeId);
   if (!node) return new Map();
   try {
     const list = await nodeClient.call(node, '/profiles', { timeoutMs: 6000 });
     nodeRegistry.markSeen(node.id, 'online');
-    return new Map(list.map(p => [p.id, p.status]));
+    return new Map(list.map(p => [p.id, p]));
   } catch (err) {
     nodeRegistry.markSeen(node.id, 'offline');
     return new Map();
@@ -54,13 +58,20 @@ const OFFLINE_UNREACHABLE = { running: false, botState: 'offline', lastExitInfo:
 router.get('/', async (req, res) => {
   const all = registry.list();
   const remoteNodeIds = [...new Set(all.filter(p => p.nodeId).map(p => p.nodeId))];
-  const statusMaps = new Map();
-  await Promise.all(remoteNodeIds.map(async id => statusMaps.set(id, await fetchRemoteStatuses(id))));
+  const remoteMaps = new Map();
+  await Promise.all(remoteNodeIds.map(async id => remoteMaps.set(id, await fetchRemoteProfiles(id))));
 
   const profiles = all.map(p => {
     if (p.nodeId) {
-      const status = statusMaps.get(p.nodeId)?.get(p.id) || OFFLINE_UNREACHABLE;
-      return { ...p, status, hasPassword: credentialStore.hasPassword(p.username), currentActivity: null, activityHistory: [], scoutedPlayers: [] };
+      const remote = remoteMaps.get(p.nodeId)?.get(p.id);
+      return {
+        ...p,
+        status: remote ? remote.status : OFFLINE_UNREACHABLE,
+        hasPassword: credentialStore.hasPassword(p.username),
+        currentActivity: remote ? remote.currentActivity : null,
+        activityHistory: remote ? remote.activityHistory : [],
+        scoutedPlayers: remote ? remote.scoutedPlayers : [],
+      };
     }
     return {
       ...p,
