@@ -41,15 +41,23 @@ app.get('/api/status', (req, res) => {
   res.json({ dataDir, botRunning: isProcessRunning(), version: dashboardVersion });
 });
 
+function characterClassFor(accountId) {
+  const profile = accountsRegistry.list().find(p =>
+    p.server && p.characterName && accountIdFor(p.server, p.characterName) === accountId);
+  return profile ? (profile.characterClass || null) : null;
+}
+
 app.get('/api/accounts', async (req, res) => {
   const dataDir = findDataDir();
   const localAccounts = dataDir ? listAccounts(dataDir).map(acc => ({
     ...acc,
     stats: latestSnapshot(dataDir, acc.id),
     currentActivity: logBuffer.getLastActivity(acc.charName),
+    characterClass: characterClassFor(acc.id),
   })) : [];
   const remoteAccounts = await listRemoteAccounts();
-  res.json([...localAccounts, ...remoteAccounts]);
+  const remoteAccountsWithClass = remoteAccounts.map(acc => ({ ...acc, characterClass: characterClassFor(acc.id) }));
+  res.json([...localAccounts, ...remoteAccountsWithClass]);
 });
 
 app.get('/api/account/:id/logs', (req, res) => {
