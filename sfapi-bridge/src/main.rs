@@ -94,6 +94,7 @@ struct MailInfo {
 #[serde(rename_all = "camelCase")]
 struct StateResponse {
     character_name: String,
+    character_class: String,
     equipment: Vec<EquipmentItem>,
     guild: Option<GuildInfo>,
     tavern: TavernInfo,
@@ -236,6 +237,7 @@ async fn state_handler(Json(req): Json<StateRequest>) -> Response {
 
     Json(StateResponse {
         character_name: character.name.clone(),
+        character_class: format!("{:?}", character.class),
         equipment,
         guild,
         tavern,
