@@ -228,8 +228,9 @@ export default {
 
     function metaLine(p) {
       const nodeBadge = p.nodeId ? `<span class="node-badge">🖧 ${escapeHtml(nodesById.get(p.nodeId)?.name || '?')}</span>` : '';
+      const classBadge = p.characterClass ? `<span class="node-badge">${escapeHtml(p.characterClass)}</span>` : '';
       if (p.server && p.characterName) {
-        return `${escapeHtml(p.username)} · ${escapeHtml(p.characterName)} @ ${escapeHtml(p.server)}${nodeBadge}`;
+        return `${escapeHtml(p.username)} · ${escapeHtml(p.characterName)} @ ${escapeHtml(p.server)}${classBadge}${nodeBadge}`;
       }
       return `${escapeHtml(p.username)} · noch nicht eingeloggt${nodeBadge}`;
     }
@@ -241,6 +242,27 @@ export default {
         case 'connecting': return { cls: 'connecting', text: 'Verbindet...' };
         default: return { cls: 'offline', text: 'Offline' };
       }
+    }
+
+    // Klasse wird einmalig automatisch ermittelt (sf-api-bridge-Login), nacheinander statt
+    // parallel, um nicht mehrere echte Spiele-Logins gleichzeitig auszulösen. Best-effort:
+    // Fehler (z. B. Bridge gerade offline) werden ignoriert, die Karte zeigt dann weiterhin
+    // keine Klasse an, der manuelle "🔄 Klasse"-Button bleibt als Fallback.
+    let backfillRunning = false;
+    async function backfillMissingClasses(profiles) {
+      if (backfillRunning) return;
+      const targets = profiles.filter(p => p.server && p.characterName && p.hasPassword && !p.characterClass);
+      if (!targets.length) return;
+      backfillRunning = true;
+      let any = false;
+      for (const p of targets) {
+        try {
+          await ctx.fetchJSON(`/api/gamestate/${encodeURIComponent(p.id)}`);
+          any = true;
+        } catch (err) { /* still-offline bridge or login failure — retry next page visit */ }
+      }
+      backfillRunning = false;
+      if (any) await loadProfiles();
     }
 
     async function loadProfiles() {
@@ -318,6 +340,7 @@ export default {
               <button class="btn-secondary" data-action="pause" ${hasCharacter && !paused ? '' : 'disabled'} title="Schaltet alle Automatisierungen aus (kein garantierter Sofort-Effekt, nur Konfiguration)">${paused ? 'Pausiert' : 'Pause'}</button>
               <button class="btn-secondary" data-action="resume" ${paused ? '' : 'disabled'}>Fortsetzen</button>
               <button class="btn-secondary" data-action="claim" ${hasCharacter && p.hasPassword ? '' : 'disabled'} title="Kalender, Tagesaufgaben und ausstehende Freischaltungen abholen">Einlösen</button>
+              <button class="btn-secondary" data-action="detect-class" ${hasCharacter && p.hasPassword ? '' : 'disabled'} title="Spielklasse abrufen (für die Account-Analyse)">🔄 Klasse</button>
               <button class="btn-secondary" data-action="toggle-term">Konsole</button>
               <select class="node-select" data-action="move-node" title="Auf einen anderen Node verschieben">${nodeOptionsHtml(p.nodeId)}</select>
               <button class="btn-danger" data-action="delete">Löschen</button>
@@ -413,6 +436,24 @@ export default {
               alert('Einlösen fehlgeschlagen: ' + err.message);
             } finally {
               setTimeout(() => { claimBtn.disabled = false; claimBtn.textContent = original; }, 2500);
+            }
+          });
+        }
+
+        const detectClassBtn = card.querySelector('[data-action="detect-class"]');
+        if (detectClassBtn) {
+          detectClassBtn.addEventListener('click', async () => {
+            const original = detectClassBtn.textContent;
+            detectClassBtn.disabled = true;
+            detectClassBtn.textContent = 'Erkenne…';
+            try {
+              await ctx.fetchJSON(`/api/gamestate/${encodeURIComponent(id)}`);
+              await loadProfiles();
+            } catch (err) {
+              detectClassBtn.textContent = original;
+              alert('Klassenerkennung fehlgeschlagen: ' + err.message);
+            } finally {
+              detectClassBtn.disabled = !(hasCharacter && p.hasPassword);
             }
           });
         }
@@ -599,6 +640,8 @@ export default {
           await loadProfiles();
         });
       });
+
+      backfillMissingClasses(profiles);
     }
 
     wrap.querySelector('#acc-add-btn').addEventListener('click', async () => {
