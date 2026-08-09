@@ -1,6 +1,8 @@
+import { t, getLanguage } from '/lib/i18n.js';
+
 const GROUP_ORDER = ['quest', 'arena', 'dungeon', 'fortress', 'underworld', 'pets', 'guild', 'world_boss', 'timing', 'notifications', 'sonstiges'];
 
-const GROUP_LABELS = {
+const GROUP_LABELS_DE = {
   quest: 'Quests & Taverne',
   arena: 'Arena & Sammelalbum',
   dungeon: 'Dungeons & Verliese',
@@ -13,6 +15,24 @@ const GROUP_LABELS = {
   notifications: 'Benachrichtigungen',
   sonstiges: 'Sonstiges',
 };
+
+const GROUP_LABELS_EN = {
+  quest: 'Quests & Tavern',
+  arena: 'Arena & Scrapbook',
+  dungeon: 'Dungeons',
+  fortress: 'Fortress',
+  underworld: 'Underworld',
+  pets: 'Pets',
+  guild: 'Guild',
+  world_boss: 'World Boss',
+  timing: 'Timing & Behavior',
+  notifications: 'Notifications',
+  sonstiges: 'Other',
+};
+
+function groupLabels() {
+  return getLanguage() === 'en' ? GROUP_LABELS_EN : GROUP_LABELS_DE;
+}
 
 function groupKey(key) {
   const groups = [
@@ -34,7 +54,7 @@ function groupKey(key) {
 // Menschenlesbare Bezeichnungen + kurze Erklärungen für die bekannten Bot-Einstellungen.
 // Alles, was hier nicht aufgeführt ist, bekommt automatisch einen aus dem Schlüsselnamen
 // abgeleiteten Titel (siehe humanizeKey) — nichts wird also unbeschriftet gelassen.
-const LABELS = {
+const LABELS_DE = {
   config_version: { label: 'Config-Version', desc: 'Interne Versionsnummer der Einstellungsdatei — nicht manuell ändern.' },
 
   // Quests & Taverne
@@ -212,6 +232,188 @@ const LABELS = {
   module_priorities: { label: 'Modul-Prioritäten', desc: 'Reihenfolge, in der Bot-Module bei Konflikten priorisiert werden.' },
 };
 
+const LABELS_EN = {
+  config_version: { label: 'Config version', desc: 'Internal version number of the settings file — do not change manually.' },
+
+  // Quests & Tavern
+  auto_quest: { label: 'Automate quests', desc: 'Automatically starts quests and collects rewards.' },
+  auto_expedition: { label: 'Automate expeditions', desc: 'Automatically starts available expeditions.' },
+  auto_cityguard: { label: 'Automate city guard', desc: 'Automatically sends the character to city guard duty.' },
+  cityguard_hours: { label: 'City guard duration (hours)', desc: 'How many hours each city guard shift should last.' },
+  auto_do_tasks: { label: 'Complete guild tasks', desc: 'Automatically completes pending guild tasks.' },
+  task_use_mushrooms: { label: 'Use mushrooms for tasks', desc: 'Allows spending mushrooms to speed up guild tasks.' },
+  use_task_bonus_beer: { label: 'Use bonus beer for tasks', desc: 'Uses bonus beer from task rewards for further quests.' },
+  beer_ignores_mushroom_reserve: { label: 'Beer ignores mushroom reserve', desc: 'Buys beer even if it would dip below the minimum mushroom reserve.' },
+  beer_auto_detect_free: { label: 'Detect free beer slots', desc: 'Automatically uses available free beers before buying more.' },
+  beer_buy_amount: { label: 'Beer purchase amount', desc: 'How many beers are automatically bought per purchase.' },
+  beer_event_amount: { label: 'Beer purchase amount (event)', desc: 'Purchase amount for beer during active server events.' },
+  collect_advent_calendar: { label: 'Collect calendar/advent calendar', desc: 'Automatically collects daily calendar rewards.' },
+  auto_lucky_turn: { label: 'Spin the lucky wheel automatically', desc: 'Spins the lucky wheel automatically when available.' },
+  auto_lucky_turn_for_mush: { label: 'Also spin lucky wheel for mushrooms', desc: 'Spins the lucky wheel even when it would cost mushrooms.' },
+  max_lucky_turns_per_day: { label: 'Max. lucky wheel spins/day', desc: 'Cap on automatic lucky wheel spins on normal days.' },
+  max_lucky_turns_per_day_event: { label: 'Max. lucky wheel spins/day (event)', desc: 'Cap on lucky wheel spins on event days.' },
+  quest_priority: { label: 'Quest priority', desc: 'Strategy for choosing the next quest (e.g. fastest or most rewarding first).' },
+  quest_smart_primary: { label: 'Smart priority: primary criterion', desc: 'With "smart" priority, the most important selection criterion (e.g. XP).' },
+  no_town_watch_before_arena_wins: { label: 'No city guard before arena wins', desc: 'Delays city guard until enough arena wins have been achieved.' },
+  auto_dice_game: { label: 'Automate dice game', desc: 'Automatically plays the tavern dice game.' },
+  auto_calendar: { label: 'Automate calendar', desc: 'Manages the event calendar automatically.' },
+  auto_unlock_features: { label: 'Unlock new features', desc: 'Automatically unlocks newly available game features.' },
+  auto_claim_rewards: { label: 'Automatically claim rewards', desc: 'Automatically collects available rewards (mail, achievements, etc.).' },
+  auto_idle_game: { label: 'Automate idle game', desc: 'Manages the idle minigame automatically.' },
+  tavern_prefer_expedition: { label: 'Prefer expeditions', desc: 'Prefers expeditions over normal quests when both are available.' },
+  tavern_quest_start: { label: 'Quest start delay', desc: 'Wait time before a new quest is started automatically.' },
+
+  // Arena & Scrapbook
+  auto_arena: { label: 'Automate arena', desc: 'Automatically fights arena opponents.' },
+  min_fight_win_chance: { label: 'Minimum win chance (%)', desc: 'A fight is only fought automatically if the estimated win chance is above this.' },
+  use_mushrooms_arena: { label: 'Use mushrooms in the arena', desc: 'Allows spending mushrooms to enable additional arena fights.' },
+  auto_arena_stop_on_cityguard: { label: 'Pause arena during city guard', desc: 'Pauses arena fights while city guard is active.' },
+  auto_arena_xp_first: { label: 'Attack XP opponents first', desc: 'Prefers opponents with higher XP yield when choosing a target.' },
+  auto_arena_simulate: { label: 'Simulate fights beforehand', desc: 'Simulates arena fights before executing them to check the win chance.' },
+  arena_target: { label: 'Target strategy', desc: 'How arena opponents are chosen (e.g. best win chance).' },
+
+  // Dungeons
+  auto_dungeon: { label: 'Automate dungeons', desc: 'Automatically runs available dungeons.' },
+  auto_tower: { label: 'Automate tower', desc: 'Automatically runs the tower dungeon.' },
+  auto_hellevator: { label: 'Automate hellevator', desc: 'Automatically participates in the hellevator event.' },
+  use_mushrooms_hellevator: { label: 'Use mushrooms in the hellevator', desc: 'Allows spending mushrooms for extra hellevator attempts.' },
+  auto_legendary_dungeon: { label: 'Automate legendary dungeons', desc: 'Automatically runs legendary dungeons once unlocked.' },
+  use_mushrooms_legendary: { label: 'Use mushrooms in legendary dungeons', desc: 'Allows spending mushrooms for extra attempts in legendary dungeons.' },
+  use_mushrooms_dungeon: { label: 'Use mushrooms in dungeons', desc: 'Allows spending mushrooms for extra dungeon attempts.' },
+  use_mushrooms_tower: { label: 'Use mushrooms in the tower', desc: 'Allows spending mushrooms for extra tower attempts.' },
+  dungeon_save_fight_report: { label: 'Save fight reports', desc: 'Saves dungeon fight reports to the fight history.' },
+  auto_dungeon_companion_equip: { label: 'Auto-equip companion', desc: 'Automatically equips dungeon companions with available gear.' },
+  auto_dungeon_portal: { label: 'Automate dungeon portal', desc: 'Automatically uses the dungeon portal once available.' },
+
+  // Fortress
+  auto_fortress: { label: 'Automate fortress', desc: 'Manages the fortress automatically (resources, buildings, troops).' },
+  auto_fortress_gather_wood: { label: 'Gather wood', desc: 'Automatically gathers wood for the fortress.' },
+  auto_fortress_gather_stone: { label: 'Gather stone', desc: 'Automatically gathers stone for the fortress.' },
+  auto_fortress_gather_exp: { label: 'Gather experience (fortress)', desc: 'Automatically gathers fortress experience points.' },
+  auto_fortress_upgrade_buildings: { label: 'Upgrade buildings', desc: 'Automatically upgrades fortress buildings once enough resources are available.' },
+  auto_fortress_search_gems: { label: 'Search for gems', desc: 'Automatically starts the gem search in the fortress.' },
+  fortress_search_gems_skip: { label: 'Skip gem search', desc: 'Skips the gem search under certain conditions.' },
+  fortress_search_gems_skip_time: { label: 'Gem search: time to skip', desc: 'Time/duration after which the gem search is skipped.' },
+  auto_fortress_upgrade_soldier: { label: 'Upgrade soldiers', desc: 'Automatically upgrades soldier units.' },
+  auto_fortress_upgrade_archer: { label: 'Upgrade archers', desc: 'Automatically upgrades archer units.' },
+  auto_fortress_upgrade_mage: { label: 'Upgrade mages', desc: 'Automatically upgrades mage units.' },
+  auto_fortress_build_soldier: { label: 'Train soldiers', desc: 'Automatically trains new soldier units.' },
+  auto_fortress_build_archer: { label: 'Train archers', desc: 'Automatically trains new archer units.' },
+  auto_fortress_build_mage: { label: 'Train mages', desc: 'Automatically trains new mage units.' },
+  fortress_attack_loose_1_soldier_min: { label: 'Min. soldiers for a risky attack', desc: 'Minimum number of soldiers used for a risky attack.' },
+  fortress_attack_min_start_soldiers_pct: { label: 'Min. troop strength for attack (%)', desc: 'A fortress attack only starts if at least this share of troops is available.' },
+  fortress_attack_partner: { label: 'Attack partner', desc: 'Preferred partner account for joint fortress attacks.' },
+  fortress_protect_chars: { label: 'Protected characters', desc: 'Characters that are never chosen as targets in fortress attacks.' },
+  fortress_partner_max_rerolls: { label: 'Max. partner rerolls', desc: 'How many times a new attack partner may be rerolled.' },
+  fortress_partner_use_mushroom_reroll: { label: 'Use mushrooms for partner reroll', desc: 'Allows spending mushrooms to get a new attack partner.' },
+
+  // Underworld
+  auto_underworld: { label: 'Automate underworld', desc: 'Manages the underworld automatically (resources, buildings, fights).' },
+  auto_underworld_gather_souls: { label: 'Gather souls', desc: 'Automatically gathers souls in the underworld.' },
+  auto_underworld_gather_silver: { label: 'Gather silver (underworld)', desc: 'Automatically gathers silver in the underworld.' },
+  auto_underworld_gather_tfa: { label: 'Gather ancient artifacts', desc: 'Automatically gathers ancient artifacts in the underworld.' },
+  auto_underworld_upgrade_keeper: { label: 'Upgrade keeper', desc: 'Automatically upgrades the underworld keeper.' },
+  auto_underworld_upgrade_troll: { label: 'Upgrade troll', desc: 'Automatically upgrades the troll unit.' },
+  auto_underworld_upgrade_goblin: { label: 'Upgrade goblin', desc: 'Automatically upgrades the goblin unit.' },
+  auto_underworld_enable_fights: { label: 'Allow underworld fights', desc: 'Allows automatic attacks on other underworlds.' },
+  underworld_attack_mode: { label: 'Attack mode', desc: 'Strategy for choosing underworld attack targets.' },
+  underworld_attack_favorite_chars: { label: 'Preferred attack targets', desc: 'List of preferred characters for underworld attacks.' },
+  underworld_upgrade_units_keep_souls: { label: 'Soul reserve for upgrades', desc: 'Minimum amount of souls not spent on upgrades.' },
+  underworld_gather_stop_from_hour: { label: 'Pause gathering from (hour)', desc: 'Time at which automatic gathering pauses.' },
+  underworld_gather_stop_until_hour: { label: 'Gathering paused until (hour)', desc: 'Time until which automatic gathering stays paused.' },
+
+  // Pets
+  auto_pets: { label: 'Automate pets', desc: 'Manages pets automatically (feeding, fights, dungeons).' },
+  auto_pets_feed: { label: 'Feed pets', desc: 'Automatically feeds pets with available juice.' },
+  auto_pets_dungeons: { label: 'Automate pet dungeons', desc: 'Automatically explores pet dungeons.' },
+  auto_pets_arena: { label: 'Automate pet arena', desc: 'Automatically fights pet arena battles.' },
+  pet_juice_priority: { label: 'Juice priority', desc: 'Which juice type is preferred during production.' },
+  juice_enable: { label: 'Enable juice production', desc: 'Automatically produces juice for pets.' },
+  juice_min_shadow: { label: 'Minimum shadow juice reserve', desc: 'Amount kept in reserve and not consumed.' },
+  juice_min_light: { label: 'Minimum light juice reserve', desc: 'Amount kept in reserve and not consumed.' },
+  juice_min_earth: { label: 'Minimum earth juice reserve', desc: 'Amount kept in reserve and not consumed.' },
+  juice_min_fire: { label: 'Minimum fire juice reserve', desc: 'Amount kept in reserve and not consumed.' },
+  juice_min_water: { label: 'Minimum water juice reserve', desc: 'Amount kept in reserve and not consumed.' },
+
+  // Guild
+  auto_guild: { label: 'Automate guild', desc: 'Manages guild activities automatically.' },
+  auto_guild_portal: { label: 'Automate guild portal', desc: 'Automatically fights in the guild portal.' },
+  guild_portal_after_quests: { label: 'Guild portal only after quests', desc: 'Starts the guild portal only once all quests are done.' },
+  auto_guild_hydra: { label: 'Automate hydra', desc: 'Automatically fights the guild hydra.' },
+  guild_hydra_rush_before_midnight: { label: 'Rush hydra before midnight', desc: 'Pushes harder on hydra attacks shortly before midnight.' },
+  guild_hydra_after_quests: { label: 'Hydra only after quests', desc: 'Fights the hydra only once all quests are done.' },
+  auto_guild_raid: { label: 'Automate guild raid', desc: 'Automatically participates in guild raids.' },
+  start_guild_raid: { label: 'Manually start guild raid', desc: 'Starts a guild raid at a scheduled time.' },
+  start_guild_raid_datetime: { label: 'Guild raid start time', desc: 'Date/time for the scheduled guild raid start.' },
+  start_reoccurring_guild_raid_day: { label: 'Recurring raid: weekday', desc: 'Weekday for a recurring guild raid.' },
+  start_reoccurring_guild_raid_time: { label: 'Recurring raid: time', desc: 'Time for a recurring guild raid.' },
+  auto_guild_attack: { label: 'Automate guild attacks', desc: 'Automatically participates in guild-vs-guild attacks.' },
+  auto_guild_defense: { label: 'Automate guild defense', desc: 'Automatically participates in guild defense.' },
+  guild_fights_attack: { label: 'Participate in attack fights', desc: 'Participates in offensive guild fights.' },
+  guild_fights_def: { label: 'Participate in defense fights', desc: 'Participates in defensive guild fights.' },
+  guild_fights_raid: { label: 'Participate in raid fights', desc: 'Participates in guild raid fights.' },
+  guild_min_wait_mins: { label: 'Min. wait time (minutes)', desc: 'Minimum wait time between guild fight actions.' },
+  guild_max_wait_mins: { label: 'Max. wait time (minutes)', desc: 'Maximum wait time between guild fight actions.' },
+  start_guild_fight_1: { label: 'Start guild fight 1 on schedule', desc: 'Automatically starts a first scheduled guild fight.' },
+  start_guild_fight_2: { label: 'Start guild fight 2 on schedule', desc: 'Automatically starts a second scheduled guild fight.' },
+  start_guild_fights_time_1: { label: 'Guild fight 1 start time', desc: 'Scheduled time for the first guild fight.' },
+  start_guild_fights_time_2: { label: 'Guild fight 2 start time', desc: 'Scheduled time for the second guild fight.' },
+  guild_fights_favorite_guilds: { label: 'Preferred target guilds', desc: 'List of preferred rival guilds for guild fights.' },
+  guild_donate_long_cityguard_only: { label: 'Donate only on long city guard', desc: 'Only donates to the guild when city guard runs long enough.' },
+
+  // World Boss
+  auto_world_boss: { label: 'Automate world boss', desc: 'Automatically participates in the world boss event.' },
+  world_boss_auto_upgrade: { label: 'Upgrade world boss gear', desc: 'Automatically upgrades world boss equipment.' },
+  world_boss_use_mushrooms: { label: 'Use mushrooms for world boss', desc: 'Allows spending mushrooms for extra world boss attacks.' },
+  world_boss_max_catalysts_spend: { label: 'Max. catalyst spend', desc: 'Cap on catalyst consumption for the world boss.' },
+  world_boss_max_upgrade_level: { label: 'Max. upgrade level', desc: 'Highest level world boss equipment is automatically upgraded to.' },
+  world_boss_reroll_upgrade_shop: { label: 'Reroll upgrade shop', desc: 'Rerolls the offer in the world boss upgrade shop when needed.' },
+  world_boss_max_mushroom_spend: { label: 'Max. mushroom spend (world boss)', desc: 'Cap on mushroom consumption for the world boss.' },
+
+  // Equipment / Skills / Consumables
+  auto_equip_better: { label: 'Equip better gear', desc: 'Automatically equips better items that are found.' },
+  auto_equip_gems: { label: 'Auto-socket gems', desc: 'Automatically sockets found gems into equipment.' },
+  auto_sell_items: { label: 'Auto-sell items', desc: 'Automatically sells items that aren\'t needed.' },
+  auto_buy_bottles: { label: 'Auto-buy potion bottles', desc: 'Automatically restocks empty bottles for potions.' },
+  auto_buy_better_items: { label: 'Buy better items in the shop', desc: 'Automatically buys better equipment from the shop when available.' },
+  auto_buy_potions: { label: 'Auto-buy potions', desc: 'Automatically restocks needed potions.' },
+  auto_skills: { label: 'Auto-distribute attribute points', desc: 'Automatically distributes new attribute points.' },
+  auto_enchant: { label: 'Automate enchanting', desc: 'Automatically enchants equipment when possible.' },
+  auto_mount: { label: 'Automate mounts', desc: 'Automatically manages buying/using mounts.' },
+  auto_mount_buy_lower: { label: 'Buy cheaper mounts too', desc: 'Also buys cheaper mount tiers when needed.' },
+  min_mush_mount: { label: 'Minimum mushroom reserve for mounts', desc: 'Mushrooms kept untouched for mount purchases.' },
+  auto_use_life_potions: { label: 'Auto-use life potions', desc: 'Automatically uses life potions.' },
+  auto_use_luck_potions: { label: 'Auto-use luck potions', desc: 'Automatically uses luck potions.' },
+  auto_use_main_potions: { label: 'Auto-use main potions', desc: 'Automatically uses main attribute potions.' },
+  auto_use_const_potions: { label: 'Auto-use constitution potions', desc: 'Automatically uses constitution/stamina potions.' },
+  min_mushrooms: { label: 'Minimum mushroom reserve', desc: 'General mushroom reserve not spent automatically.' },
+  min_lucky_coins: { label: 'Minimum lucky coin reserve', desc: 'Lucky coins kept in reserve and not spent automatically.' },
+  use_mushrooms_mount: { label: 'Use mushrooms for mounts', desc: 'Allows spending mushrooms when buying mounts.' },
+
+  // Notifications
+  auto_notify: { label: 'Enable notifications', desc: 'Sends notifications for important events.' },
+  notify_discord_webhook: { label: 'Discord webhook URL', desc: 'Target webhook for Discord notifications.' },
+  notify_telegram_token: { label: 'Telegram bot token', desc: 'Access token for Telegram notifications.' },
+  notify_telegram_chat: { label: 'Telegram chat ID', desc: 'Target chat for Telegram notifications.' },
+
+  // Timing & Behavior
+  poll_interval_secs: { label: 'Poll interval (seconds)', desc: 'How often the bot polls the game status.' },
+  humanize_enabled: { label: 'Simulate human behavior', desc: 'Adds random delays to make behavior look less bot-like.' },
+  humanize_action_delay_min_ms: { label: 'Min. action delay (ms)', desc: 'Lower bound of the random delay between actions.' },
+  humanize_action_delay_max_ms: { label: 'Max. action delay (ms)', desc: 'Upper bound of the random delay between actions.' },
+  humanize_poll_jitter_pct: { label: 'Poll jitter (%)', desc: 'Random percentage variance applied to the poll interval.' },
+  active_hours_enabled: { label: 'Restrict active hours', desc: 'Limits bot operation to specific times of day.' },
+  active_hours_start: { label: 'Active from (hour)', desc: 'Start of the allowed operating period.' },
+  active_hours_end: { label: 'Active until (hour)', desc: 'End of the allowed operating period.' },
+  active_windows: { label: 'Active time windows', desc: 'Detailed list of allowed operating time windows.' },
+  diagnostic_logging: { label: 'Diagnostic logging', desc: 'Writes extra diagnostic information to the log.' },
+  module_priorities: { label: 'Module priorities', desc: 'Order in which bot modules are prioritized on conflicts.' },
+};
+
+function currentLabels() {
+  return getLanguage() === 'en' ? LABELS_EN : LABELS_DE;
+}
+
 function humanizeKey(key) {
   return key
     .replace(/_/g, ' ')
@@ -273,29 +475,29 @@ export default {
     const wrap = document.createElement('div');
     wrap.className = 'settings-page';
     wrap.innerHTML = `
-      <h1 class="page-title">Einstellungen</h1>
+      <h1 class="page-title">${t('settings.title')}</h1>
       <div class="panel-settings-card">
-        <h3>⚙ Panel-Einstellungen</h3>
-        <div class="panel-settings-desc">Wie oft die sf-api-Bridge live abgefragt wird (Ausrüstung, Spielstand). Seltener abfragen reduziert das Risiko zusätzlicher, außerplanmäßiger Logins.</div>
+        <h3>${t('settings.panelSettingsTitle')}</h3>
+        <div class="panel-settings-desc">${t('settings.panelSettingsDesc')}</div>
         <div class="panel-settings-row">
-          <select id="gamestate-interval-select"><option>Lade...</option></select>
-          <button class="btn btn-primary" id="gamestate-interval-save" style="width:auto;padding:7px 16px;">Übernehmen</button>
+          <select id="gamestate-interval-select"><option>${t('common.loading')}</option></select>
+          <button class="btn btn-primary" id="gamestate-interval-save" style="width:auto;padding:7px 16px;">${t('settings.applyBtn')}</button>
           <span id="panel-settings-status"></span>
         </div>
       </div>
       <div class="templates-card">
-        <h3>📋 Einstellungs-Vorlagen</h3>
-        <div class="templates-desc">Speichere die aktuellen Einstellungen eines Charakters als Vorlage und wende sie auf andere Charaktere an — legt deren Einstellungen dabei auch neu an, falls sie noch nie gestartet wurden.</div>
+        <h3>${t('settings.templatesTitle')}</h3>
+        <div class="templates-desc">${t('settings.templatesDesc')}</div>
         <div class="templates-save-row">
-          <input type="text" id="template-name-input" placeholder="Name der Vorlage (z. B. &quot;Arena-Fokus&quot;)" />
-          <button class="btn btn-primary" id="template-save-btn" style="width:auto;padding:7px 16px;">Aktuelle Einstellungen speichern</button>
-          <button class="btn-secondary" id="template-import-btn" style="width:auto;padding:7px 16px;">📤 Aus Backup-Datei importieren</button>
+          <input type="text" id="template-name-input" placeholder="${t('settings.templateNamePlaceholder')}" />
+          <button class="btn btn-primary" id="template-save-btn" style="width:auto;padding:7px 16px;">${t('settings.saveCurrentBtn')}</button>
+          <button class="btn-secondary" id="template-import-btn" style="width:auto;padding:7px 16px;">${t('settings.importBtn')}</button>
           <input type="file" id="template-import-file" accept="application/json,.json" hidden />
         </div>
         <div id="templates-status"></div>
-        <div id="templates-list">Lade...</div>
+        <div id="templates-list">${t('common.loading')}</div>
       </div>
-      <div id="settings-body"><div id="settings-groups">Lade...</div></div>`;
+      <div id="settings-body"><div id="settings-groups">${t('common.loading')}</div></div>`;
     container.appendChild(wrap);
 
     async function loadPanelSettings() {
@@ -306,23 +508,23 @@ export default {
         select.innerHTML = data.presets.map(p =>
           `<option value="${p.key}" ${p.key === data.current ? 'selected' : ''}>${p.label}</option>`).join('');
       } catch (err) {
-        status.textContent = 'Fehler: ' + err.message;
+        status.textContent = t('analytics.loadError', { message: err.message });
       }
     }
 
     wrap.querySelector('#gamestate-interval-save').addEventListener('click', async () => {
       const select = wrap.querySelector('#gamestate-interval-select');
       const status = wrap.querySelector('#panel-settings-status');
-      status.textContent = 'Speichere...';
+      status.textContent = t('settings.saving');
       try {
         await ctx.fetchJSON('/api/panel-settings', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ preset: select.value }),
         });
-        status.textContent = 'Übernommen.';
+        status.textContent = t('settings.applied');
       } catch (err) {
-        status.textContent = 'Fehler: ' + err.message;
+        status.textContent = t('analytics.loadError', { message: err.message });
       }
     });
 
@@ -348,29 +550,29 @@ export default {
           ctx.fetchJSON('/api/accounts'),
         ]);
       } catch (err) {
-        listEl.textContent = 'Fehler: ' + err.message;
+        listEl.textContent = t('analytics.loadError', { message: err.message });
         return;
       }
       if (!list.length) {
-        listEl.innerHTML = '<div class="templates-empty">Noch keine Vorlagen gespeichert.</div>';
+        listEl.innerHTML = `<div class="templates-empty">${t('settings.templatesEmpty')}</div>`;
         return;
       }
-      listEl.innerHTML = list.map(t => `
-        <div class="template-row" data-id="${t.id}">
+      listEl.innerHTML = list.map(tpl => `
+        <div class="template-row" data-id="${tpl.id}">
           <div class="template-head">
-            <span><span class="template-name char-name">${escapeHtml(t.name)}</span><span class="muted template-meta">${t.fieldCount} Felder · ${fmtDate(t.createdAt)}</span></span>
+            <span><span class="template-name char-name">${escapeHtml(tpl.name)}</span><span class="muted template-meta">${t('settings.templateMeta', { count: tpl.fieldCount, date: fmtDate(tpl.createdAt) })}</span></span>
             <div class="template-actions">
-              <button class="btn-secondary" data-action="toggle-apply">Anwenden</button>
-              <button class="btn-danger" data-action="delete">Löschen</button>
+              <button class="btn-secondary" data-action="toggle-apply">${t('settings.applyTemplateBtn')}</button>
+              <button class="btn-danger" data-action="delete">${t('settings.deleteBtn')}</button>
             </div>
           </div>
           <div class="template-apply-panel" data-role="apply-panel">
             <div class="template-target-list">
               ${allAccounts.map(acc => `
                 <label><input type="checkbox" value="${escapeHtml(acc.id)}" /> <span class="char-name">${escapeHtml(acc.charName)}</span> <span class="muted">(${escapeHtml(acc.server)})</span></label>
-              `).join('') || '<span class="muted">Keine Accounts vorhanden.</span>'}
+              `).join('') || `<span class="muted">${t('settings.noAccounts')}</span>`}
             </div>
-            <button class="btn btn-primary" data-action="confirm-apply" style="width:auto;padding:6px 14px;font-size:12px;">Auf ausgewählte anwenden</button>
+            <button class="btn btn-primary" data-action="confirm-apply" style="width:auto;padding:6px 14px;font-size:12px;">${t('settings.applySelectedBtn')}</button>
             <span data-role="apply-status" class="muted" style="margin-left:8px;font-size:11.5px;"></span>
           </div>
         </div>`).join('');
@@ -381,29 +583,29 @@ export default {
           row.querySelector('[data-role="apply-panel"]').classList.toggle('open');
         });
         row.querySelector('[data-action="delete"]').addEventListener('click', async () => {
-          if (!confirm('Diese Vorlage wirklich löschen?')) return;
+          if (!confirm(t('settings.confirmDeleteTemplate'))) return;
           try {
             await ctx.fetchJSON(`/api/settings-templates/${encodeURIComponent(id)}`, { method: 'DELETE' });
             await loadTemplates();
           } catch (err) {
-            alert('Löschen fehlgeschlagen: ' + err.message);
+            alert(t('settings.deleteFailed', { message: err.message }));
           }
         });
         row.querySelector('[data-action="confirm-apply"]').addEventListener('click', async () => {
           const statusEl = row.querySelector('[data-role="apply-status"]');
           const accountIds = [...row.querySelectorAll('.template-target-list input:checked')].map(cb => cb.value);
-          if (!accountIds.length) { statusEl.textContent = 'Bitte mindestens einen Charakter wählen.'; return; }
-          statusEl.textContent = 'Wende an...';
+          if (!accountIds.length) { statusEl.textContent = t('settings.selectAtLeastOne'); return; }
+          statusEl.textContent = t('settings.applying');
           try {
             await ctx.fetchJSON(`/api/settings-templates/${encodeURIComponent(id)}/apply`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ accountIds }),
             });
-            statusEl.textContent = `Auf ${accountIds.length} Charakter(e) angewendet.`;
+            statusEl.textContent = t('settings.appliedToCount', { count: accountIds.length });
             if (accountIds.includes(ctx.getAccountId())) load();
           } catch (err) {
-            statusEl.textContent = 'Fehler: ' + err.message;
+            statusEl.textContent = t('analytics.loadError', { message: err.message });
           }
         });
       });
@@ -414,20 +616,20 @@ export default {
       const nameInput = wrap.querySelector('#template-name-input');
       const accountId = ctx.getAccountId();
       const name = nameInput.value.trim();
-      if (!name) { status.textContent = 'Bitte einen Namen für die Vorlage angeben.'; return; }
-      if (!accountId || !hasCurrentSettings) { status.textContent = 'Kein Account mit geladenen Einstellungen ausgewählt.'; return; }
-      status.textContent = 'Speichere...';
+      if (!name) { status.textContent = t('settings.nameRequired'); return; }
+      if (!accountId || !hasCurrentSettings) { status.textContent = t('settings.noLoadedSettings'); return; }
+      status.textContent = t('settings.saving');
       try {
         await ctx.fetchJSON('/api/settings-templates', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, accountId }),
         });
-        status.textContent = `Vorlage "${name}" gespeichert.`;
+        status.textContent = t('settings.templateSaved', { name });
         nameInput.value = '';
         await loadTemplates();
       } catch (err) {
-        status.textContent = 'Fehler: ' + err.message;
+        status.textContent = t('analytics.loadError', { message: err.message });
       }
     });
 
@@ -444,21 +646,21 @@ export default {
         const parsed = JSON.parse(text);
         const settings = parsed && typeof parsed.botConfig === 'object' ? parsed.botConfig : parsed;
         if (!settings || typeof settings !== 'object' || Array.isArray(settings)) {
-          throw new Error('Keine gültige Einstellungs-Struktur in dieser Datei gefunden');
+          throw new Error(t('settings.invalidImportFile'));
         }
         const defaultName = file.name.replace(/\.json$/i, '');
-        const name = prompt('Name für die importierte Vorlage:', defaultName);
+        const name = prompt(t('settings.importNamePrompt'), defaultName);
         if (!name || !name.trim()) return;
-        status.textContent = 'Importiere...';
+        status.textContent = t('settings.importing');
         await ctx.fetchJSON('/api/settings-templates/import', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: name.trim(), settings }),
         });
-        status.textContent = `Vorlage "${name.trim()}" importiert.`;
+        status.textContent = t('settings.templateImported', { name: name.trim() });
         await loadTemplates();
       } catch (err) {
-        status.textContent = 'Import fehlgeschlagen: ' + err.message;
+        status.textContent = t('settings.importFailed', { message: err.message });
       }
     });
 
@@ -471,15 +673,15 @@ export default {
       const body = wrap.querySelector('#settings-body');
       pending = {};
       hasCurrentSettings = false;
-      if (!accountId) { body.textContent = 'Kein Account ausgewählt.'; return; }
+      if (!accountId) { body.textContent = t('analytics.noAccountSelected'); return; }
       try {
         const settings = await ctx.fetchJSON(`/api/settings/${encodeURIComponent(accountId)}`);
         hasCurrentSettings = true;
         render(body, settings);
       } catch (err) {
         body.innerHTML = /Keine Einstellungen/i.test(err.message)
-          ? `<p class="muted">Für diesen Account gibt es noch keine gespeicherten Einstellungen — er wurde vermutlich noch nie gestartet. Wende oben eine Vorlage darauf an, um ihn direkt einsatzbereit zu machen.</p>`
-          : `<p class="muted">Fehler: ${escapeHtml(err.message)}</p>`;
+          ? `<p class="muted">${t('settings.noSettingsYet')}</p>`
+          : `<p class="muted">${t('analytics.loadError', { message: escapeHtml(err.message) })}</p>`;
       }
     }
 
@@ -495,7 +697,7 @@ export default {
       }
       // Arrays/Objekte: nur zur vollständigen Übersicht angezeigt, nicht editierbar
       // (sichere Bearbeitung beliebiger JSON-Strukturen ist über ein einfaches Formular nicht sinnvoll möglich).
-      return `<span class="readonly-value" title="Nur lesbar">${escapeHtml(JSON.stringify(value))}</span>`;
+      return `<span class="readonly-value" title="${t('settings.readOnlyTitle')}">${escapeHtml(JSON.stringify(value))}</span>`;
     }
 
     function render(body, settings) {
@@ -508,9 +710,9 @@ export default {
 
       body.innerHTML = `<div id="settings-groups">` + orderedGroups.map(([g, entries]) => `
         <div class="group">
-          <h3>${GROUP_LABELS[g] || g}</h3>
+          <h3>${groupLabels()[g] || g}</h3>
           ${entries.map(([key, value]) => {
-            const meta = LABELS[key];
+            const meta = currentLabels()[key];
             const label = meta ? meta.label : humanizeKey(key);
             const desc = meta && meta.desc ? `<span class="row-desc">${escapeHtml(meta.desc)}</span>` : '';
             return `
@@ -526,7 +728,7 @@ export default {
         </div>`).join('') + `</div>
         <div class="save-bar">
           <span id="settings-status" class="muted"></span>
-          <button class="btn btn-primary" id="settings-save" style="width:auto;padding:8px 20px;">Speichern</button>
+          <button class="btn btn-primary" id="settings-save" style="width:auto;padding:8px 20px;">${t('settings.saveBtn')}</button>
         </div>`;
 
       body.querySelectorAll('input[data-key]').forEach(input => {
@@ -539,7 +741,7 @@ export default {
 
       body.querySelector('#settings-save').addEventListener('click', async () => {
         const status = body.querySelector('#settings-status');
-        status.textContent = 'Speichere...';
+        status.textContent = t('settings.saving');
         try {
           const accountId = ctx.getAccountId();
           await ctx.fetchJSON(`/api/settings/${encodeURIComponent(accountId)}`, {
@@ -547,10 +749,10 @@ export default {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(pending),
           });
-          status.textContent = 'Gespeichert.';
+          status.textContent = t('settings.saved');
           pending = {};
         } catch (err) {
-          status.textContent = 'Fehler: ' + err.message;
+          status.textContent = t('analytics.loadError', { message: err.message });
         }
       });
     }
