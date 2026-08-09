@@ -5,6 +5,7 @@ export default {
   'common.copyError': 'Fehler',
   'common.copyBtn': 'Kopieren',
   'common.passwordMismatch': 'Passwörter stimmen nicht überein.',
+  'common.loading': 'Lade...',
 
   // nav — page labels rendered by router.js
   'nav.overview': 'Overview',
@@ -106,6 +107,27 @@ export default {
   'router.updateFailed': 'Update fehlgeschlagen: {{message}}',
   'router.checkFailed': 'Prüfung fehlgeschlagen: {{message}}',
   'router.notifEmpty': 'Keine Fehler oder Warnungen bisher.',
+
+  // analytics.js (public/pages/analytics.js)
+  'analytics.chartLoadError': 'Chart.js konnte nicht geladen werden',
+  'analytics.title': 'Analysen',
+  'analytics.dailyEarningsTitle': '📊 Tägliche Erträge (letzte 14 Tage)',
+  'analytics.detectedActionsTitle': '⚔ Erkannte Aktionen',
+  'analytics.epLabel': 'EP',
+  'analytics.honorLabel': 'Ehre',
+  'analytics.noFightsDetected': 'Noch keine Kämpfe erkannt.',
+  'analytics.colTime': 'Zeit',
+  'analytics.colType': 'Typ',
+  'analytics.colCommands': 'Befehle im Fenster',
+  'analytics.noAccountSelected': 'Kein Account ausgewählt.',
+  'analytics.fieldLevel': 'Level',
+  'analytics.fieldSilver': 'Gold',
+  'analytics.fieldHonor': 'Ehre',
+  'analytics.fieldRank': 'Rang',
+  'analytics.fieldMushrooms': 'Pilze',
+  'analytics.fieldArmor': 'Rüstung',
+  'analytics.fieldExperience': 'Erfahrung',
+  'analytics.loadError': 'Fehler: {{message}}',
 
   // console.js (public/pages/console.js)
   'console.title': 'Konsole',

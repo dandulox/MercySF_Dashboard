@@ -1,10 +1,12 @@
+import { t } from '/lib/i18n.js';
+
 function ensureChartJs() {
   if (window.Chart) return Promise.resolve();
   return new Promise((resolve, reject) => {
     const script = document.createElement('script');
     script.src = '/vendor/chart.js';
     script.onload = () => resolve();
-    script.onerror = () => reject(new Error('Chart.js konnte nicht geladen werden'));
+    script.onerror = () => reject(new Error(t('analytics.chartLoadError')));
     document.head.appendChild(script);
   });
 }
@@ -40,15 +42,15 @@ export default {
     const wrap = document.createElement('div');
     wrap.className = 'analytics-page';
     wrap.innerHTML = `
-      <h1 class="page-title">Analysen</h1>
-      <div id="analytics-body">Lade...</div>
+      <h1 class="page-title">${t('analytics.title')}</h1>
+      <div id="analytics-body">${t('common.loading')}</div>
       <div class="earnings-card">
-        <h3>📊 Tägliche Erträge (letzte 14 Tage)</h3>
+        <h3>${t('analytics.dailyEarningsTitle')}</h3>
         <div class="earnings-chart"><canvas id="earnings-chart"></canvas></div>
       </div>
       <div class="earnings-card">
-        <h3>⚔ Erkannte Aktionen</h3>
-        <div id="actions-body">Lade...</div>
+        <h3>${t('analytics.detectedActionsTitle')}</h3>
+        <div id="actions-body">${t('common.loading')}</div>
       </div>
     `;
     container.appendChild(wrap);
@@ -84,9 +86,9 @@ export default {
         data: {
           labels: daily.map(d => d.date),
           datasets: [
-            { label: 'EP', data: daily.map(d => d.expGained), backgroundColor: 'rgba(79,140,255,0.6)' },
+            { label: t('analytics.epLabel'), data: daily.map(d => d.expGained), backgroundColor: 'rgba(79,140,255,0.6)' },
             { label: 'Gold', data: daily.map(d => Math.round(d.silverGained / 100)), backgroundColor: 'rgba(53,201,143,0.6)' },
-            { label: 'Ehre', data: daily.map(d => d.honorGained), backgroundColor: 'rgba(240,180,41,0.6)' },
+            { label: t('analytics.honorLabel'), data: daily.map(d => d.honorGained), backgroundColor: 'rgba(240,180,41,0.6)' },
           ],
         },
         options: {
@@ -103,9 +105,9 @@ export default {
     async function loadActions(accountId) {
       const el = wrap.querySelector('#actions-body');
       const windows = await ctx.fetchJSON(`/api/stats/${encodeURIComponent(accountId)}/actions?limit=30`);
-      if (!windows.length) { el.textContent = 'Noch keine Kämpfe erkannt.'; return; }
+      if (!windows.length) { el.textContent = t('analytics.noFightsDetected'); return; }
       el.innerHTML = `<div class="table-scroll"><table class="actions-table">
-        <thead><tr><th>Zeit</th><th>Typ</th><th>EP</th><th>Gold</th><th>Ehre</th><th>Befehle im Fenster</th></tr></thead>
+        <thead><tr><th>${t('analytics.colTime')}</th><th>${t('analytics.colType')}</th><th>${t('analytics.epLabel')}</th><th>Gold</th><th>${t('analytics.honorLabel')}</th><th>${t('analytics.colCommands')}</th></tr></thead>
         <tbody>${windows.map(w => {
           const goldDelta = Math.round(w.silverDelta / 100);
           return `
@@ -124,12 +126,20 @@ export default {
     async function load() {
       const accountId = ctx.getAccountId();
       const body = wrap.querySelector('#analytics-body');
-      if (!accountId) { body.textContent = 'Kein Account ausgewählt.'; return; }
+      if (!accountId) { body.textContent = t('analytics.noAccountSelected'); return; }
       try {
         await ensureChartJs();
         const data = await ctx.fetchJSON(`/api/analytics/${encodeURIComponent(accountId)}`);
         destroyCharts();
-        const labelMap = { level: 'Level', silver: 'Gold', honor: 'Ehre', rank: 'Rang', mushrooms: 'Pilze', armor: 'Rüstung', experience: 'Erfahrung' };
+        const labelMap = {
+          level: t('analytics.fieldLevel'),
+          silver: t('analytics.fieldSilver'),
+          honor: t('analytics.fieldHonor'),
+          rank: t('analytics.fieldRank'),
+          mushrooms: t('analytics.fieldMushrooms'),
+          armor: t('analytics.fieldArmor'),
+          experience: t('analytics.fieldExperience'),
+        };
         body.innerHTML = Object.keys(data.series).map(f => `
           <div class="chart-card">
             <h3>${labelMap[f] || f}</h3>
@@ -160,7 +170,7 @@ export default {
         await loadEarnings(accountId);
         await loadActions(accountId);
       } catch (err) {
-        body.textContent = 'Fehler: ' + err.message;
+        body.textContent = t('analytics.loadError', { message: err.message });
       }
     }
 
