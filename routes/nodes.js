@@ -63,6 +63,75 @@ router.post('/:id/rename', express.json(), (req, res) => {
   res.json(sanitize(node));
 });
 
+// Update-Proxy-Endpunkte: reine Weiterleitung an die gleichnamigen Endpunkte des Node-Agents
+// (siehe node-agent/lib/cliUpdate.js + selfUpdate.js) — kein eigener Zustand im Dashboard, damit
+// ein Update auch dann korrekt "verfügbar" bleibt, wenn zwischenzeitlich ein anderer Client fragt.
+function nodeOr404(id, res) {
+  const node = nodeRegistry.get(id);
+  if (!node) res.status(404).json({ error: 'Node nicht gefunden' });
+  return node;
+}
+
+router.get('/:id/cli/status', async (req, res) => {
+  const node = nodeOr404(req.params.id, res);
+  if (!node) return;
+  try {
+    res.json(await nodeClient.call(node, '/cli/status', { timeoutMs: 5000 }));
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+router.post('/:id/cli/check', async (req, res) => {
+  const node = nodeOr404(req.params.id, res);
+  if (!node) return;
+  try {
+    res.json(await nodeClient.call(node, '/cli/check', { method: 'POST', timeoutMs: 30000 }));
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+router.post('/:id/cli/apply', async (req, res) => {
+  const node = nodeOr404(req.params.id, res);
+  if (!node) return;
+  try {
+    res.json(await nodeClient.call(node, '/cli/apply', { method: 'POST', timeoutMs: 60000 }));
+  } catch (err) {
+    res.status(err.status || 502).json({ error: err.message });
+  }
+});
+
+router.get('/:id/self-update/status', async (req, res) => {
+  const node = nodeOr404(req.params.id, res);
+  if (!node) return;
+  try {
+    res.json(await nodeClient.call(node, '/self-update/status', { timeoutMs: 5000 }));
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+router.post('/:id/self-update/check', async (req, res) => {
+  const node = nodeOr404(req.params.id, res);
+  if (!node) return;
+  try {
+    res.json(await nodeClient.call(node, '/self-update/check', { method: 'POST', timeoutMs: 15000 }));
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+router.post('/:id/self-update/apply', async (req, res) => {
+  const node = nodeOr404(req.params.id, res);
+  if (!node) return;
+  try {
+    res.json(await nodeClient.call(node, '/self-update/apply', { method: 'POST', timeoutMs: 60000 }));
+  } catch (err) {
+    res.status(err.status || 502).json({ error: err.message });
+  }
+});
+
 router.post('/:id/ping', async (req, res) => {
   const node = nodeRegistry.get(req.params.id);
   if (!node) return res.status(404).json({ error: 'Node nicht gefunden' });

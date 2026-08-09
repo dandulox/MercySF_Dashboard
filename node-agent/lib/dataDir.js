@@ -28,4 +28,17 @@ function accountIdFor(server, characterName) {
   return `https___${server.replace(/\./g, '_')}__${characterName}`;
 }
 
-module.exports = { findDataDir, accountIdFor };
+function latestSnapshot(dataDir, id) {
+  const p = path.join(dataDir, 'analytics', `${id}.json`);
+  if (!fs.existsSync(p)) return null;
+  try {
+    const data = JSON.parse(fs.readFileSync(p, 'utf8'));
+    const snaps = data.snapshots || [];
+    if (!snaps.length) return null;
+    return snaps[snaps.length - 1];
+  } catch (e) {
+    return null;
+  }
+}
+
+module.exports = { findDataDir, accountIdFor, latestSnapshot };
