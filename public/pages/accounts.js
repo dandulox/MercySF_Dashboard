@@ -1,4 +1,5 @@
 import { connectTerminal } from '/lib/terminal.js';
+import { t } from '/lib/i18n.js';
 
 function escapeHtml(s) {
   return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -26,9 +27,9 @@ function fmtUptime(startedAt) {
 function fmtRelTime(iso) {
   if (!iso) return '';
   const secs = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
-  if (secs < 60) return `vor ${secs}s`;
-  if (secs < 3600) return `vor ${Math.floor(secs / 60)}m`;
-  return `vor ${Math.floor(secs / 3600)}h`;
+  if (secs < 60) return t('nodes.secsAgo', { secs });
+  if (secs < 3600) return t('nodes.minsAgo', { mins: Math.floor(secs / 60) });
+  return t('nodes.hoursAgo', { hours: Math.floor(secs / 3600) });
 }
 
 export default {
@@ -150,31 +151,31 @@ export default {
     const wrap = document.createElement('div');
     wrap.className = 'accounts-page';
     wrap.innerHTML = `
-      <h1 class="page-title">Account-Verwaltung</h1>
+      <h1 class="page-title">${t('accounts.title')}</h1>
       <div class="add-card">
         <div class="add-header">
           <div class="add-icon">➕</div>
           <div>
-            <div class="add-title">Neuen Account hinzufügen</div>
-            <div class="add-subtitle">Einmal einloggen — alle Charaktere dieses Logins werden automatisch gefunden</div>
+            <div class="add-title">${t('accounts.addTitle')}</div>
+            <div class="add-subtitle">${t('accounts.addSubtitle')}</div>
           </div>
         </div>
         <div class="add-form">
           <div class="field">
-            <label for="acc-username">S&amp;F-Username</label>
+            <label for="acc-username">${t('accounts.usernameLabel')}</label>
             <input type="text" id="acc-username" placeholder="Username" autocomplete="off" />
           </div>
           <div class="field">
-            <label for="acc-password">Passwort</label>
-            <input type="password" id="acc-password" placeholder="Passwort" autocomplete="off" />
+            <label for="acc-password">${t('login.password')}</label>
+            <input type="password" id="acc-password" placeholder="${t('login.password')}" autocomplete="off" />
           </div>
           <div class="field">
             <label for="acc-node">Node</label>
-            <select id="acc-node"><option value="">Lokal (dieser Server)</option></select>
+            <select id="acc-node"><option value="">${t('accounts.localNode')}</option></select>
           </div>
-          <button class="add-btn" id="acc-add-btn">Account hinzufügen</button>
+          <button class="add-btn" id="acc-add-btn">${t('accounts.addBtn')}</button>
         </div>
-        <div class="add-hint">Wir loggen einmal automatisiert ein, um alle Charaktere dieses Logins zu finden, und legen für jeden ein fertiges Profil an. Das Passwort wird verschlüsselt gespeichert (AES-256), damit künftige Starts vollautomatisch ablaufen — nie im Klartext, nie im Browser.</div>
+        <div class="add-hint">${t('accounts.addHint')}</div>
         <div class="add-hint" id="acc-add-status"></div>
       </div>
       <div id="profiles-list"></div>
@@ -191,7 +192,7 @@ export default {
       btn.type = 'button';
       btn.className = 'password-toggle';
       btn.textContent = '👁';
-      btn.setAttribute('aria-label', 'Passwort anzeigen');
+      btn.setAttribute('aria-label', t('common.showPassword'));
       btn.addEventListener('click', () => {
         const show = input.type === 'password';
         input.type = show ? 'text' : 'password';
@@ -208,14 +209,14 @@ export default {
       nodesById = new Map(nodes.map(n => [n.id, n]));
       const select = wrap.querySelector('#acc-node');
       const current = select.value;
-      select.innerHTML = '<option value="">Lokal (dieser Server)</option>' +
+      select.innerHTML = `<option value="">${t('accounts.localNode')}</option>` +
         nodes.map(n => `<option value="${n.id}">${escapeHtml(n.name)}</option>`).join('');
       select.value = current;
       return nodes;
     }
 
     function nodeOptionsHtml(selectedId) {
-      return '<option value="">Lokal (dieser Server)</option>' +
+      return `<option value="">${t('accounts.localNode')}</option>` +
         [...nodesById.values()].map(n => `<option value="${n.id}" ${n.id === selectedId ? 'selected' : ''}>${escapeHtml(n.name)}</option>`).join('');
     }
 
@@ -232,14 +233,14 @@ export default {
       if (p.server && p.characterName) {
         return `${escapeHtml(p.username)} · ${escapeHtml(p.characterName)} @ ${escapeHtml(p.server)}${classBadge}${nodeBadge}`;
       }
-      return `${escapeHtml(p.username)} · noch nicht eingeloggt${nodeBadge}`;
+      return `${escapeHtml(p.username)} · ${t('accounts.notLoggedIn')}${nodeBadge}`;
     }
 
     function statusInfo(botState, currentActivity) {
       switch (botState) {
-        case 'running': return { cls: 'running', text: currentActivity ? `Running · ${currentActivity}` : 'Running' };
-        case 'logged_in': return { cls: 'logged_in', text: 'Eingeloggt' };
-        case 'connecting': return { cls: 'connecting', text: 'Verbindet...' };
+        case 'running': return { cls: 'running', text: currentActivity ? t('accounts.runningWithActivity', { activity: currentActivity }) : 'Running' };
+        case 'logged_in': return { cls: 'logged_in', text: t('accounts.loggedIn') };
+        case 'connecting': return { cls: 'connecting', text: t('accounts.connecting') };
         default: return { cls: 'offline', text: 'Offline' };
       }
     }
@@ -251,11 +252,11 @@ export default {
       try {
         profiles = await ctx.fetchJSON('/api/profiles');
       } catch (err) {
-        list.innerHTML = `<p class="empty-hint">Fehler: ${escapeHtml(err.message)}</p>`;
+        list.innerHTML = `<p class="empty-hint">${t('analytics.loadError', { message: escapeHtml(err.message) })}</p>`;
         return;
       }
       if (!profiles.length) {
-        list.innerHTML = `<p class="empty-hint">Noch keine Accounts angelegt. Leg oben einen an, um ihn einzeln starten zu können.</p>`;
+        list.innerHTML = `<p class="empty-hint">${t('accounts.emptyHint')}</p>`;
         return;
       }
 
@@ -275,22 +276,22 @@ export default {
             <div class="detail-block">
               <h4>Session</h4>
               <div class="stat-line">
-                ${uptime ? `<b>Laufzeit:</b> ${uptime}<br>` : ''}
-                <b>Befehle gesendet:</b> ${p.status.commandsSent ?? 0}<br>
-                <b>Fehler/Warnungen:</b> ${p.status.errorsSeen ?? 0}
+                ${uptime ? `<b>${t('accounts.uptimeLabel')}</b> ${uptime}<br>` : ''}
+                <b>${t('accounts.commandsSentLabel')}</b> ${p.status.commandsSent ?? 0}<br>
+                <b>${t('accounts.errorsWarningsLabel')}</b> ${p.status.errorsSeen ?? 0}
               </div>
             </div>
             <div class="detail-block">
-              <h4>Letzte Aktionen</h4>
+              <h4>${t('accounts.lastActionsTitle')}</h4>
               ${history.length ? `<ul class="mini-list">${history.map(h =>
                 `<li><span>${escapeHtml(h.label)}</span><span class="mini-time">${fmtRelTime(h.at)}</span></li>`).join('')}</ul>`
-                : '<div class="mini-empty">Noch keine erfasst</div>'}
+                : `<div class="mini-empty">${t('accounts.noneRecordedYet')}</div>`}
             </div>
             <div class="detail-block">
-              <h4>Zuletzt gescoutet</h4>
+              <h4>${t('accounts.lastScoutedTitle')}</h4>
               ${scouted.length ? `<ul class="mini-list">${scouted.map(s =>
                 `<li><span>${escapeHtml(s.name)}</span><span class="mini-time">${fmtRelTime(s.at)}</span></li>`).join('')}</ul>`
-                : '<div class="mini-empty">Noch niemand</div>'}
+                : `<div class="mini-empty">${t('accounts.noOneYet')}</div>`}
             </div>
           </div>`;
       }
@@ -309,20 +310,20 @@ export default {
             <div class="profile-info">
               <div class="profile-nickname-row">
                 <span class="profile-nickname char-name" data-role="nickname">${escapeHtml(p.nickname)}</span>
-                <button class="rename-btn" data-action="rename" title="Umbenennen">✏️</button>
+                <button class="rename-btn" data-action="rename" title="${t('nodes.renameTitle')}">✏️</button>
               </div>
               <div class="profile-meta char-name" data-role="meta">${metaLine(p)}</div>
             </div>
             <div class="profile-actions">
               <button class="btn btn-primary" data-action="start" ${p.status.running ? 'disabled' : ''}>Start</button>
               <button class="btn-secondary" data-action="stop" ${p.status.running ? '' : 'disabled'}>Stop</button>
-              <button class="btn-secondary" data-action="pause" ${hasCharacter && !paused ? '' : 'disabled'} title="Schaltet alle Automatisierungen aus (kein garantierter Sofort-Effekt, nur Konfiguration)">${paused ? 'Pausiert' : 'Pause'}</button>
-              <button class="btn-secondary" data-action="resume" ${paused ? '' : 'disabled'}>Fortsetzen</button>
-              <button class="btn-secondary" data-action="claim" ${hasCharacter && p.hasPassword ? '' : 'disabled'} title="Kalender, Tagesaufgaben und ausstehende Freischaltungen abholen">Einlösen</button>
-              <button class="btn-secondary" data-action="detect-class" ${hasCharacter && p.hasPassword ? '' : 'disabled'} title="Spielklasse abrufen (für die Account-Analyse)">🔄 Klasse</button>
-              <button class="btn-secondary" data-action="toggle-term">Konsole</button>
-              <select class="node-select" data-action="move-node" title="Auf einen anderen Node verschieben">${nodeOptionsHtml(p.nodeId)}</select>
-              <button class="btn-danger" data-action="delete">Löschen</button>
+              <button class="btn-secondary" data-action="pause" ${hasCharacter && !paused ? '' : 'disabled'} title="${t('accounts.pauseTitle')}">${paused ? t('accounts.paused') : 'Pause'}</button>
+              <button class="btn-secondary" data-action="resume" ${paused ? '' : 'disabled'}>${t('accounts.resumeBtn')}</button>
+              <button class="btn-secondary" data-action="claim" ${hasCharacter && p.hasPassword ? '' : 'disabled'} title="${t('accounts.claimTitle')}">${t('accounts.claimBtn')}</button>
+              <button class="btn-secondary" data-action="detect-class" ${hasCharacter && p.hasPassword ? '' : 'disabled'} title="${t('accounts.detectClassTitle')}">${t('accounts.detectClassBtn')}</button>
+              <button class="btn-secondary" data-action="toggle-term">${t('nav.console')}</button>
+              <select class="node-select" data-action="move-node" title="${t('accounts.moveNodeTitle')}">${nodeOptionsHtml(p.nodeId)}</select>
+              <button class="btn-danger" data-action="delete">${t('settings.deleteBtn')}</button>
             </div>
           </div>
           ${detailsHtml(p)}
@@ -335,13 +336,13 @@ export default {
       list.innerHTML = [...groups.entries()].map(([username, members]) => `
         <div class="login-group" data-username="${escapeHtml(username)}">
           <div class="login-group-header">
-            <span class="login-group-title char-name">${escapeHtml(username)} <span class="login-group-count">(${members.length} Charakter${members.length === 1 ? '' : 'e'})</span></span>
+            <span class="login-group-title char-name">${escapeHtml(username)} <span class="login-group-count">(${members.length} ${members.length === 1 ? t('accounts.characterSingular') : t('accounts.characterPlural')})</span></span>
             <div class="login-group-actions">
-              <button class="btn-secondary" data-group-action="refresh">⟳ Neue Charaktere suchen</button>
-              <button class="btn-secondary" data-group-action="start-all">Alle starten</button>
-              <button class="btn-secondary" data-group-action="stop-all">Alle stoppen</button>
-              <button class="btn-secondary" data-group-action="pause-all">Alle pausieren</button>
-              <button class="btn-danger" data-group-action="remove-login">Account entfernen</button>
+              <button class="btn-secondary" data-group-action="refresh">${t('accounts.refreshBtn')}</button>
+              <button class="btn-secondary" data-group-action="start-all">${t('accounts.startAllBtn')}</button>
+              <button class="btn-secondary" data-group-action="stop-all">${t('accounts.stopAllBtn')}</button>
+              <button class="btn-secondary" data-group-action="pause-all">${t('accounts.pauseAllBtn')}</button>
+              <button class="btn-danger" data-group-action="remove-login">${t('accounts.removeLoginBtn')}</button>
             </div>
             <div class="login-group-status" data-role="group-status"></div>
           </div>
@@ -367,12 +368,12 @@ export default {
             profile.nickname = trimmed;
             card.querySelector('[data-role="nickname"]').textContent = trimmed;
           } catch (err) {
-            alert('Umbenennen fehlgeschlagen: ' + err.message);
+            alert(t('nodes.renameFailed', { message: err.message }));
           }
         }
 
         card.querySelector('[data-action="rename"]').addEventListener('click', () => {
-          const next = prompt('Neuer Spitzname:', profile.nickname);
+          const next = prompt(t('accounts.renameNicknamePrompt'), profile.nickname);
           if (next !== null) renameProfile(next);
         });
 
@@ -390,7 +391,7 @@ export default {
             await ctx.fetchJSON(`/api/profiles/${encodeURIComponent(id)}/pause`, { method: 'POST' });
             await loadProfiles();
           } catch (err) {
-            alert('Pausieren fehlgeschlagen: ' + err.message);
+            alert(t('accounts.pauseFailed', { message: err.message }));
           }
         });
         card.querySelector('[data-action="resume"]').addEventListener('click', async () => {
@@ -398,7 +399,7 @@ export default {
             await ctx.fetchJSON(`/api/profiles/${encodeURIComponent(id)}/resume`, { method: 'POST' });
             await loadProfiles();
           } catch (err) {
-            alert('Fortsetzen fehlgeschlagen: ' + err.message);
+            alert(t('accounts.resumeFailed', { message: err.message }));
           }
         });
         const claimBtn = card.querySelector('[data-action="claim"]');
@@ -406,13 +407,13 @@ export default {
           claimBtn.addEventListener('click', async () => {
             const original = claimBtn.textContent;
             claimBtn.disabled = true;
-            claimBtn.textContent = 'Löse ein…';
+            claimBtn.textContent = t('accounts.claimingBtn');
             try {
               await ctx.fetchJSON(`/api/profiles/${encodeURIComponent(id)}/claim`, { method: 'POST' });
-              claimBtn.textContent = 'Eingelöst ✓';
+              claimBtn.textContent = t('accounts.claimedBtn');
             } catch (err) {
               claimBtn.textContent = original;
-              alert('Einlösen fehlgeschlagen: ' + err.message);
+              alert(t('accounts.claimFailed', { message: err.message }));
             } finally {
               setTimeout(() => { claimBtn.disabled = false; claimBtn.textContent = original; }, 2500);
             }
@@ -424,13 +425,13 @@ export default {
           detectClassBtn.addEventListener('click', async () => {
             const original = detectClassBtn.textContent;
             detectClassBtn.disabled = true;
-            detectClassBtn.textContent = 'Erkenne…';
+            detectClassBtn.textContent = t('accounts.detectingBtn');
             try {
               await ctx.fetchJSON(`/api/gamestate/${encodeURIComponent(id)}`);
               await loadProfiles();
             } catch (err) {
               detectClassBtn.textContent = original;
-              alert('Klassenerkennung fehlgeschlagen: ' + err.message);
+              alert(t('accounts.detectClassFailed', { message: err.message }));
             } finally {
               detectClassBtn.disabled = !(profile.server && profile.characterName && profile.hasPassword);
             }
@@ -439,8 +440,8 @@ export default {
 
         card.querySelector('[data-action="move-node"]').addEventListener('change', async (ev) => {
           const nodeId = ev.target.value || null;
-          const targetName = nodeId ? (nodesById.get(nodeId)?.name || nodeId) : 'lokal (diesen Server)';
-          if (!confirm(`Account "${profile.nickname}" auf ${targetName} verschieben? Läuft er gerade, wird er dabei gestoppt und muss dort neu gestartet werden.`)) {
+          const targetName = nodeId ? (nodesById.get(nodeId)?.name || nodeId) : t('accounts.localNodeTarget');
+          if (!confirm(t('accounts.confirmMoveNode', { nickname: profile.nickname, target: targetName }))) {
             ev.target.value = profile.nodeId || '';
             return;
           }
@@ -453,13 +454,13 @@ export default {
             });
             await loadProfiles();
           } catch (err) {
-            alert('Verschieben fehlgeschlagen: ' + err.message);
+            alert(t('accounts.moveFailed', { message: err.message }));
             ev.target.value = profile.nodeId || '';
           }
         });
 
         card.querySelector('[data-action="delete"]').addEventListener('click', async () => {
-          if (!confirm(`Account-Profil "${profile.nickname}" wirklich löschen? Läuft die CLI gerade, wird sie gestoppt. Deine Spieldaten (Statistiken, Kampfhistorie) bleiben erhalten, verschwinden aber aus der Übersicht.`)) return;
+          if (!confirm(t('accounts.confirmDeleteProfile', { nickname: profile.nickname }))) return;
           closeTerminal(id);
           await ctx.fetchJSON(`/api/profiles/${encodeURIComponent(id)}`, { method: 'DELETE' });
           await loadProfiles();
@@ -484,10 +485,10 @@ export default {
           function showPasswordHelper() {
             helperEl.classList.add('visible');
             helperEl.innerHTML = `
-              <div class="login-helper-label">Passwort für <span class="char-name">${escapeHtml(profile.nickname)}</span> (wird nirgends gespeichert)</div>
+              <div class="login-helper-label">${t('accounts.passwordForLabel', { nickname: escapeHtml(profile.nickname) })}</div>
               <div class="login-helper-row">
-                <input type="password" data-role="pw-input" placeholder="Passwort" autocomplete="off" />
-                <button class="btn btn-primary" data-role="pw-submit" style="width:auto;padding:7px 16px;">Einloggen</button>
+                <input type="password" data-role="pw-input" placeholder="${t('login.password')}" autocomplete="off" />
+                <button class="btn btn-primary" data-role="pw-submit" style="width:auto;padding:7px 16px;">${t('accounts.loginBtn')}</button>
               </div>
             `;
             const input = helperEl.querySelector('[data-role="pw-input"]');
@@ -506,7 +507,7 @@ export default {
           function showCharacterHelper(characters) {
             helperEl.classList.add('visible');
             helperEl.innerHTML = `
-              <div class="login-helper-label">Charakter wählen</div>
+              <div class="login-helper-label">${t('accounts.chooseCharacterLabel')}</div>
               ${characters.map(c => `
                 <button class="char-btn" data-index="${c.index}" data-name="${escapeHtml(c.name)}" data-url="${escapeHtml(c.url)}">
                   <span class="char-name">${escapeHtml(c.name)}</span>
@@ -520,10 +521,10 @@ export default {
 
           function showNicknameStep(index, charName, url) {
             helperEl.innerHTML = `
-              <div class="login-helper-label">Spitzname für <span class="char-name">${escapeHtml(charName)}</span></div>
+              <div class="login-helper-label">${t('accounts.nicknameForLabel', { charName: escapeHtml(charName) })}</div>
               <div class="login-helper-row">
                 <input type="text" data-role="nick-input" value="${escapeHtml(charName)}" />
-                <button class="btn btn-primary" data-role="nick-submit" style="width:auto;padding:7px 16px;">Bestätigen</button>
+                <button class="btn btn-primary" data-role="nick-submit" style="width:auto;padding:7px 16px;">${t('accounts.confirmBtn')}</button>
               </div>
             `;
             const input = helperEl.querySelector('[data-role="nick-input"]');
@@ -575,20 +576,20 @@ export default {
         const statusEl = group.querySelector('[data-role="group-status"]');
 
         group.querySelector('[data-group-action="refresh"]').addEventListener('click', async () => {
-          statusEl.textContent = 'Suche neue Charaktere...';
+          statusEl.textContent = t('accounts.searchingCharacters');
           try {
             const result = await ctx.fetchJSON(`/api/logins/${encodeURIComponent(username)}/refresh`, { method: 'POST' });
             statusEl.textContent = result.created.length
-              ? `${result.created.length} neue(r) Charakter gefunden: ${result.created.map(p => p.characterName).join(', ')}`
-              : `Keine neuen Charaktere (insgesamt ${result.totalFound} bekannt).`;
+              ? t('accounts.newCharactersFound', { count: result.created.length, names: result.created.map(p => p.characterName).join(', ') })
+              : t('accounts.noNewCharacters', { total: result.totalFound });
             await loadProfiles();
           } catch (err) {
-            statusEl.textContent = 'Fehler: ' + err.message;
+            statusEl.textContent = t('analytics.loadError', { message: err.message });
           }
         });
 
         group.querySelector('[data-group-action="start-all"]').addEventListener('click', async () => {
-          statusEl.textContent = 'Starte alle...';
+          statusEl.textContent = t('accounts.startingAll');
           await Promise.all(memberIds.map(mid =>
             ctx.fetchJSON(`/api/profiles/${encodeURIComponent(mid)}/start`, { method: 'POST' }).catch(() => {})));
           statusEl.textContent = '';
@@ -596,7 +597,7 @@ export default {
         });
 
         group.querySelector('[data-group-action="stop-all"]').addEventListener('click', async () => {
-          statusEl.textContent = 'Stoppe alle...';
+          statusEl.textContent = t('accounts.stoppingAll');
           memberIds.forEach(closeTerminal);
           await Promise.all(memberIds.map(mid =>
             ctx.fetchJSON(`/api/profiles/${encodeURIComponent(mid)}/stop`, { method: 'POST' }).catch(() => {})));
@@ -605,7 +606,7 @@ export default {
         });
 
         group.querySelector('[data-group-action="pause-all"]').addEventListener('click', async () => {
-          statusEl.textContent = 'Pausiere alle...';
+          statusEl.textContent = t('accounts.pausingAll');
           await Promise.all(memberIds.map(mid =>
             ctx.fetchJSON(`/api/profiles/${encodeURIComponent(mid)}/pause`, { method: 'POST' }).catch(() => {})));
           statusEl.textContent = '';
@@ -613,7 +614,7 @@ export default {
         });
 
         group.querySelector('[data-group-action="remove-login"]').addEventListener('click', async () => {
-          if (!confirm(`Account "${username}" komplett entfernen? Alle ${memberIds.length} Charakter-Profile und das gespeicherte Passwort werden gelöscht. Deine Spieldaten bleiben erhalten, verschwinden aber aus der Übersicht.`)) return;
+          if (!confirm(t('accounts.confirmRemoveLogin', { username, count: memberIds.length }))) return;
           memberIds.forEach(closeTerminal);
           await ctx.fetchJSON(`/api/logins/${encodeURIComponent(username)}`, { method: 'DELETE' });
           await loadProfiles();
@@ -627,10 +628,10 @@ export default {
       const nodeId = wrap.querySelector('#acc-node').value || undefined;
       const status = wrap.querySelector('#acc-add-status');
       if (!username || !password) {
-        status.textContent = 'Bitte Username und Passwort angeben.';
+        status.textContent = t('accounts.addValidation');
         return;
       }
-      status.textContent = 'Logge testweise ein, suche Charaktere...';
+      status.textContent = t('accounts.addTesting');
       try {
         const result = await ctx.fetchJSON('/api/profiles', {
           method: 'POST',
@@ -641,11 +642,11 @@ export default {
         wrap.querySelector('#acc-password').value = '';
         const names = result.created.map(p => p.characterName).join(', ');
         status.textContent = result.created.length
-          ? `${result.created.length} Charakter(e) angelegt: ${names}`
-          : 'Keine neuen Charaktere (evtl. schon vorhanden).';
+          ? t('accounts.addedCharacters', { count: result.created.length, names })
+          : t('accounts.noNewCharactersOnAdd');
         await loadProfiles();
       } catch (err) {
-        status.textContent = 'Fehler: ' + err.message;
+        status.textContent = t('analytics.loadError', { message: err.message });
       }
     });
 
