@@ -45,6 +45,7 @@ const PAGES = [
   { id: 'accounts', label: 'Account-Verwaltung', icon: '🗂' },
   { id: 'nodes', label: 'Nodes', icon: '🖧' },
   { id: 'analytics', label: 'Analysen', icon: '📈' },
+  { id: 'analytics-compare', label: 'Account-Analyse', icon: '🧬' },
   { id: 'settings', label: 'Einstellungen', icon: '⚙' },
   { id: 'console', label: 'Konsole', icon: '⌨' },
 ];
