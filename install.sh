@@ -10,6 +10,11 @@
 # zentrales Dashboard, siehe "Nodes"-Seite dort — kein eigenes Web-UI, kein sf-api-Build):
 #   curl -fsSL https://raw.githubusercontent.com/dandulox/MercySF_Dashboard/main/install.sh | bash -s -- --node
 #
+# Von einem bestimmten Branch installieren/testen (z. B. einem Feature-Branch vor dem Merge nach
+# main) — MERCY_BRANCH steuert, welcher Branch geklont/ausgecheckt wird, das install.sh selbst
+# muss trotzdem von genau diesem Branch geladen werden:
+#   curl -fsSL https://raw.githubusercontent.com/dandulox/MercySF_Dashboard/nodetest/install.sh | MERCY_BRANCH=nodetest bash -s -- --node
+#
 # Deinstallation (entfernt ALLES, inkl. gespeicherter Zugangsdaten und Statistik-Historie):
 #   curl -fsSL https://raw.githubusercontent.com/dandulox/MercySF_Dashboard/main/install.sh | bash -s -- --uninstall
 #
@@ -21,6 +26,7 @@
 set -euo pipefail
 
 REPO_URL="https://github.com/dandulox/MercySF_Dashboard.git"
+BRANCH="${MERCY_BRANCH:-main}"
 INSTALL_DIR="/opt/mercy"
 DASHBOARD_DIR="$INSTALL_DIR/dashboard"
 NODE_AGENT_DIR="$DASHBOARD_DIR/node-agent"
@@ -69,11 +75,13 @@ fi
 mkdir -p "$INSTALL_DIR"
 
 if [[ -d "$DASHBOARD_DIR/.git" ]]; then
-  log "Bestehende Installation gefunden — aktualisiere Code (git pull)"
-  git -C "$DASHBOARD_DIR" pull --ff-only
+  log "Bestehende Installation gefunden — aktualisiere Code (Branch: $BRANCH)"
+  git -C "$DASHBOARD_DIR" fetch --depth 1 origin "$BRANCH"
+  git -C "$DASHBOARD_DIR" checkout "$BRANCH"
+  git -C "$DASHBOARD_DIR" reset --hard "origin/$BRANCH"
 else
-  log "Repository klonen nach $DASHBOARD_DIR"
-  git clone --depth 1 "$REPO_URL" "$DASHBOARD_DIR"
+  log "Repository klonen nach $DASHBOARD_DIR (Branch: $BRANCH)"
+  git clone --depth 1 --branch "$BRANCH" "$REPO_URL" "$DASHBOARD_DIR"
 fi
 
 if [[ ! -f "$CLI_PATH" ]]; then
