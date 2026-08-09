@@ -1,13 +1,15 @@
+import { t } from '/lib/i18n.js';
+
 function escapeHtml(s) {
   return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 }
 
 function fmtRelTime(iso) {
-  if (!iso) return 'nie';
+  if (!iso) return t('nodes.never');
   const secs = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
-  if (secs < 60) return `vor ${secs}s`;
-  if (secs < 3600) return `vor ${Math.floor(secs / 60)}m`;
-  return `vor ${Math.floor(secs / 3600)}h`;
+  if (secs < 60) return t('nodes.secsAgo', { secs });
+  if (secs < 3600) return t('nodes.minsAgo', { mins: Math.floor(secs / 60) });
+  return t('nodes.hoursAgo', { hours: Math.floor(secs / 3600) });
 }
 
 export default {
@@ -81,17 +83,17 @@ export default {
         <div class="add-header">
           <div class="add-icon">🖧</div>
           <div>
-            <div class="add-title">Node pairen</div>
-            <div class="add-subtitle">IP/Hostname, Port und Pairing-Code von einem frisch installierten Node-Agent eingeben</div>
+            <div class="add-title">${t('nodes.pairTitle')}</div>
+            <div class="add-subtitle">${t('nodes.pairSubtitle')}</div>
           </div>
         </div>
         <div class="add-form">
           <div class="field">
-            <label for="node-name">Name (optional)</label>
-            <input type="text" id="node-name" placeholder="z. B. vServer 2" autocomplete="off" />
+            <label for="node-name">${t('nodes.nameLabel')}</label>
+            <input type="text" id="node-name" placeholder="${t('nodes.namePlaceholder')}" autocomplete="off" />
           </div>
           <div class="field">
-            <label for="node-host">IP / Hostname</label>
+            <label for="node-host">${t('nodes.hostLabel')}</label>
             <input type="text" id="node-host" placeholder="203.0.113.10" autocomplete="off" />
           </div>
           <div class="field">
@@ -99,12 +101,12 @@ export default {
             <input type="text" id="node-port" placeholder="8090" value="8090" autocomplete="off" />
           </div>
           <div class="field code">
-            <label for="node-code">Pairing-Code</label>
+            <label for="node-code">${t('nodes.codeLabel')}</label>
             <input type="text" id="node-code" placeholder="ABCD1234" autocomplete="off" maxlength="8" />
           </div>
-          <button class="add-btn" id="node-add-btn">Pairen</button>
+          <button class="add-btn" id="node-add-btn">${t('nodes.pairBtn')}</button>
         </div>
-        <div class="add-hint">Der Pairing-Code wird beim Installieren des Node-Agents auf dem Server angezeigt (<code>journalctl -u mercy-node-agent</code>) und ist 15 Minuten gültig.</div>
+        <div class="add-hint">${t('nodes.pairHint')}</div>
         <div class="add-hint" id="node-add-status"></div>
       </div>
       <div id="nodes-list"></div>
@@ -117,11 +119,11 @@ export default {
       try {
         nodes = await ctx.fetchJSON('/api/nodes');
       } catch (err) {
-        list.innerHTML = `<p class="empty-hint">Fehler: ${escapeHtml(err.message)}</p>`;
+        list.innerHTML = `<p class="empty-hint">${t('analytics.loadError', { message: escapeHtml(err.message) })}</p>`;
         return;
       }
       if (!nodes.length) {
-        list.innerHTML = `<p class="empty-hint">Noch keine Nodes gepairt. Alle Accounts laufen aktuell lokal auf diesem Server.</p>`;
+        list.innerHTML = `<p class="empty-hint">${t('nodes.emptyHint')}</p>`;
         return;
       }
       list.innerHTML = nodes.map(n => `
@@ -133,26 +135,26 @@ export default {
             <div class="node-info">
               <div class="node-name-row">
                 <span class="node-name char-name" data-role="name">${escapeHtml(n.name)}</span>
-                <button class="rename-btn" data-action="rename" title="Umbenennen">✏️</button>
+                <button class="rename-btn" data-action="rename" title="${t('nodes.renameTitle')}">✏️</button>
               </div>
-              <div class="node-meta" data-role="meta">${escapeHtml(n.host)}:${n.port} · ${n.accountCount} Account${n.accountCount === 1 ? '' : 's'} · zuletzt gesehen ${fmtRelTime(n.lastSeen)}</div>
+              <div class="node-meta" data-role="meta">${t('nodes.metaLine', { host: escapeHtml(n.host), port: n.port, count: n.accountCount, accountWord: n.accountCount === 1 ? 'Account' : 'Accounts', lastSeen: fmtRelTime(n.lastSeen) })}</div>
             </div>
             <div class="node-actions">
               <button class="btn-secondary" data-action="ping">Ping</button>
-              <button class="btn-danger" data-action="remove">Entfernen</button>
+              <button class="btn-danger" data-action="remove">${t('nodes.removeBtn')}</button>
             </div>
           </div>
           <div class="node-updates">
             <div class="update-row">
               <span class="update-label">CLI</span>
-              <span class="pill pill-off" data-role="cli-pill">Prüfe…</span>
-              <button class="icon-btn-tiny" data-action="cli-check" title="Jetzt prüfen">⟳</button>
+              <span class="pill pill-off" data-role="cli-pill">${t('sidebar.checking')}</span>
+              <button class="icon-btn-tiny" data-action="cli-check" title="${t('sidebar.forceCheckTitle')}">⟳</button>
               <button class="btn btn-primary" data-action="cli-apply" style="display:none;">Update</button>
             </div>
             <div class="update-row">
               <span class="update-label">Node-Agent</span>
-              <span class="pill pill-off" data-role="agent-pill">Prüfe…</span>
-              <button class="icon-btn-tiny" data-action="agent-check" title="Jetzt prüfen">⟳</button>
+              <span class="pill pill-off" data-role="agent-pill">${t('sidebar.checking')}</span>
+              <button class="icon-btn-tiny" data-action="agent-check" title="${t('sidebar.forceCheckTitle')}">⟳</button>
               <button class="btn btn-primary" data-action="agent-apply" style="display:none;">Update</button>
             </div>
           </div>
@@ -164,7 +166,7 @@ export default {
         const node = nodes.find(n => n.id === id);
 
         card.querySelector('[data-action="rename"]').addEventListener('click', async () => {
-          const next = prompt('Neuer Name:', node.name);
+          const next = prompt(t('nodes.renamePrompt'), node.name);
           if (next === null || !next.trim()) return;
           try {
             await ctx.fetchJSON(`/api/nodes/${encodeURIComponent(id)}/rename`, {
@@ -174,7 +176,7 @@ export default {
             });
             await loadNodes();
           } catch (err) {
-            alert('Umbenennen fehlgeschlagen: ' + err.message);
+            alert(t('nodes.renameFailed', { message: err.message }));
           }
         });
 
@@ -189,7 +191,7 @@ export default {
         });
 
         card.querySelector('[data-action="remove"]').addEventListener('click', async () => {
-          if (!confirm(`Node "${node.name}" wirklich entfernen? Alle diesem Node zugewiesenen Accounts fallen auf "lokal" zurück (die CLI läuft dort nicht automatisch weiter).`)) return;
+          if (!confirm(t('nodes.confirmRemove', { name: node.name }))) return;
           await ctx.fetchJSON(`/api/nodes/${encodeURIComponent(id)}`, { method: 'DELETE' });
           await loadNodes();
         });
@@ -201,17 +203,17 @@ export default {
 
           function render(status) {
             if (status.applying) {
-              pill.textContent = 'Installiere…';
+              pill.textContent = t('router.installing');
               pill.className = 'pill pill-warn';
               applyBtn.style.display = 'none';
             } else if (status.updateAvailable) {
-              pill.textContent = 'Update verfügbar';
+              pill.textContent = t('nodes.updateAvailable');
               pill.className = 'pill pill-warn';
               applyBtn.style.display = '';
               applyBtn.disabled = false;
               applyBtn.textContent = 'Update';
             } else if (status.lastError) {
-              pill.textContent = 'Fehler';
+              pill.textContent = t('nodes.errorLabel');
               pill.className = 'pill pill-warn';
               pill.title = status.lastError;
               applyBtn.style.display = 'none';
@@ -226,7 +228,7 @@ export default {
             try {
               render(await ctx.fetchJSON(`/api/nodes/${encodeURIComponent(id)}${statusPath}`));
             } catch (err) {
-              pill.textContent = 'Node nicht erreichbar';
+              pill.textContent = t('nodes.nodeUnreachable');
               pill.className = 'pill pill-off';
               applyBtn.style.display = 'none';
             }
@@ -237,7 +239,7 @@ export default {
             try {
               render(await ctx.fetchJSON(`/api/nodes/${encodeURIComponent(id)}${checkPath}`, { method: 'POST' }));
             } catch (err) {
-              alert('Prüfung fehlgeschlagen: ' + err.message);
+              alert(t('router.checkFailed', { message: err.message }));
             } finally {
               checkBtn.classList.remove('spinning');
             }
@@ -246,12 +248,12 @@ export default {
           applyBtn.addEventListener('click', async () => {
             if (applyConfirm && !confirm(applyConfirm)) return;
             applyBtn.disabled = true;
-            applyBtn.textContent = 'Installiere…';
+            applyBtn.textContent = t('router.installing');
             try {
               await ctx.fetchJSON(`/api/nodes/${encodeURIComponent(id)}${applyPath}`, { method: 'POST' });
               await load();
             } catch (err) {
-              alert('Update fehlgeschlagen: ' + err.message);
+              alert(t('router.updateFailed', { message: err.message }));
               applyBtn.disabled = false;
               applyBtn.textContent = 'Update';
             }
@@ -263,15 +265,15 @@ export default {
         wireUpdateBlock({
           statusPath: '/cli/status', checkPath: '/cli/check', applyPath: '/cli/apply',
           pillSelector: '[data-role="cli-pill"]', checkSelector: '[data-action="cli-check"]', applySelector: '[data-action="cli-apply"]',
-          applyConfirm: 'CLI auf diesem Node aktualisieren? Laufende Konsolen-Sessions dort werden neu gestartet.',
-          versionLabel: status => status.currentHash ? `Aktuell (${status.currentHash.slice(0, 8)})` : 'Unbekannt',
+          applyConfirm: t('nodes.confirmCliUpdate'),
+          versionLabel: status => status.currentHash ? t('nodes.currentWithValue', { value: status.currentHash.slice(0, 8) }) : t('nodes.unknown'),
         });
 
         wireUpdateBlock({
           statusPath: '/self-update/status', checkPath: '/self-update/check', applyPath: '/self-update/apply',
           pillSelector: '[data-role="agent-pill"]', checkSelector: '[data-action="agent-check"]', applySelector: '[data-action="agent-apply"]',
-          applyConfirm: 'Node-Agent-Software auf diesem Node aktualisieren? Der Node-Agent-Dienst startet dabei kurz neu.',
-          versionLabel: status => status.currentVersion ? `Aktuell (${status.currentVersion})` : 'Aktuell',
+          applyConfirm: t('nodes.confirmAgentUpdate'),
+          versionLabel: status => status.currentVersion ? t('nodes.currentWithValue', { value: status.currentVersion }) : t('nodes.current'),
         });
       });
 
@@ -293,10 +295,10 @@ export default {
       const code = wrap.querySelector('#node-code').value.trim();
       const status = wrap.querySelector('#node-add-status');
       if (!host || !port || !code) {
-        status.textContent = 'Bitte IP/Hostname, Port und Code angeben.';
+        status.textContent = t('nodes.pairValidation');
         return;
       }
-      status.textContent = 'Verbinde...';
+      status.textContent = t('console.connecting');
       try {
         await ctx.fetchJSON('/api/nodes/pair', {
           method: 'POST',
@@ -306,10 +308,10 @@ export default {
         wrap.querySelector('#node-name').value = '';
         wrap.querySelector('#node-host').value = '';
         wrap.querySelector('#node-code').value = '';
-        status.textContent = 'Node erfolgreich gepairt.';
+        status.textContent = t('nodes.pairSuccess');
         await loadNodes();
       } catch (err) {
-        status.textContent = 'Fehler: ' + err.message;
+        status.textContent = t('analytics.loadError', { message: err.message });
       }
     });
 
