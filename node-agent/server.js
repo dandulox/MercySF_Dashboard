@@ -300,11 +300,17 @@ app.get('/profiles/:id/history', async (req, res) => {
 });
 
 const ANALYTICS_FIELDS = ['level', 'experience', 'silver', 'mushrooms', 'honor', 'rank', 'armor'];
-const ANALYTICS_BUCKET_MS = 5 * 60 * 1000;
-const ANALYTICS_MAX_BUCKETS = 288;
+const ANALYTICS_DEFAULT_BUCKET_MS = 5 * 60 * 1000;
+const ANALYTICS_DEFAULT_MAX_BUCKETS = 288;
+const ANALYTICS_MIN_BUCKET_MS = 60 * 1000;
+const ANALYTICS_MAX_BUCKET_MS = 7 * 24 * 60 * 60 * 1000;
+const ANALYTICS_MAX_BUCKETS_CAP = 400;
 
-// Gleiche Bucket-Logik wie routes/analytics.js im Dashboard — liest die rohen, von der lokal
+// Gleiche Bucket-Logik wie lib/analyticsService.js im Dashboard — liest die rohen, von der lokal
 // laufenden CLI geschriebenen Snapshots direkt von der Platte, kein Zwischenspeicher nötig.
+// bucketMs/maxBuckets sind per Query-Parameter überschreibbar (Standard: unverändertes
+// 5-Minuten/24h-Verhalten), damit die Account-Analyse-Seite im Dashboard auch 7-Tage/30-Tage-
+// Ansichten für auf diesem Node laufende Accounts anfordern kann.
 app.get('/profiles/:id/analytics', (req, res) => {
   const profile = profileStore.get(req.params.id);
   if (!profile) return res.status(404).json({ error: 'Profil nicht gefunden' });
@@ -319,15 +325,17 @@ app.get('/profiles/:id/analytics', (req, res) => {
   } catch (e) {
     return res.status(500).json({ error: 'Analysedaten konnten nicht gelesen werden' });
   }
+  const bucketMs = Math.min(Math.max(parseInt(req.query.bucketMs, 10) || ANALYTICS_DEFAULT_BUCKET_MS, ANALYTICS_MIN_BUCKET_MS), ANALYTICS_MAX_BUCKET_MS);
+  const maxBuckets = Math.min(Math.max(parseInt(req.query.maxBuckets, 10) || ANALYTICS_DEFAULT_MAX_BUCKETS, 1), ANALYTICS_MAX_BUCKETS_CAP);
   const snapshots = data.snapshots || [];
   const buckets = new Map();
   for (const snap of snapshots) {
     const ms = Date.parse(snap.timestamp);
     if (Number.isNaN(ms)) continue;
-    const bucketKey = Math.floor(ms / ANALYTICS_BUCKET_MS) * ANALYTICS_BUCKET_MS;
+    const bucketKey = Math.floor(ms / bucketMs) * bucketMs;
     buckets.set(bucketKey, snap);
   }
-  const bucketKeys = [...buckets.keys()].sort((a, b) => a - b).slice(-ANALYTICS_MAX_BUCKETS);
+  const bucketKeys = [...buckets.keys()].sort((a, b) => a - b).slice(-maxBuckets);
   const series = {};
   for (const field of ANALYTICS_FIELDS) {
     series[field] = bucketKeys.map(key => ({ t: new Date(key).toISOString(), v: buckets.get(key)[field] }));
