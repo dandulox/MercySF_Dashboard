@@ -100,6 +100,8 @@ export default {
   'router.updateFailed': 'Update failed: {{message}}',
   'router.checkFailed': 'Check failed: {{message}}',
   'router.notifEmpty': 'No errors or warnings yet.',
+  'router.enableDarkMode': 'Enable dark mode',
+  'router.enableLightMode': 'Enable light mode',
 
   'analytics.chartLoadError': 'Chart.js could not be loaded',
   'analytics.title': 'Analytics',

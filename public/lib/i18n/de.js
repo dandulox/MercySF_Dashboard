@@ -107,6 +107,8 @@ export default {
   'router.updateFailed': 'Update fehlgeschlagen: {{message}}',
   'router.checkFailed': 'Prüfung fehlgeschlagen: {{message}}',
   'router.notifEmpty': 'Keine Fehler oder Warnungen bisher.',
+  'router.enableDarkMode': 'Dunkelmodus aktivieren',
+  'router.enableLightMode': 'Hellmodus aktivieren',
 
   // analytics.js (public/pages/analytics.js)
   'analytics.chartLoadError': 'Chart.js konnte nicht geladen werden',

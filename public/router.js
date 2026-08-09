@@ -367,10 +367,10 @@ function initAnonMode() {
 function initThemeToggle() {
   const btn = document.getElementById('theme-toggle-btn');
   if (!btn) return;
-  const apply = (t) => {
-    document.documentElement.setAttribute('data-theme', t);
-    btn.textContent = t === 'light' ? '🌙' : '☀';
-    btn.title = t === 'light' ? 'Dunkelmodus aktivieren' : 'Hellmodus aktivieren';
+  const apply = (theme) => {
+    document.documentElement.setAttribute('data-theme', theme);
+    btn.textContent = theme === 'light' ? '🌙' : '☀';
+    btn.title = theme === 'light' ? t('router.enableDarkMode') : t('router.enableLightMode');
   };
   apply(document.documentElement.getAttribute('data-theme') || 'dark');
   btn.addEventListener('click', () => {
