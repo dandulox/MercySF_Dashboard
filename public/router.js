@@ -1,3 +1,5 @@
+import { t, getLanguage, setLanguageAuthenticated, onLanguageChange } from '/lib/i18n.js';
+
 const state = {
   accountId: null,
   accounts: [],
@@ -41,19 +43,19 @@ export function injectStyleOnce(id, css) {
 const ctx = { fetchJSON, getAccountId, onAccountChange, injectStyleOnce };
 
 const PAGES = [
-  { id: 'overview', label: 'Overview', icon: '▦' },
-  { id: 'accounts', label: 'Account-Verwaltung', icon: '🗂' },
-  { id: 'nodes', label: 'Nodes', icon: '🖧' },
-  { id: 'analytics', label: 'Analysen', icon: '📈' },
-  { id: 'analytics-compare', label: 'Account-Analyse', icon: '🧬' },
-  { id: 'settings', label: 'Einstellungen', icon: '⚙' },
-  { id: 'console', label: 'Konsole', icon: '⌨' },
+  { id: 'overview', icon: '▦', labelKey: 'nav.overview' },
+  { id: 'accounts', icon: '🗂', labelKey: 'nav.accounts' },
+  { id: 'nodes', icon: '🖧', labelKey: 'nav.nodes' },
+  { id: 'analytics', icon: '📈', labelKey: 'nav.analytics' },
+  { id: 'analytics-compare', icon: '🧬', labelKey: 'nav.analyticsCompare' },
+  { id: 'settings', icon: '⚙', labelKey: 'nav.settings' },
+  { id: 'console', icon: '⌨', labelKey: 'nav.console' },
 ];
 
 let currentUnmount = null;
 
 function fmtLevel(acc) {
-  return acc.stats ? `Level ${acc.stats.level}` : 'keine Daten';
+  return acc.stats ? t('router.level', { level: acc.stats.level }) : t('router.noData');
 }
 
 function renderSidebarAccounts() {
@@ -92,7 +94,7 @@ function renderTopbarAccountSelect() {
   if (!label || !panel || !btn) return;
 
   const current = state.accounts.find(a => a.id === state.accountId);
-  label.textContent = current ? `${current.charName} (${current.server})` : (state.accounts.length ? 'Account wählen' : 'Keine Accounts');
+  label.textContent = current ? `${current.charName} (${current.server})` : (state.accounts.length ? t('router.selectAccount') : t('router.noAccounts'));
 
   panel.innerHTML = '';
   state.accounts.forEach(acc => {
@@ -117,34 +119,44 @@ document.addEventListener('click', (ev) => {
   if (dropdown && !dropdown.contains(ev.target)) closeAccountDropdown();
 });
 
-async function loadStatus() {
-  const status = await fetchJSON('/api/status');
+let lastStatus = null;
+
+function renderStatus() {
+  const status = lastStatus;
+  if (!status) return;
   const chip = document.getElementById('engine-status');
   const globalStatus = document.getElementById('global-status');
   const versionEl = document.getElementById('footer-version');
   if (versionEl && status.version) versionEl.textContent = `Dashboard v${status.version}`;
   if (!chip || !globalStatus) return;
   if (status.botRunning) {
-    chip.textContent = 'LÄUFT';
+    chip.textContent = t('router.botRunning');
     chip.className = 'pill pill-on';
-    globalStatus.textContent = 'Bot-Prozess aktiv';
+    globalStatus.textContent = t('router.botActiveStatus');
   } else {
-    chip.textContent = 'GESTOPPT';
+    chip.textContent = t('router.botStopped');
     chip.className = 'pill pill-off';
-    globalStatus.textContent = 'Kein Bot-Prozess erkannt';
+    globalStatus.textContent = t('router.botInactiveStatus');
   }
   if (!status.dataDir) {
-    globalStatus.textContent = 'Kein Account-Datenverzeichnis gefunden — noch nicht eingeloggt';
+    globalStatus.textContent = t('router.noDataDir');
   }
 }
 
-async function loadCliUpdateStatus() {
+async function loadStatus() {
+  lastStatus = await fetchJSON('/api/status');
+  renderStatus();
+}
+
+let lastCliStatus = null;
+
+function renderCliUpdateStatus() {
+  const status = lastCliStatus;
   const pill = document.getElementById('cli-version-pill');
   const btn = document.getElementById('engine-update-btn');
-  if (!pill || !btn) return;
-  const status = await fetchJSON('/api/cli-update/status');
+  if (!pill || !btn || !status) return;
   if (status.applying) {
-    pill.textContent = 'Installiere…';
+    pill.textContent = t('router.installing');
     pill.className = 'pill pill-warn';
     btn.style.display = 'none';
   } else if (status.updateAvailable) {
@@ -160,27 +172,45 @@ async function loadCliUpdateStatus() {
   }
 }
 
-async function loadDashboardUpdateStatus() {
+async function loadCliUpdateStatus() {
+  const pill = document.getElementById('cli-version-pill');
+  const btn = document.getElementById('engine-update-btn');
+  if (!pill || !btn) return;
+  lastCliStatus = await fetchJSON('/api/cli-update/status');
+  renderCliUpdateStatus();
+}
+
+let lastDashboardStatus = null;
+
+function renderDashboardUpdateStatus() {
+  const status = lastDashboardStatus;
   const pill = document.getElementById('dashboard-version-pill');
   const btn = document.getElementById('dashboard-update-btn');
-  if (!pill || !btn) return;
-  const status = await fetchJSON('/api/dashboard-update/status');
+  if (!pill || !btn || !status) return;
   if (status.applying) {
-    pill.textContent = 'Installiere…';
+    pill.textContent = t('router.installing');
     pill.className = 'pill pill-warn';
     btn.style.display = 'none';
   } else if (status.updateAvailable) {
-    pill.textContent = status.remoteVersion ? `Update auf ${status.remoteVersion}` : 'Update Available';
-    pill.title = status.currentVersion ? `Aktuell: ${status.currentVersion}` : '';
+    pill.textContent = status.remoteVersion ? t('router.updateTo', { version: status.remoteVersion }) : 'Update Available';
+    pill.title = status.currentVersion ? t('router.currentVersionTitle', { version: status.currentVersion }) : '';
     pill.className = 'pill pill-warn';
     btn.style.display = '';
     btn.disabled = false;
     btn.textContent = 'Update';
   } else {
-    pill.textContent = status.currentVersion ? `Up To Date (${status.currentVersion})` : 'Up To Date';
+    pill.textContent = status.currentVersion ? t('router.upToDateWithVersion', { version: status.currentVersion }) : 'Up To Date';
     pill.className = 'pill pill-on';
     btn.style.display = 'none';
   }
+}
+
+async function loadDashboardUpdateStatus() {
+  const pill = document.getElementById('dashboard-version-pill');
+  const btn = document.getElementById('dashboard-update-btn');
+  if (!pill || !btn) return;
+  lastDashboardStatus = await fetchJSON('/api/dashboard-update/status');
+  renderDashboardUpdateStatus();
 }
 
 // Nach dem Anstoßen startet sich der Dashboard-Prozess selbst neu — die Seite pollt kurz, bis
@@ -228,14 +258,14 @@ async function renderRoute() {
     const result = page.mount(root, ctx);
     if (typeof result === 'function') currentUnmount = result;
   } catch (err) {
-    root.innerHTML = `<div class="card"><p>Fehler beim Laden der Seite "${pageMeta.id}": ${err.message}</p></div>`;
+    root.innerHTML = `<div class="card"><p>${t('router.pageLoadError', { page: pageMeta.id, message: err.message })}</p></div>`;
   }
 }
 
 function renderNav() {
   const nav = document.getElementById('nav');
   nav.innerHTML = PAGES.map(p =>
-    `<a class="nav-item" data-page="${p.id}" href="#/${p.id}"><span>${p.icon}</span> ${p.label}</a>`
+    `<a class="nav-item" data-page="${p.id}" href="#/${p.id}"><span>${p.icon}</span> ${t(p.labelKey)}</a>`
   ).join('');
 }
 
@@ -258,7 +288,7 @@ function renderNotifPanel() {
   badge.hidden = unread === 0;
   badge.textContent = unread > 99 ? '99+' : String(unread);
   if (!allNotifications.length) {
-    list.innerHTML = '<div class="notif-panel-empty">Keine Fehler oder Warnungen bisher.</div>';
+    list.innerHTML = `<div class="notif-panel-empty">${t('router.notifEmpty')}</div>`;
     return;
   }
   list.innerHTML = allNotifications.map(n => `
@@ -392,6 +422,34 @@ function initAccessMenu() {
   });
 }
 
+function initLangToggle() {
+  const btn = document.getElementById('lang-toggle-btn');
+  if (!btn) return;
+  const apply = (lang) => { btn.textContent = lang === 'de' ? 'EN' : 'DE'; };
+  apply(getLanguage());
+  btn.addEventListener('click', async () => {
+    const next = getLanguage() === 'de' ? 'en' : 'de';
+    try {
+      await setLanguageAuthenticated(next, fetchJSON);
+    } catch (err) {
+      console.error('Failed to persist language choice', err);
+    }
+  });
+}
+
+onLanguageChange((lang) => {
+  const btn = document.getElementById('lang-toggle-btn');
+  if (btn) btn.textContent = lang === 'de' ? 'EN' : 'DE';
+  renderNav();
+  renderSidebarAccounts();
+  renderTopbarAccountSelect();
+  renderStatus();
+  renderCliUpdateStatus();
+  renderDashboardUpdateStatus();
+  renderNotifPanel();
+  renderRoute();
+});
+
 function initMobileNav() {
   const sidebar = document.getElementById('sidebar');
   const backdrop = document.getElementById('sidebar-backdrop');
@@ -425,31 +483,31 @@ document.getElementById('refresh-btn')?.addEventListener('click', () => {
 });
 
 document.getElementById('engine-update-btn')?.addEventListener('click', async () => {
-  if (!confirm('CLI aktualisieren? Laufende Konsolen-Sessions werden neu gestartet, aktive Logins gehen dabei verloren.')) return;
+  if (!confirm(t('router.confirmCliUpdate'))) return;
   const btn = document.getElementById('engine-update-btn');
   btn.disabled = true;
-  btn.textContent = 'Installiere…';
+  btn.textContent = t('router.installing');
   try {
     await fetchJSON('/api/cli-update/apply', { method: 'POST' });
     await loadCliUpdateStatus();
   } catch (err) {
-    alert('Update fehlgeschlagen: ' + err.message);
+    alert(t('router.updateFailed', { message: err.message }));
     btn.disabled = false;
     btn.textContent = 'Update';
   }
 });
 
 document.getElementById('dashboard-update-btn')?.addEventListener('click', async () => {
-  if (!confirm('Dashboard aktualisieren? Der Server-Prozess startet dabei neu (git pull + Neubau), die Seite lädt danach automatisch neu.')) return;
+  if (!confirm(t('router.confirmDashboardUpdate'))) return;
   const btn = document.getElementById('dashboard-update-btn');
   btn.disabled = true;
-  btn.textContent = 'Installiere…';
+  btn.textContent = t('router.installing');
   try {
     await fetchJSON('/api/dashboard-update/apply', { method: 'POST' });
-    btn.textContent = 'Startet neu…';
+    btn.textContent = t('router.restarting');
     waitForServerAndReload();
   } catch (err) {
-    alert('Update fehlgeschlagen: ' + err.message);
+    alert(t('router.updateFailed', { message: err.message }));
     btn.disabled = false;
     btn.textContent = 'Update';
   }
@@ -465,7 +523,7 @@ function wireForceCheckButton(btnId, endpoint, reload) {
       await fetchJSON(endpoint, { method: 'POST' });
       await reload();
     } catch (err) {
-      alert('Prüfung fehlgeschlagen: ' + err.message);
+      alert(t('router.checkFailed', { message: err.message }));
     } finally {
       btn.disabled = false;
       btn.classList.remove('spinning');
@@ -478,6 +536,7 @@ wireForceCheckButton('dashboard-force-check-btn', '/api/dashboard-update/check',
 
 initAnonMode();
 initThemeToggle();
+initLangToggle();
 initNotifications();
 initAccessMenu();
 initMobileNav();
