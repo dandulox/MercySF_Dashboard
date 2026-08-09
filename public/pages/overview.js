@@ -1,3 +1,5 @@
+import { t } from '/lib/i18n.js';
+
 function fmt(n) {
   if (n === undefined || n === null) return '—';
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
@@ -12,10 +14,10 @@ function toGold(silver) {
 }
 
 function fmtDuration(sec) {
-  if (!sec) return '0 Min';
+  if (!sec) return t('overview.zeroMin');
   const h = Math.floor(sec / 3600);
   const m = Math.floor((sec % 3600) / 60);
-  return h ? `${h} Std ${m} Min` : `${m} Min`;
+  return h ? t('overview.durationHM', { h, m }) : t('overview.durationM', { m });
 }
 
 function escapeHtml(s) {
@@ -60,7 +62,7 @@ export default {
     wrap.innerHTML = `
       <h1 class="page-title">Overview</h1>
       <section class="card" id="no-data-card" style="display:none">
-        <p>Noch keine Account-Daten gefunden. Logg dich über die Konsole ein — sobald ein Account läuft, erscheinen hier automatisch echte Live-Daten.</p>
+        <p>${t('overview.noDataHint')}</p>
       </section>
       <section class="card collapsible-card" id="nodes-overview-card" style="display:none">
         <div class="card-header">
@@ -78,8 +80,8 @@ export default {
           <table class="accounts-table">
             <thead>
               <tr>
-                <th>ACCOUNT</th><th>SERVER</th><th>LEVEL</th><th>GOLD</th><th>PILZE</th>
-                <th>EHRE</th><th>RANG</th><th>ARENA HEUTE</th><th>DUNGEON HEUTE</th>
+                <th>ACCOUNT</th><th>SERVER</th><th>LEVEL</th><th>GOLD</th><th>${t('overview.colMushrooms')}</th>
+                <th>${t('overview.colHonor')}</th><th>${t('overview.colRank')}</th><th>${t('overview.colArenaToday')}</th><th>${t('overview.colDungeonToday')}</th>
               </tr>
             </thead>
             <tbody id="accounts-table-body"></tbody>
@@ -87,56 +89,56 @@ export default {
         </div>
         <div class="accounts-pagination">
           <div class="pagination-pagesize">
-            <label for="accounts-pagesize">Pro Seite</label>
+            <label for="accounts-pagesize">${t('overview.perPageLabel')}</label>
             <select id="accounts-pagesize">
               <option value="5">5</option>
               <option value="10">10</option>
-              <option value="all">Alle</option>
+              <option value="all">${t('overview.allOption')}</option>
             </select>
           </div>
           <div class="pagination-controls">
-            <button type="button" class="icon-btn" id="accounts-prev-btn" title="Vorherige Seite">‹</button>
+            <button type="button" class="icon-btn" id="accounts-prev-btn" title="${t('overview.prevPageTitle')}">‹</button>
             <span id="accounts-page-label" class="muted"></span>
-            <button type="button" class="icon-btn" id="accounts-next-btn" title="Nächste Seite">›</button>
+            <button type="button" class="icon-btn" id="accounts-next-btn" title="${t('overview.nextPageTitle')}">›</button>
           </div>
         </div>
       </section>
       <div class="gamestate-grid">
         <section class="card collapsible-card" id="character-card">
           <div class="card-header">
-            <span>🧙 Charakter</span>
-            <button class="icon-btn" id="gamestate-refresh-btn" title="Ausrüstung, Gilde, Taverne & Mail aktualisieren">⟳</button>
+            <span>${t('overview.characterTitle')}</span>
+            <button class="icon-btn" id="gamestate-refresh-btn" title="${t('overview.refreshGamestateTitle')}">⟳</button>
           </div>
           <div class="stat-grid" id="stat-grid"></div>
           <div id="daily-earnings-body" class="daily-earnings"></div>
         </section>
         <section class="card collapsible-card" id="equipment-card">
-          <div class="card-header"><span>🛡 Ausrüstung</span></div>
-          <div id="equipment-body" class="muted">Wähle einen Account, um die Ausrüstung zu sehen.</div>
+          <div class="card-header"><span>${t('overview.equipmentTitle')}</span></div>
+          <div id="equipment-body" class="muted">${t('overview.selectAccountEquip')}</div>
         </section>
         <section class="card collapsible-card span-2" id="tavern-card">
-          <div class="card-header"><span>🍺 Taverne</span></div>
-          <div id="tavern-body" class="muted">Wähle einen Account, um Tavernendaten zu sehen.</div>
+          <div class="card-header"><span>${t('overview.tavernTitle')}</span></div>
+          <div id="tavern-body" class="muted">${t('overview.selectAccountTavern')}</div>
         </section>
         <section class="card collapsible-card" id="guild-card">
-          <div class="card-header"><span>🏰 Gilde</span></div>
-          <div id="guild-body" class="muted">Wähle einen Account, um Gildendaten zu sehen.</div>
+          <div class="card-header"><span>${t('overview.guildTitle')}</span></div>
+          <div id="guild-body" class="muted">${t('overview.selectAccountGuild')}</div>
         </section>
         <section class="card collapsible-card" id="mail-card">
-          <div class="card-header"><span>✉ Mail</span></div>
-          <div id="mail-body" class="muted">Wähle einen Account, um die Mail zu sehen.</div>
+          <div class="card-header"><span>${t('overview.mailTitle')}</span></div>
+          <div id="mail-body" class="muted">${t('overview.selectAccountMail')}</div>
         </section>
       </div>
       <section class="card collapsible-card" id="battle-history-card">
         <div class="card-header">
-          <span>⚔ Kampfhistorie</span>
-          <button class="icon-btn" id="battle-history-refresh-btn" title="Kampfhistorie aktualisieren">⟳</button>
+          <span>${t('overview.battleHistoryTitle')}</span>
+          <button class="icon-btn" id="battle-history-refresh-btn" title="${t('overview.refreshBattleHistoryTitle')}">⟳</button>
         </div>
-        <div id="battle-history-body" class="muted">Wähle einen Account, um die Kampfhistorie zu sehen.</div>
+        <div id="battle-history-body" class="muted">${t('overview.selectAccountBattleHistory')}</div>
       </section>
       <section class="card collapsible-card" id="activity-log-card">
         <div class="card-header"><span>📜 Activity Log</span></div>
-        <div id="activity-log" class="activity-log">Wähle einen Account, um das Log zu sehen.</div>
+        <div id="activity-log" class="activity-log">${t('overview.selectAccountLog')}</div>
       </section>
     `;
     container.appendChild(wrap);
@@ -273,7 +275,7 @@ export default {
       const pageLabel = wrap.querySelector('#accounts-page-label');
       const prevBtn = wrap.querySelector('#accounts-prev-btn');
       const nextBtn = wrap.querySelector('#accounts-next-btn');
-      pageLabel.textContent = accountsPageSize === 'all' ? '' : `Seite ${accountsPage + 1} / ${totalPages}`;
+      pageLabel.textContent = accountsPageSize === 'all' ? '' : t('overview.pageLabel', { page: accountsPage + 1, total: totalPages });
       prevBtn.disabled = accountsPage <= 0 || accountsPageSize === 'all';
       nextBtn.disabled = accountsPage >= totalPages - 1 || accountsPageSize === 'all';
     }
@@ -283,7 +285,7 @@ export default {
       grid.innerHTML = '';
       if (!account || !account.stats) return;
       const s = account.stats;
-      [['LEVEL', s.level], ['GOLD', fmt(toGold(s.silver))], ['PILZE', s.mushrooms], ['EHRE', fmt(s.honor)], ['RANG', fmt(s.rank)]]
+      [['LEVEL', s.level], ['GOLD', fmt(toGold(s.silver))], [t('overview.colMushrooms'), s.mushrooms], [t('overview.colHonor'), fmt(s.honor)], [t('overview.colRank'), fmt(s.rank)]]
         .forEach(([label, value]) => {
           const div = document.createElement('div');
           div.className = 'stat-card';
@@ -347,63 +349,66 @@ export default {
         }
 
         el.innerHTML = `
-          <div class="daily-earnings-title">📅 Erträge</div>
+          <div class="daily-earnings-title">${t('overview.earningsTitle')}</div>
           <div class="table-scroll">
             <table class="daily-earnings-table">
               <thead>
-                <tr><th></th><th>Heute</th><th>Gestern</th><th>Diese Woche</th><th>Letzte Woche</th></tr>
+                <tr><th></th><th>${t('overview.todayLabel')}</th><th>${t('overview.yesterdayLabel')}</th><th>${t('overview.thisWeekLabel')}</th><th>${t('overview.lastWeekLabel')}</th></tr>
               </thead>
               <tbody>
-                ${tableRow('expGained', 'EP')}
+                ${tableRow('expGained', t('analytics.epLabel'))}
                 ${tableRow('silverGained', 'Gold', toGold)}
-                ${tableRow('honorGained', 'Ehre')}
+                ${tableRow('honorGained', t('analytics.honorLabel'))}
               </tbody>
             </table>
           </div>
-          <div class="daily-levelups">Level-Ups heute: <strong>${today.levelsGained}</strong></div>
+          <div class="daily-levelups">${t('overview.levelUpsTodayLabel')} <strong>${today.levelsGained}</strong></div>
         `;
       } catch (err) {
-        el.textContent = 'Fehler: ' + err.message;
+        el.textContent = t('analytics.loadError', { message: err.message });
       }
     }
 
     async function renderLog(accountId, charName) {
       const logEl = wrap.querySelector('#activity-log');
-      if (!accountId) { logEl.textContent = 'Wähle einen Account, um das Log zu sehen.'; return; }
+      if (!accountId) { logEl.textContent = t('overview.selectAccountLog'); return; }
       const lines = await ctx.fetchJSON(`/api/account/${encodeURIComponent(accountId)}/logs`);
-      if (!lines.length) { logEl.textContent = 'Keine Log-Einträge gefunden.'; return; }
+      if (!lines.length) { logEl.textContent = t('overview.noLogEntries'); return; }
       logEl.innerHTML = lines.map(l => `<div class="line">${highlightCharName(escapeHtml(l), charName)}</div>`).join('');
     }
 
-    const BATTLE_KIND_LABELS = { arena: 'Arena', dungeon: 'Dungeon', scrapbook: 'Sammelalbum' };
+    function battleKindLabels() {
+      return { arena: 'Arena', dungeon: 'Dungeon', scrapbook: t('overview.kindScrapbook') };
+    }
 
     async function renderBattleHistory(accountId) {
       const el = wrap.querySelector('#battle-history-body');
-      if (!accountId) { el.textContent = 'Wähle einen Account, um die Kampfhistorie zu sehen.'; return; }
-      el.textContent = 'Lade…';
+      if (!accountId) { el.textContent = t('overview.selectAccountBattleHistory'); return; }
+      el.textContent = t('overview.loadingEllipsis');
       try {
         const data = await ctx.fetchJSON(`/api/history/${encodeURIComponent(accountId)}?limit=20`);
-        if (!data.battles.length) { el.textContent = 'Noch keine Kämpfe aufgezeichnet.'; return; }
+        if (!data.battles.length) { el.textContent = t('overview.noBattlesRecorded'); return; }
+        const kindLabels = battleKindLabels();
         el.innerHTML = `
           <div class="table-scroll">
             <table class="battle-history-table">
-              <thead><tr><th>Zeit</th><th>Gegner</th><th>Typ</th><th>Ergebnis</th><th>EP</th><th>Silber</th><th>Ehre</th></tr></thead>
+              <thead><tr><th>${t('analytics.colTime')}</th><th>${t('overview.colEnemy')}</th><th>${t('analytics.colType')}</th><th>${t('overview.colResult')}</th><th>${t('analytics.epLabel')}</th><th>${t('overview.colSilver')}</th><th>${t('analytics.honorLabel')}</th></tr></thead>
               <tbody>${data.battles.map(b => `
                 <tr>
                   <td class="muted">${new Date(b.timestamp).toLocaleString('de-DE')}</td>
                   <td class="char-name">${escapeHtml(b.enemy_name || '—')}</td>
-                  <td>${BATTLE_KIND_LABELS[b.kind] || escapeHtml(b.kind || '—')}</td>
-                  <td><span class="battle-result ${b.won ? 'win' : 'loss'}">${b.won ? 'Sieg' : 'Niederlage'}</span></td>
+                  <td>${kindLabels[b.kind] || escapeHtml(b.kind || '—')}</td>
+                  <td><span class="battle-result ${b.won ? 'win' : 'loss'}">${b.won ? t('overview.win') : t('overview.loss')}</span></td>
                   <td class="${b.xp >= 0 ? 'positive' : 'negative'}">${b.xp >= 0 ? '+' : ''}${b.xp}</td>
                   <td class="${b.silver >= 0 ? 'positive' : 'negative'}">${b.silver >= 0 ? '+' : ''}${b.silver}</td>
                   <td class="${b.honor >= 0 ? 'positive' : 'negative'}">${b.honor >= 0 ? '+' : ''}${b.honor}</td>
                 </tr>`).join('')}</tbody>
             </table>
           </div>
-          <div class="battle-history-note">${data.returned} von ${data.total} aufgezeichneten Kämpfen — lokal von der CLI erfasst, nicht vom Spieleserver.</div>
+          <div class="battle-history-note">${t('overview.battleHistoryNote', { returned: data.returned, total: data.total })}</div>
         `;
       } catch (err) {
-        el.textContent = 'Fehler: ' + err.message;
+        el.textContent = t('analytics.loadError', { message: err.message });
       }
     }
 
@@ -436,7 +441,7 @@ export default {
           <div class="node-overview-accounts ${expanded ? 'open' : ''}" data-accounts-for="${n.id}">
             ${nodeAccounts.length ? `
               <table>
-                <thead><tr><th>Account</th><th>Level</th><th>Gold</th><th>Ehre</th></tr></thead>
+                <thead><tr><th>Account</th><th>Level</th><th>Gold</th><th>${t('analytics.honorLabel')}</th></tr></thead>
                 <tbody>${nodeAccounts.map(a => `
                   <tr>
                     <td class="char-name">${escapeHtml(a.charName)}</td>
@@ -444,7 +449,7 @@ export default {
                     <td>${fmt(toGold(a.stats?.silver))}</td>
                     <td>${fmt(a.stats?.honor)}</td>
                   </tr>`).join('')}</tbody>
-              </table>` : '<div class="node-overview-empty">Noch keine Daten von diesem Node — Account dort starten, um Statistiken zu sehen.</div>'}
+              </table>` : `<div class="node-overview-empty">${t('overview.noNodeDataHint')}</div>`}
           </div>
         `;
       }).join('');
@@ -475,13 +480,13 @@ export default {
 
     function renderEquipmentBody(items) {
       const el = wrap.querySelector('#equipment-body');
-      if (!items.length) { el.textContent = 'Keine Ausrüstung gefunden.'; return; }
+      if (!items.length) { el.textContent = t('overview.noEquipmentFound'); return; }
       el.innerHTML = `<div class="equip-grid">${items.map(item => `
         <div class="equip-slot">
           <div class="equip-slot-name">${escapeHtml(item.slot)}</div>
           <div class="equip-slot-type">${escapeHtml(item.itemType)}</div>
           <div class="equip-slot-attrs">${Object.entries(item.attributes).map(([k, v]) => `${escapeHtml(k)}: ${v}`).join('<br>') || '—'}</div>
-          <div class="equip-slot-meta">Qualität ${item.itemQuality} · +${item.upgradeCount}</div>
+          <div class="equip-slot-meta">${t('overview.qualityLabel', { quality: item.itemQuality, upgrade: item.upgradeCount })}</div>
         </div>`).join('')}</div>`;
     }
 
@@ -495,13 +500,13 @@ export default {
 
     function renderGuildBody(guild) {
       const el = wrap.querySelector('#guild-body');
-      if (!guild) { el.textContent = 'Kein Gildenmitglied.'; return; }
+      if (!guild) { el.textContent = t('overview.noGuildMember'); return; }
       const VISIBLE = 8;
       const hiddenCount = Math.max(0, guild.members.length - VISIBLE);
       el.innerHTML = `
-        <div class="guild-summary"><strong>${escapeHtml(guild.name)}</strong> · Ehre ${fmt(guild.honor)} · Rang ${guild.rank} · ${guild.memberCount} Mitglieder</div>
+        <div class="guild-summary"><strong>${escapeHtml(guild.name)}</strong> · ${t('analytics.honorLabel')} ${fmt(guild.honor)} · ${t('overview.colRank')} ${guild.rank} · ${guild.memberCount} ${t('overview.membersLabel')}</div>
         <div class="guild-member-list" id="guild-member-list">${renderGuildMemberRows(guild.members.slice(0, VISIBLE))}</div>
-        ${hiddenCount > 0 ? `<button type="button" class="link-btn-inline" id="guild-show-all-btn">+${hiddenCount} weitere anzeigen</button>` : ''}
+        ${hiddenCount > 0 ? `<button type="button" class="link-btn-inline" id="guild-show-all-btn">${t('overview.showMoreMembers', { count: hiddenCount })}</button>` : ''}
       `;
       const showAllBtn = el.querySelector('#guild-show-all-btn');
       if (showAllBtn) {
@@ -520,10 +525,10 @@ export default {
         : 0;
       el.innerHTML = `
         <div class="alu-bar-wrap">
-          <div class="alu-bar-label"><span>⚡ Abenteuerlust</span><span>${tavern.adventurePoints}/${tavern.adventurePointsMax}</span></div>
+          <div class="alu-bar-label"><span>${t('overview.adventureLust')}</span><span>${tavern.adventurePoints}/${tavern.adventurePointsMax}</span></div>
           <div class="alu-bar-track"><div class="alu-bar-fill" style="width:${aluPct}%"></div></div>
         </div>
-        <div class="tavern-summary">🍺 ${tavern.beerDrunk}/${tavern.beerMax} · Aktion: ${action}</div>
+        <div class="tavern-summary">🍺 ${tavern.beerDrunk}/${tavern.beerMax} · ${t('overview.tavernActionLabel', { action })}</div>
         ${tavern.quests.map(q => `
           <div class="tavern-quest-row">
             <span>${escapeHtml(q.location)}</span>
@@ -534,13 +539,13 @@ export default {
 
     function renderMailBody(mail) {
       const el = wrap.querySelector('#mail-body');
-      if (!mail.recent.length) { el.textContent = `Postfach leer (0/${mail.inboxCapacity}).`; return; }
+      if (!mail.recent.length) { el.textContent = t('overview.mailboxEmpty', { cap: mail.inboxCapacity }); return; }
       el.innerHTML = `
-        <div class="mail-summary">${mail.unreadCount} ungelesen · ${mail.recent.length}/${mail.inboxCapacity} im Postfach</div>
+        <div class="mail-summary">${t('overview.mailSummary', { unread: mail.unreadCount, count: mail.recent.length, cap: mail.inboxCapacity })}</div>
         ${mail.recent.map(entry => `
           <div class="mail-row ${entry.read ? '' : 'unread'}">
-            <span>${escapeHtml(entry.title || '(kein Betreff)')}</span>
-            <span class="muted">von ${escapeHtml(entry.from)} · ${new Date(entry.date).toLocaleString('de-DE')}</span>
+            <span>${escapeHtml(entry.title || t('overview.noSubject'))}</span>
+            <span class="muted">${t('overview.mailFrom', { from: escapeHtml(entry.from) })} · ${new Date(entry.date).toLocaleString('de-DE')}</span>
           </div>`).join('')}
       `;
     }
@@ -551,16 +556,16 @@ export default {
       const tavernEl = wrap.querySelector('#tavern-body');
       const mailEl = wrap.querySelector('#mail-body');
       if (!profileId) {
-        equipEl.textContent = 'Wähle einen Account, um die Ausrüstung zu sehen.';
-        guildEl.textContent = 'Wähle einen Account, um Gildendaten zu sehen.';
-        tavernEl.textContent = 'Wähle einen Account, um Tavernendaten zu sehen.';
-        mailEl.textContent = 'Wähle einen Account, um die Mail zu sehen.';
+        equipEl.textContent = t('overview.selectAccountEquip');
+        guildEl.textContent = t('overview.selectAccountGuild');
+        tavernEl.textContent = t('overview.selectAccountTavern');
+        mailEl.textContent = t('overview.selectAccountMail');
         return;
       }
-      equipEl.textContent = 'Lade…';
-      guildEl.textContent = 'Lade…';
-      tavernEl.textContent = 'Lade…';
-      mailEl.textContent = 'Lade…';
+      equipEl.textContent = t('overview.loadingEllipsis');
+      guildEl.textContent = t('overview.loadingEllipsis');
+      tavernEl.textContent = t('overview.loadingEllipsis');
+      mailEl.textContent = t('overview.loadingEllipsis');
       try {
         const data = await ctx.fetchJSON(`/api/gamestate/${encodeURIComponent(profileId)}`);
         renderEquipmentBody(data.equipment);
@@ -568,7 +573,7 @@ export default {
         renderTavernBody(data.tavern);
         renderMailBody(data.mail);
       } catch (err) {
-        const msg = 'Fehler: ' + err.message;
+        const msg = t('analytics.loadError', { message: err.message });
         equipEl.textContent = msg;
         guildEl.textContent = msg;
         tavernEl.textContent = msg;
