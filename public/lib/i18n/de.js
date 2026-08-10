@@ -137,12 +137,11 @@ export default {
   'analyticsCompare.range24h': '24 Std',
   'analyticsCompare.range7d': '7 Tage',
   'analyticsCompare.range30d': '30 Tage',
-  'analyticsCompare.normalizeLabel': 'Werte als Index anzeigen (Start = 100)',
-  'analyticsCompare.addSeriesBtn': '+ Serie hinzufügen',
-  'analyticsCompare.emptyHint': 'Füge mindestens eine Serie hinzu, um ein Chart zu sehen.',
-  'analyticsCompare.typeAccount': 'Charakter',
-  'analyticsCompare.typeClass': 'Klasse',
-  'analyticsCompare.removeSeriesTitle': 'Serie entfernen',
+  'analyticsCompare.emptyHint': 'Wähle mindestens einen Charakter oder eine Klasse aus, um alle Statistiken zu sehen.',
+  'analyticsCompare.charactersLabel': 'Charaktere',
+  'analyticsCompare.classesLabel': 'Klassen',
+  'analyticsCompare.noClassesHint': 'Noch keine Klassen erkannt (siehe Account-Verwaltung).',
+  'analyticsCompare.noAccountsHint': 'Noch keine Accounts angelegt.',
 
   // nodes.js (public/pages/nodes.js)
   'nodes.never': 'nie',

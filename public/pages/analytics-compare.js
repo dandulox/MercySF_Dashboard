@@ -1,4 +1,4 @@
-import { t } from '/lib/i18n.js';
+import { t, getLanguage } from '/lib/i18n.js';
 
 function ensureChartJs() {
   if (window.Chart) return Promise.resolve();
@@ -13,6 +13,10 @@ function ensureChartJs() {
 
 function themeVar(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 }
 
 function fieldLabels() {
@@ -35,13 +39,13 @@ function rangeLabels() {
 }
 const FIELD_KEYS = ['level', 'silver', 'honor', 'rank', 'mushrooms', 'armor', 'experience'];
 
-// Deterministische Farbpalette statt Zufallsfarben, damit Serien beim Neuladen/Ändern stabil
-// erkennbar bleiben (Chart.js hat keine eingebaute Kategorie-Palette für Liniendiagramme).
+// Deterministische Farbpalette statt Zufallsfarben, damit ein Charakter/eine Klasse über alle
+// Feld-Charts hinweg und über Auswahl-Änderungen hinweg immer dieselbe Farbe behält (siehe
+// colorForTarget — Index basiert auf der festen Reihenfolge aller bekannten Ziele, nicht auf der
+// aktuellen Auswahl).
 const SERIES_COLORS = [
   '#4f8cff', '#35c98f', '#f0b429', '#ff6b6b', '#a875ff', '#2dd4d4', '#ff9f43', '#e879f9',
 ];
-
-let nextSeriesUid = 1;
 
 export default {
   id: 'analytics-compare',
@@ -53,15 +57,24 @@ export default {
       .analytics-compare-page .filter-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
       .analytics-compare-page .filter-row label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-right: 4px; }
       .analytics-compare-page select { background: var(--input-bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 6px 10px; font-size: 13px; }
-      .analytics-compare-page .series-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
-      .analytics-compare-page .series-row { display: flex; gap: 8px; align-items: center; background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; flex-wrap: wrap; }
-      .analytics-compare-page .series-swatch { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-      .analytics-compare-page .series-remove { margin-left: auto; background: none; border: none; color: var(--muted); cursor: pointer; font-size: 15px; padding: 2px 6px; }
-      .analytics-compare-page .series-remove:hover { color: var(--red); }
-      .analytics-compare-page .add-series-btn { padding: 7px 14px; border-radius: 8px; border: 1px dashed var(--border); background: none; color: var(--accent); cursor: pointer; font-size: 13px; }
-      .analytics-compare-page .chart-card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px; }
-      .analytics-compare-page canvas { max-height: 420px; }
+      .analytics-compare-page .target-section { margin-top: 10px; }
+      .analytics-compare-page .target-section h3 { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 8px; }
+      .analytics-compare-page .target-checks { display: flex; flex-wrap: wrap; gap: 8px; }
+      .analytics-compare-page .target-chip {
+        display: flex; align-items: center; gap: 6px; background: var(--panel-2); border: 1px solid var(--border);
+        border-radius: 20px; padding: 5px 12px 5px 8px; font-size: 12.5px; cursor: pointer; user-select: none; color: var(--text);
+      }
+      .analytics-compare-page .target-chip.active { border-width: 2px; padding: 4px 11px 4px 7px; }
+      .analytics-compare-page .target-chip-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; background: var(--border); }
+      .analytics-compare-page .empty-classes-hint { color: var(--muted); font-size: 12px; }
+      .analytics-compare-page #charts-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .analytics-compare-page .chart-card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px; min-width: 0; }
+      .analytics-compare-page .chart-card h3 { margin: 0 0 8px; font-size: 13px; }
+      .analytics-compare-page canvas { max-height: 220px; }
       .analytics-compare-page .empty-hint { color: var(--muted); font-size: 13px; }
+      @media (max-width: 900px) {
+        .analytics-compare-page #charts-grid { grid-template-columns: 1fr; }
+      }
     `;
     ctx.injectStyleOnce('analytics-compare', css);
 
@@ -75,216 +88,189 @@ export default {
           <select id="range-select">
             ${Object.entries(rangeLabels()).map(([v, l]) => `<option value="${v}">${l}</option>`).join('')}
           </select>
-          <label style="margin-left:16px;"><input type="checkbox" id="normalize-toggle"> ${t('analyticsCompare.normalizeLabel')}</label>
         </div>
-        <div class="series-list" id="series-list"></div>
-        <button class="add-series-btn" id="add-series-btn">${t('analyticsCompare.addSeriesBtn')}</button>
+        <div class="target-section">
+          <h3>${t('analyticsCompare.charactersLabel')}</h3>
+          <div class="target-checks" id="account-checks"></div>
+        </div>
+        <div class="target-section">
+          <h3>${t('analyticsCompare.classesLabel')}</h3>
+          <div class="target-checks" id="class-checks"></div>
+        </div>
       </div>
-      <div class="chart-card">
-        <canvas id="compare-chart"></canvas>
-        <div class="empty-hint" id="compare-empty" hidden>${t('analyticsCompare.emptyHint')}</div>
-      </div>
+      <div id="charts-grid"></div>
+      <div class="empty-hint" id="compare-empty" hidden>${t('analyticsCompare.emptyHint')}</div>
     `;
     container.appendChild(wrap);
 
     let accounts = [];
     let classes = [];
-    // Jede Serie: { uid, type: 'account'|'class', targetId, field }
-    let seriesDefs = [];
-    let chart = null;
+    const selectedAccounts = new Set();
+    const selectedClasses = new Set();
+    let charts = [];
 
-    function destroyChart() {
-      if (chart) { chart.destroy(); chart = null; }
+    function destroyCharts() {
+      charts.forEach(c => c.destroy());
+      charts = [];
     }
 
     function applyChartTheme() {
-      if (!chart) return;
       const muted = themeVar('--muted');
       const border = themeVar('--border');
-      if (chart.options.plugins?.legend?.labels) chart.options.plugins.legend.labels.color = muted;
-      for (const scale of Object.values(chart.options.scales || {})) {
-        if (scale.ticks) scale.ticks.color = muted;
-        if (scale.grid) scale.grid.color = border;
-      }
-      chart.update();
+      charts.forEach(chart => {
+        if (chart.options.plugins?.legend?.labels) chart.options.plugins.legend.labels.color = muted;
+        for (const scale of Object.values(chart.options.scales || {})) {
+          if (scale.ticks) scale.ticks.color = muted;
+          if (scale.grid) scale.grid.color = border;
+        }
+        chart.update();
+      });
     }
     window.addEventListener('mercy-theme-change', applyChartTheme);
 
-    function targetOptionsHtml(type, selected) {
-      if (type === 'class') {
-        return classes.map(c => `<option value="${c}" ${c === selected ? 'selected' : ''}>${c}</option>`).join('');
-      }
-      return accounts.map(a => `<option value="${a.id}" ${a.id === selected ? 'selected' : ''}>${a.charName} (${a.server})</option>`).join('');
+    // Feste Reihenfolge aller bekannten Ziele (unabhängig von der aktuellen Auswahl) — ein
+    // Charakter/eine Klasse behält so über Auswahl-Änderungen hinweg immer dieselbe Farbe.
+    function allTargetKeysOrdered() {
+      return [...accounts.map(a => `account:${a.id}`), ...classes.map(c => `class:${c}`)];
+    }
+    function colorForTarget(key) {
+      const idx = allTargetKeysOrdered().indexOf(key);
+      return SERIES_COLORS[Math.max(idx, 0) % SERIES_COLORS.length];
     }
 
-    function fieldOptionsHtml(selected) {
-      const labels = fieldLabels();
-      return FIELD_KEYS.map(f => `<option value="${f}" ${f === selected ? 'selected' : ''}>${labels[f]}</option>`).join('');
-    }
+    function renderTargetChecks() {
+      const accWrap = wrap.querySelector('#account-checks');
+      accWrap.innerHTML = accounts.map(a => {
+        const key = `account:${a.id}`;
+        const active = selectedAccounts.has(a.id);
+        const color = colorForTarget(key);
+        return `<button type="button" class="target-chip${active ? ' active' : ''}" data-type="account" data-id="${a.id}" style="${active ? `border-color:${color}` : ''}">
+          <span class="target-chip-dot" style="background:${active ? color : 'transparent'}"></span>${escapeHtml(a.charName)} (${escapeHtml(a.server)})
+        </button>`;
+      }).join('') || `<span class="empty-classes-hint">${t('analyticsCompare.noAccountsHint')}</span>`;
 
-    function renderSeriesList() {
-      const list = wrap.querySelector('#series-list');
-      list.innerHTML = seriesDefs.map((s, idx) => `
-        <div class="series-row" data-uid="${s.uid}">
-          <span class="series-swatch" style="background:${SERIES_COLORS[idx % SERIES_COLORS.length]}"></span>
-          <select data-role="type">
-            <option value="account" ${s.type === 'account' ? 'selected' : ''}>${t('analyticsCompare.typeAccount')}</option>
-            <option value="class" ${s.type === 'class' ? 'selected' : ''}>${t('analyticsCompare.typeClass')}</option>
-          </select>
-          <select data-role="target">${targetOptionsHtml(s.type, s.targetId)}</select>
-          <select data-role="field">${fieldOptionsHtml(s.field)}</select>
-          <button class="series-remove" data-role="remove" title="${t('analyticsCompare.removeSeriesTitle')}">✕</button>
-        </div>
-      `).join('');
+      const classWrap = wrap.querySelector('#class-checks');
+      classWrap.innerHTML = classes.length
+        ? classes.map(c => {
+          const key = `class:${c}`;
+          const active = selectedClasses.has(c);
+          const color = colorForTarget(key);
+          return `<button type="button" class="target-chip${active ? ' active' : ''}" data-type="class" data-id="${c}" style="${active ? `border-color:${color}` : ''}">
+            <span class="target-chip-dot" style="background:${active ? color : 'transparent'}"></span>${escapeHtml(c)} (Σ)
+          </button>`;
+        }).join('')
+        : `<span class="empty-classes-hint">${t('analyticsCompare.noClassesHint')}</span>`;
 
-      list.querySelectorAll('.series-row').forEach(row => {
-        const uid = Number(row.dataset.uid);
-        const def = seriesDefs.find(s => s.uid === uid);
-        row.querySelector('[data-role="type"]').addEventListener('change', (ev) => {
-          def.type = ev.target.value;
-          def.targetId = def.type === 'class' ? (classes[0] || '') : (accounts[0]?.id || '');
-          renderSeriesList();
-          loadAndRender();
-        });
-        row.querySelector('[data-role="target"]').addEventListener('change', (ev) => {
-          def.targetId = ev.target.value;
-          loadAndRender();
-        });
-        row.querySelector('[data-role="field"]').addEventListener('change', (ev) => {
-          def.field = ev.target.value;
-          loadAndRender();
-        });
-        row.querySelector('[data-role="remove"]').addEventListener('click', () => {
-          seriesDefs = seriesDefs.filter(s => s.uid !== uid);
-          renderSeriesList();
+      wrap.querySelectorAll('.target-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const set = btn.dataset.type === 'class' ? selectedClasses : selectedAccounts;
+          const id = btn.dataset.id;
+          if (set.has(id)) set.delete(id); else set.add(id);
+          renderTargetChecks();
           loadAndRender();
         });
       });
     }
 
-    function addSeries() {
-      const type = 'account';
-      seriesDefs.push({ uid: nextSeriesUid++, type, targetId: accounts[0]?.id || '', field: 'level' });
-      renderSeriesList();
-      loadAndRender();
-    }
-    wrap.querySelector('#add-series-btn').addEventListener('click', addSeries);
-
     wrap.querySelector('#range-select').addEventListener('change', loadAndRender);
-    wrap.querySelector('#normalize-toggle').addEventListener('change', (ev) => {
-      ev.target.dataset.userTouched = '1';
-      renderChartFromLastResponse();
-    });
 
-    let lastResponse = null;
-
-    function normalizeValues(values) {
-      const firstReal = values.find(v => typeof v === 'number');
-      if (!firstReal) return values.map(() => null);
-      return values.map(v => (typeof v === 'number' ? Math.round((v / firstReal) * 10000) / 100 : null));
-    }
-
-    function renderChartFromLastResponse() {
+    function renderCharts(requestSeries, response) {
+      destroyCharts();
+      const grid = wrap.querySelector('#charts-grid');
       const emptyHint = wrap.querySelector('#compare-empty');
-      const canvas = wrap.querySelector('#compare-chart');
-      if (!lastResponse || !lastResponse.series.length) {
-        destroyChart();
-        emptyHint.textContent = t('analyticsCompare.emptyHint');
+      if (!requestSeries || !response) {
+        grid.innerHTML = '';
         emptyHint.hidden = false;
-        canvas.hidden = true;
         return;
       }
       emptyHint.hidden = true;
-      canvas.hidden = false;
 
-      const distinctFields = new Set(lastResponse.series.map(s => s.field));
-      const normalizeCheckbox = wrap.querySelector('#normalize-toggle');
-      if (distinctFields.size > 1 && !normalizeCheckbox.dataset.userTouched) {
-        normalizeCheckbox.checked = true;
-      }
-      const normalize = normalizeCheckbox.checked;
+      const labels = fieldLabels();
+      grid.innerHTML = FIELD_KEYS.map(f => `
+        <div class="chart-card">
+          <h3>${labels[f]}</h3>
+          <canvas id="chart-field-${f}"></canvas>
+        </div>`).join('');
 
-      destroyChart();
-      const labels = lastResponse.buckets.map(t => new Date(t).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }));
-      const datasets = lastResponse.series.map((s, idx) => {
-        const targetLabel = s.type === 'class' ? `${s.targetLabel} (Σ)` : s.targetLabel;
-        const color = SERIES_COLORS[idx % SERIES_COLORS.length];
-        return {
-          label: `${targetLabel} – ${fieldLabels()[s.field]}`,
-          data: normalize ? normalizeValues(s.values) : s.values,
-          borderColor: color,
-          backgroundColor: color + '26',
-          tension: 0.2,
-          pointRadius: 0,
-          spanGaps: true,
-        };
-      });
+      const locale = getLanguage() === 'en' ? 'en-US' : 'de-DE';
+      const bucketLabels = response.buckets.map(ts => new Date(ts).toLocaleString(locale, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }));
 
-      chart = new window.Chart(canvas.getContext('2d'), {
-        type: 'line',
-        data: { labels, datasets },
-        options: {
-          responsive: true,
-          plugins: { legend: { labels: { color: themeVar('--muted') } } },
-          scales: {
-            x: { ticks: { color: themeVar('--muted') }, grid: { color: themeVar('--border') } },
-            y: { ticks: { color: themeVar('--muted') }, grid: { color: themeVar('--border') } },
+      for (const field of FIELD_KEYS) {
+        const datasets = [];
+        requestSeries.forEach((reqS, idx) => {
+          if (reqS.field !== field) return;
+          const respS = response.series[idx];
+          const color = colorForTarget(`${reqS.type}:${reqS.id}`);
+          const label = reqS.type === 'class' ? `${respS.targetLabel} (Σ)` : respS.targetLabel;
+          datasets.push({
+            label,
+            data: respS.values,
+            borderColor: color,
+            backgroundColor: color + '26',
+            tension: 0.2,
+            pointRadius: 0,
+            spanGaps: true,
+          });
+        });
+        const canvasCtx = wrap.querySelector(`#chart-field-${field}`).getContext('2d');
+        const chart = new window.Chart(canvasCtx, {
+          type: 'line',
+          data: { labels: bucketLabels, datasets },
+          options: {
+            responsive: true,
+            plugins: { legend: { display: datasets.length > 1, labels: { color: themeVar('--muted') } } },
+            scales: {
+              x: { ticks: { color: themeVar('--muted') }, grid: { color: themeVar('--border') } },
+              y: { ticks: { color: themeVar('--muted') }, grid: { color: themeVar('--border') } },
+            },
           },
-        },
-      });
+        });
+        charts.push(chart);
+      }
     }
 
     async function loadAndRender() {
-      if (!seriesDefs.length) {
-        lastResponse = null;
-        renderChartFromLastResponse();
+      const targets = [
+        ...[...selectedAccounts].map(id => ({ type: 'account', id })),
+        ...[...selectedClasses].map(id => ({ type: 'class', id })),
+      ];
+      if (!targets.length) {
+        renderCharts(null, null);
         return;
       }
       await ensureChartJs();
       const range = wrap.querySelector('#range-select').value;
-      const body = {
-        range,
-        series: seriesDefs
-          .filter(s => s.targetId)
-          .map(s => ({ type: s.type, id: s.targetId, field: s.field })),
-      };
-      if (!body.series.length) {
-        lastResponse = null;
-        renderChartFromLastResponse();
-        return;
-      }
+      const requestSeries = targets.flatMap(target => FIELD_KEYS.map(field => ({ type: target.type, id: target.id, field })));
       try {
-        lastResponse = await ctx.fetchJSON('/api/analytics-compare', {
+        const response = await ctx.fetchJSON('/api/analytics-compare', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
+          body: JSON.stringify({ range, series: requestSeries }),
         });
-        renderChartFromLastResponse();
+        renderCharts(requestSeries, response);
       } catch (err) {
-        destroyChart();
+        destroyCharts();
+        const grid = wrap.querySelector('#charts-grid');
         const emptyHint = wrap.querySelector('#compare-empty');
+        grid.innerHTML = '';
         emptyHint.textContent = t('analytics.loadError', { message: err.message });
         emptyHint.hidden = false;
-        wrap.querySelector('#compare-chart').hidden = true;
       }
     }
 
     async function init() {
       accounts = await ctx.fetchJSON('/api/accounts');
       classes = [...new Set(accounts.map(a => a.characterClass).filter(Boolean))].sort();
-      if (!seriesDefs.length && accounts.length) {
-        addSeries();
-      } else {
-        renderSeriesList();
-        loadAndRender();
-      }
+      if (accounts.length) selectedAccounts.add(accounts[0].id);
+      renderTargetChecks();
+      loadAndRender();
     }
 
     init();
 
     return () => {
       window.removeEventListener('mercy-theme-change', applyChartTheme);
-      destroyChart();
+      destroyCharts();
     };
   },
 };
