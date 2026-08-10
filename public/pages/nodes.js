@@ -44,37 +44,51 @@ export default {
         background: linear-gradient(135deg, var(--accent), #7a5cff); color: #fff; cursor: pointer;
       }
       .nodes-page .add-hint { font-size: 11px; color: var(--muted); margin-top: 8px; }
-      .nodes-page .node-card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px 14px; margin-bottom: 10px; }
-      .nodes-page .node-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-      .nodes-page .node-info { flex: 1; min-width: 200px; }
-      .nodes-page .node-name-row { display: flex; align-items: center; gap: 8px; }
-      .nodes-page .node-name { font-weight: 600; font-size: 14px; }
-      .nodes-page .rename-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 12px; padding: 0; }
+
+      .nodes-page #nodes-list {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; align-items: start;
+      }
+      .nodes-page .node-card {
+        background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-lg);
+        padding: 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0;
+      }
+      .nodes-page .node-head { display: flex; align-items: flex-start; gap: 10px; }
+      .nodes-page .node-info { flex: 1; min-width: 0; }
+      .nodes-page .node-name-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+      .nodes-page .node-name { font-weight: 600; font-size: 14px; overflow-wrap: anywhere; }
+      .nodes-page .rename-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 12px; padding: 0; flex-shrink: 0; }
       .nodes-page .rename-btn:hover { color: var(--text); }
-      .nodes-page .node-meta { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
-      .nodes-page .node-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-      .nodes-page .node-actions button { width: auto; padding: 6px 12px; font-size: 12px; }
-      .nodes-page .node-updates { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+      .nodes-page .node-meta { font-size: 11px; color: var(--muted); margin-top: 2px; overflow-wrap: anywhere; }
+      .nodes-page .node-ping-row { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+      .nodes-page .node-ping-row button { width: auto; padding: 4px 10px; font-size: 11px; }
+      .nodes-page .ping-result { font-size: 10.5px; color: var(--muted); white-space: nowrap; }
+      .nodes-page .node-stats {
+        display: flex; gap: 10px; flex-wrap: wrap; padding-top: 10px; border-top: 1px solid var(--border);
+        font-size: 11px; color: var(--muted);
+      }
+      .nodes-page .node-updates { display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px solid var(--border); }
       .nodes-page .update-row { display: flex; align-items: center; gap: 8px; font-size: 12px; }
-      .nodes-page .update-row .update-label { color: var(--muted); }
-      .nodes-page .update-row button { width: auto; padding: 3px 10px; font-size: 11px; }
+      .nodes-page .update-row .update-label { color: var(--muted); width: 74px; flex-shrink: 0; }
+      .nodes-page .update-row button { width: auto; padding: 3px 10px; font-size: 11px; margin-left: auto; }
       .nodes-page .icon-btn-tiny { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 12px; padding: 2px; }
       .nodes-page .icon-btn-tiny:hover { color: var(--text); }
-      .nodes-page .node-badge-local { display: inline-block; font-size: 10px; color: var(--accent); border: 1px solid var(--accent); border-radius: 6px; padding: 1px 6px; }
-      .nodes-page .ping-result { font-size: 11px; color: var(--muted); }
-      .nodes-page .node-stats { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 11.5px; color: var(--muted); }
-      .nodes-page .node-quick-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); align-items: center; }
-      .nodes-page .node-quick-actions button { width: auto; padding: 6px 12px; font-size: 12px; }
+      .nodes-page .node-badge-local { display: inline-block; font-size: 10px; color: var(--accent); border: 1px solid var(--accent); border-radius: 6px; padding: 1px 6px; flex-shrink: 0; }
+      .nodes-page .node-quick-actions { padding-top: 10px; border-top: 1px solid var(--border); }
+      .nodes-page .quick-actions-label { font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 6px; display: block; }
+      .nodes-page .quick-actions-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
+      .nodes-page .node-quick-actions button { width: auto; padding: 5px 10px; font-size: 11px; }
       .nodes-page .node-quick-actions .btn-warn { background: rgba(240,180,41,0.12); border: 1px solid var(--yellow); color: var(--yellow); border-radius: 8px; cursor: pointer; }
-      .nodes-page .quick-action-result { font-size: 11px; color: var(--muted); }
-      .nodes-page .btn-danger { background: transparent; border: 1px solid var(--red); color: var(--red); border-radius: 8px; cursor: pointer; }
+      .nodes-page .quick-action-result { font-size: 10.5px; color: var(--muted); margin-top: 4px; display: block; }
+      .nodes-page .node-footer { display: flex; justify-content: flex-end; }
+      .nodes-page .btn-danger { background: transparent; border: 1px solid var(--red); color: var(--red); border-radius: 8px; cursor: pointer; width: auto; padding: 5px 10px; font-size: 11px; }
       .nodes-page .btn-secondary { background: var(--panel-2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; cursor: pointer; }
-      .nodes-page .status-wrap { display: flex; align-items: center; gap: 6px; }
-      .nodes-page .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
+      .nodes-page .status-wrap { display: flex; align-items: center; padding-top: 2px; flex-shrink: 0; }
+      .nodes-page .status-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
       .nodes-page .status-dot.online { background: var(--green); box-shadow: 0 0 6px var(--green); }
       .nodes-page .status-dot.offline { background: var(--red); }
       .nodes-page .empty-hint { color: var(--muted); font-size: 13px; padding: 20px 0; text-align: center; }
       @media (max-width: 480px) {
+        .nodes-page #nodes-list { grid-template-columns: 1fr; }
         .nodes-page .field input { min-width: 0; width: 100%; }
         .nodes-page .add-form { flex-direction: column; align-items: stretch; }
         .nodes-page .add-btn { width: 100%; }
@@ -148,12 +162,11 @@ export default {
                 ? `${n.accountCount} ${n.accountCount === 1 ? 'Account' : 'Accounts'}`
                 : t('nodes.metaLine', { host: escapeHtml(n.host), port: n.port, count: n.accountCount, accountWord: n.accountCount === 1 ? 'Account' : 'Accounts', lastSeen: fmtRelTime(n.lastSeen) })}</div>
             </div>
-            <div class="node-actions">
+            <div class="node-ping-row">
               <button class="btn-secondary" data-action="ping">Ping</button>
-              <span class="ping-result" data-role="ping-result"></span>
-              ${n.isLocal ? '' : `<button class="btn-danger" data-action="remove">${t('nodes.removeBtn')}</button>`}
             </div>
           </div>
+          <div class="ping-result" data-role="ping-result"></div>
           <div class="node-stats" data-role="stats">${t('nodes.statsUnavailable')}</div>
           <div class="node-updates">
             <div class="update-row">
@@ -170,12 +183,15 @@ export default {
             </div>
           </div>
           <div class="node-quick-actions">
-            <span class="update-label">${t('nodes.quickActionsTitle')}</span>
-            <button class="btn-secondary" data-action="restart-bots">${t('nodes.restartBotsBtn')}</button>
-            <button class="btn-secondary" data-action="restart-service">${t('nodes.restartServiceBtn')}</button>
-            <button class="btn-warn" data-action="reboot">${t('nodes.rebootBtn')}</button>
+            <span class="quick-actions-label">${t('nodes.quickActionsTitle')}</span>
+            <div class="quick-actions-buttons">
+              <button class="btn-secondary" data-action="restart-bots">${t('nodes.restartBotsBtn')}</button>
+              <button class="btn-secondary" data-action="restart-service">${t('nodes.restartServiceBtn')}</button>
+              <button class="btn-warn" data-action="reboot">${t('nodes.rebootBtn')}</button>
+            </div>
             <span class="quick-action-result" data-role="quick-action-result"></span>
           </div>
+          ${n.isLocal ? '' : `<div class="node-footer"><button class="btn-danger" data-action="remove">${t('nodes.removeBtn')}</button></div>`}
         </div>
       `).join('');
 
