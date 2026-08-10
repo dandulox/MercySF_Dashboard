@@ -3,6 +3,8 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 const http = require('http');
+const os = require('os');
+const { spawn } = require('child_process');
 const { WebSocketServer } = require('ws');
 
 const identity = require('./lib/identity');
@@ -55,7 +57,10 @@ app.post('/pair', (req, res) => {
 app.use(requireToken);
 
 app.post('/unpair', (req, res) => {
-  ptyManager.listActiveIds().forEach(id => ptyManager.killPty(id));
+  ptyManager.listActiveIds().forEach(id => {
+    ptyManager.killPty(id);
+    profileStore.setRunning(id, false);
+  });
   pairing.unpair();
   res.json({ ok: true });
 });
@@ -127,11 +132,13 @@ app.delete('/profiles/:id', (req, res) => {
 app.post('/profiles/:id/start', (req, res) => {
   if (!profileStore.get(req.params.id)) return res.status(404).json({ error: 'Profil nicht gefunden' });
   ptyManager.ensurePty(req.params.id);
+  profileStore.setRunning(req.params.id, true);
   res.json(ptyManager.getStatus(req.params.id));
 });
 
 app.post('/profiles/:id/stop', (req, res) => {
   ptyManager.killPty(req.params.id);
+  profileStore.setRunning(req.params.id, false);
   res.json(ptyManager.getStatus(req.params.id));
 });
 
@@ -359,6 +366,48 @@ app.get('/profiles/:id/stats/actions', (req, res) => {
   res.json(statsDb.getRecentActionWindows(accountIdFor(profile.server, profile.characterName), profile.characterName, limit));
 });
 
+// --- Schnellsteuerung für den Fall, dass Bot oder Node sich mal aufgehängt haben ---
+
+// Startet nur die gerade aktiven PTY-Sessions neu (gleiches Muster wie beim CLI-Update) — betrifft
+// keine Profile, deren Konsole nie geöffnet/gestartet wurde.
+app.post('/bots/restart', (req, res) => {
+  const ids = ptyManager.listActiveIds();
+  ids.forEach(id => ptyManager.restartPty(id));
+  res.json({ ok: true, restarted: ids.length });
+});
+
+// Neustart des Node-Agent-Dienstes selbst (systemd) — z. B. wenn der Prozess in einem seltsamen
+// Zustand hängt, den ein reiner PTY-Neustart nicht behebt. Antwortet zuerst, der eigentliche
+// Neustart läuft entkoppelt mit kurzer Verzögerung (sonst würde der Request selbst abgewürgt).
+// Beim Hochfahren werden zuletzt laufende Bots automatisch wiederhergestellt (s. u.).
+app.post('/service/restart', (req, res) => {
+  res.json({ ok: true });
+  spawn('bash', ['-c', 'sleep 1 && systemctl restart mercy-node-agent'], { detached: true, stdio: 'ignore' }).unref();
+});
+
+// Kompletter Server-Neustart (Betriebssystem) — letzte Instanz, wenn selbst ein Dienst-Neustart
+// nicht mehr reicht (z. B. hängender Prozess, der SIGTERM ignoriert). Braucht Root-Rechte, die
+// der Node-Agent laut Installer ohnehin hat.
+app.post('/system/reboot', (req, res) => {
+  res.json({ ok: true });
+  spawn('bash', ['-c', 'sleep 1 && systemctl reboot'], { detached: true, stdio: 'ignore' }).unref();
+});
+
+// Grober Auslastungs-Überblick über Node-Bordmittel (kein natives Addon nötig) — reicht für einen
+// schnellen "steht der Server kurz vorm Absaufen"-Blick auf der Nodes-Seite.
+app.get('/system/stats', (req, res) => {
+  const total = os.totalmem();
+  const free = os.freemem();
+  res.json({
+    loadAvg: os.loadavg(),
+    cpuCount: os.cpus().length,
+    memTotalBytes: total,
+    memFreeBytes: free,
+    memUsedPercent: Math.round(((total - free) / total) * 1000) / 10,
+    uptimeSec: Math.floor(os.uptime()),
+  });
+});
+
 app.use((err, req, res, next) => {
   console.error('[server] unerwarteter Fehler:', err);
   res.status(500).json({ error: 'Interner Fehler' });
@@ -407,6 +456,21 @@ httpServer.on('upgrade', (req, socket, head) => {
 // dauerhaft unpairbar.
 setInterval(() => pairing.ensureFreshCodeIfUnpaired(), 30_000);
 
+// Startet Charaktere, die beim letzten Stop/Neustart noch als "gestartet" markiert waren (siehe
+// profileStore.setRunning), gestaffelt automatisch wieder — sonst müsste man nach jedem
+// Node-Agent-Neustart/-Reboot (Update, /service/restart, /system/reboot, Absturz) jeden Account
+// manuell erneut anklicken. Identisches Muster wie restoreAutoStartedProfiles im Dashboard.
+function restoreRunningProfiles() {
+  const toStart = profileStore.list().filter(p => p.running);
+  toStart.forEach((profile, i) => {
+    setTimeout(() => {
+      console.log(`[autostart] starte ${profile.nickname || profile.id} (${i + 1}/${toStart.length})`);
+      ptyManager.ensurePty(profile.id);
+    }, i * 4000);
+  });
+  if (toStart.length) console.log(`[autostart] ${toStart.length} zuletzt laufende Charakter(e) werden gestaffelt neu gestartet`);
+}
+
 httpServer.listen(PORT, '0.0.0.0', () => {
   const id = identity.get();
   console.log(`Mercy Node-Agent (${useTls ? 'HTTPS' : 'HTTP'}) "${id.name}" [${id.nodeId}] listening on :${PORT}`);
@@ -417,4 +481,5 @@ httpServer.listen(PORT, '0.0.0.0', () => {
   } else {
     console.log('[pairing] Bereits mit einem Dashboard gepairt.');
   }
+  restoreRunningProfiles();
 });

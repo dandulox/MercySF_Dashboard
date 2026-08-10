@@ -278,7 +278,7 @@
       <div class="feature-card">
         <span class="icon">🖧</span>
         <h3>Nodes (Multi-Server)</h3>
-        <p>Accounts müssen nicht auf dem Server laufen, auf dem das Dashboard selbst installiert ist. Weitere Server bekommen einen schlanken Node-Agent, per IP + zeitlich begrenztem Pairing-Code verbunden — Steuerung, Konsole, Statistiken sowie CLI-/Node-Agent-Updates laufen transparent über den jeweiligen Node.</p>
+        <p>Accounts müssen nicht auf dem Server laufen, auf dem das Dashboard selbst installiert ist. Weitere Server bekommen einen schlanken Node-Agent, per IP + zeitlich begrenztem Pairing-Code verbunden — Steuerung, Konsole, Statistiken sowie CLI-/Node-Agent-Updates laufen transparent über den jeweiligen Node. Dazu Ping mit Antwortzeit, eine Auslastungsanzeige (CPU/RAM/Uptime) und eine Schnellsteuerung für hängende Bots/Server (Bots neu starten, Dienst neu starten, oder kompletter Reboot — mit automatischem Wiederanlauf). Das Dashboard selbst erscheint dabei ebenfalls als Node in der Liste.</p>
       </div>
       <div class="feature-card">
         <span class="icon">▦</span>
@@ -394,6 +394,7 @@
       <li><span class="dot"></span><span class="text">Kein Rate-Limiting auf Login-/Passwort-Reset-Versuche — relevant vor allem, falls das Dashboard über das eigene LAN hinaus erreichbar gemacht wird.</span></li>
       <li><span class="dot"></span><span class="text">Das Activity-Log auf der Übersichtsseite bleibt für Node-Accounts leer, da deren PTY-Output nicht durch den lokalen Log-Puffer des Dashboards läuft — Analysen, Erträge und der Node-Status funktionieren dagegen auch für Node-Accounts.</span></li>
       <li><span class="dot"></span><span class="text">Ein Node-Agent akzeptiert immer nur genau ein gepairtes Dashboard gleichzeitig — erneutes Pairen trennt ein zuvor verbundenes Dashboard kommentarlos.</span></li>
+      <li><span class="dot"></span><span class="text">"Server neu starten" auf der Nodes-Seite führt einen echten <code>systemctl reboot</code> aus (auch für den Dashboard-Server selbst als lokaler Eintrag) — außer dem Bestätigungsdialog gibt es keine weitere Sicherung.</span></li>
     </ul>
   </div>
 </section>

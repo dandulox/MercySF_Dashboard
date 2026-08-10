@@ -42,10 +42,23 @@ function upsert({ id, username, server, characterName, nickname, password }) {
     server: server ? String(server).slice(0, 100) : null,
     characterName: characterName ? String(characterName).slice(0, 100) : null,
     nickname: nickname ? String(nickname).slice(0, 60) : (characterName || username),
+    running: all[id]?.running || false,
     updatedAt: new Date().toISOString(),
   };
   writeAll(all);
   if (password) credentialStore.setPassword(id, password);
+  return all[id];
+}
+
+// Merkt sich, ob ein Profil zuletzt bewusst gestartet (und nicht wieder gestoppt) wurde — nicht
+// vom tatsächlichen PTY-Lauf abhängig, der bei jedem Node-Agent-Neustart (Update, Reboot, Absturz)
+// ohnehin verloren geht. server.js nutzt das beim Hochfahren, um zuletzt laufende Charaktere
+// automatisch wieder zu starten (gleiches Muster wie restoreAutoStartedProfiles im Dashboard).
+function setRunning(id, running) {
+  const all = readAll();
+  if (!all[id]) return null;
+  all[id].running = !!running;
+  writeAll(all);
   return all[id];
 }
 
@@ -58,4 +71,4 @@ function remove(id) {
   return true;
 }
 
-module.exports = { list, get, upsert, remove };
+module.exports = { list, get, upsert, setRunning, remove };

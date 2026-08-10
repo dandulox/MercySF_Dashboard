@@ -60,6 +60,13 @@ export default {
       .nodes-page .update-row button { width: auto; padding: 3px 10px; font-size: 11px; }
       .nodes-page .icon-btn-tiny { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 12px; padding: 2px; }
       .nodes-page .icon-btn-tiny:hover { color: var(--text); }
+      .nodes-page .node-badge-local { display: inline-block; font-size: 10px; color: var(--accent); border: 1px solid var(--accent); border-radius: 6px; padding: 1px 6px; }
+      .nodes-page .ping-result { font-size: 11px; color: var(--muted); }
+      .nodes-page .node-stats { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 11.5px; color: var(--muted); }
+      .nodes-page .node-quick-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); align-items: center; }
+      .nodes-page .node-quick-actions button { width: auto; padding: 6px 12px; font-size: 12px; }
+      .nodes-page .node-quick-actions .btn-warn { background: rgba(240,180,41,0.12); border: 1px solid var(--yellow); color: var(--yellow); border-radius: 8px; cursor: pointer; }
+      .nodes-page .quick-action-result { font-size: 11px; color: var(--muted); }
       .nodes-page .btn-danger { background: transparent; border: 1px solid var(--red); color: var(--red); border-radius: 8px; cursor: pointer; }
       .nodes-page .btn-secondary { background: var(--panel-2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; cursor: pointer; }
       .nodes-page .status-wrap { display: flex; align-items: center; gap: 6px; }
@@ -135,15 +142,19 @@ export default {
             <div class="node-info">
               <div class="node-name-row">
                 <span class="node-name char-name" data-role="name">${escapeHtml(n.name)}</span>
-                <button class="rename-btn" data-action="rename" title="${t('nodes.renameTitle')}">✏️</button>
+                ${n.isLocal ? `<span class="node-badge-local">${t('nodes.localBadge')}</span>` : `<button class="rename-btn" data-action="rename" title="${t('nodes.renameTitle')}">✏️</button>`}
               </div>
-              <div class="node-meta" data-role="meta">${t('nodes.metaLine', { host: escapeHtml(n.host), port: n.port, count: n.accountCount, accountWord: n.accountCount === 1 ? 'Account' : 'Accounts', lastSeen: fmtRelTime(n.lastSeen) })}</div>
+              <div class="node-meta" data-role="meta">${n.isLocal
+                ? `${n.accountCount} ${n.accountCount === 1 ? 'Account' : 'Accounts'}`
+                : t('nodes.metaLine', { host: escapeHtml(n.host), port: n.port, count: n.accountCount, accountWord: n.accountCount === 1 ? 'Account' : 'Accounts', lastSeen: fmtRelTime(n.lastSeen) })}</div>
             </div>
             <div class="node-actions">
               <button class="btn-secondary" data-action="ping">Ping</button>
-              <button class="btn-danger" data-action="remove">${t('nodes.removeBtn')}</button>
+              <span class="ping-result" data-role="ping-result"></span>
+              ${n.isLocal ? '' : `<button class="btn-danger" data-action="remove">${t('nodes.removeBtn')}</button>`}
             </div>
           </div>
+          <div class="node-stats" data-role="stats">${t('nodes.statsUnavailable')}</div>
           <div class="node-updates">
             <div class="update-row">
               <span class="update-label">CLI</span>
@@ -158,6 +169,13 @@ export default {
               <button class="btn btn-primary" data-action="agent-apply" style="display:none;">Update</button>
             </div>
           </div>
+          <div class="node-quick-actions">
+            <span class="update-label">${t('nodes.quickActionsTitle')}</span>
+            <button class="btn-secondary" data-action="restart-bots">${t('nodes.restartBotsBtn')}</button>
+            <button class="btn-secondary" data-action="restart-service">${t('nodes.restartServiceBtn')}</button>
+            <button class="btn-warn" data-action="reboot">${t('nodes.rebootBtn')}</button>
+            <span class="quick-action-result" data-role="quick-action-result"></span>
+          </div>
         </div>
       `).join('');
 
@@ -165,7 +183,7 @@ export default {
         const id = card.dataset.id;
         const node = nodes.find(n => n.id === id);
 
-        card.querySelector('[data-action="rename"]').addEventListener('click', async () => {
+        card.querySelector('[data-action="rename"]')?.addEventListener('click', async () => {
           const next = prompt(t('nodes.renamePrompt'), node.name);
           if (next === null || !next.trim()) return;
           try {
@@ -182,19 +200,70 @@ export default {
 
         card.querySelector('[data-action="ping"]').addEventListener('click', async () => {
           const dot = card.querySelector('[data-role="dot"]');
+          const resultEl = card.querySelector('[data-role="ping-result"]');
+          resultEl.textContent = t('nodes.pingChecking');
+          const startedAt = performance.now();
           try {
             const result = await ctx.fetchJSON(`/api/nodes/${encodeURIComponent(id)}/ping`, { method: 'POST' });
+            const ms = Math.round(performance.now() - startedAt);
             dot.className = 'status-dot ' + (result.online ? 'online' : 'offline');
+            resultEl.textContent = result.online ? t('nodes.pingOnline', { ms }) : t('nodes.pingOfflineWithReason', { message: result.error || t('nodes.pingOffline') });
           } catch (err) {
             dot.className = 'status-dot offline';
+            resultEl.textContent = t('nodes.pingOfflineWithReason', { message: err.message });
           }
         });
 
-        card.querySelector('[data-action="remove"]').addEventListener('click', async () => {
+        card.querySelector('[data-action="remove"]')?.addEventListener('click', async () => {
           if (!confirm(t('nodes.confirmRemove', { name: node.name }))) return;
           await ctx.fetchJSON(`/api/nodes/${encodeURIComponent(id)}`, { method: 'DELETE' });
           await loadNodes();
         });
+
+        // Grober Auslastungs-Überblick (CPU-Load/Kernanzahl, RAM%, Uptime) — best-effort, ein
+        // nicht erreichbarer Node zeigt einfach "nicht verfügbar" statt die Karte kaputtzumachen.
+        (async () => {
+          const statsEl = card.querySelector('[data-role="stats"]');
+          try {
+            const s = await ctx.fetchJSON(`/api/nodes/${encodeURIComponent(id)}/system/stats`);
+            const load = (s.loadAvg && s.loadAvg[0] != null) ? s.loadAvg[0].toFixed(2) : '?';
+            const h = Math.floor(s.uptimeSec / 3600);
+            const m = Math.floor((s.uptimeSec % 3600) / 60);
+            const uptime = h ? `${h}h ${m}m` : `${m}m`;
+            statsEl.innerHTML = `
+              <span>🧠 ${t('nodes.statsCpu', { load, cores: s.cpuCount })}</span>
+              <span>💾 ${t('nodes.statsRam', { percent: s.memUsedPercent })}</span>
+              <span>⏱ ${t('nodes.statsUptime', { uptime })}</span>
+            `;
+          } catch (err) {
+            statsEl.textContent = t('nodes.statsUnavailable');
+          }
+        })();
+
+        function wireQuickAction(action, endpoint, confirmMsg, resultText) {
+          const btn = card.querySelector(`[data-action="${action}"]`);
+          const resultEl = card.querySelector('[data-role="quick-action-result"]');
+          btn.addEventListener('click', async () => {
+            if (confirmMsg && !confirm(confirmMsg)) return;
+            btn.disabled = true;
+            try {
+              const result = await ctx.fetchJSON(`/api/nodes/${encodeURIComponent(id)}${endpoint}`, { method: 'POST' });
+              resultEl.textContent = resultText(result);
+            } catch (err) {
+              resultEl.textContent = t('nodes.actionFailed', { message: err.message });
+            } finally {
+              btn.disabled = false;
+              setTimeout(() => { resultEl.textContent = ''; }, 8000);
+            }
+          });
+        }
+
+        wireQuickAction('restart-bots', '/bots/restart', t('nodes.restartBotsConfirm', { name: node.name }),
+          result => t('nodes.restartBotsResult', { count: result.restarted ?? 0 }));
+        wireQuickAction('restart-service', '/service/restart', t('nodes.restartServiceConfirm', { name: node.name }),
+          () => t('nodes.restartServiceResult'));
+        wireQuickAction('reboot', '/system/reboot', t('nodes.rebootConfirm', { name: node.name }),
+          () => t('nodes.rebootResult'));
 
         function wireUpdateBlock({ statusPath, checkPath, applyPath, pillSelector, checkSelector, applySelector, applyConfirm, versionLabel }) {
           const pill = card.querySelector(pillSelector);
