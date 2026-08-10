@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Mercy SF Web-Dashboard</title>
-<meta name="description" content="Web-Dashboard für Mercy SF (Shakes & Fidget Bot) — Übersicht, Steuerung und Analyse für alle Accounts direkt im Browser." />
+<title>Mercy SF Web Dashboard</title>
+<meta name="description" content="Web dashboard for Mercy SF (Shakes & Fidget bot) — overview, control, and analytics for all accounts right in the browser." />
 <style>
   :root {
     --bg: #0e0f13;
@@ -178,92 +178,92 @@
 </head>
 <body>
 
-<div class="lang-switch"><a class="active" href="index.html">🇩🇪 Deutsch</a> · <a href="index.en.html">🇬🇧 English</a></div>
+<div class="lang-switch"><a href="index.html">🇩🇪 Deutsch</a> · <a class="active" href="index.en.html">🇬🇧 English</a></div>
 
 <header class="hero">
   <div class="wrap">
     <div class="hero-icon">⚔</div>
-    <h1>Mercy SF Web-Dashboard</h1>
-    <p class="tagline">Ein Browser-Dashboard rund um die <a href="https://mercysf.app" target="_blank" rel="noopener">Mercy SF</a> Shakes&nbsp;&amp;&nbsp;Fidget-CLI — Übersicht, Steuerung, Live-Daten und Analysen für alle Accounts, ohne das Terminal-Menü. Läuft auf einem eigenen Server, voll mobiltauglich.</p>
+    <h1>Mercy SF Web Dashboard</h1>
+    <p class="tagline">A browser dashboard built around the <a href="https://mercysf.app" target="_blank" rel="noopener">Mercy SF</a> Shakes&nbsp;&amp;&nbsp;Fidget CLI — overview, control, live data, and analytics for all accounts, without the terminal menu. Runs on your own server, fully mobile-friendly.</p>
     <div class="badges">
       <span class="badge">Node.js + Express</span>
-      <span class="badge">Kein Build-Step</span>
-      <span class="badge">AES-256 verschlüsselte Zugangsdaten</span>
+      <span class="badge">No build step</span>
+      <span class="badge">AES-256 encrypted credentials</span>
       <span class="badge">AGPLv3</span>
     </div>
     <div class="cta-row">
       <a class="btn btn-primary" href="https://github.com/dandulox/MercySF_Dashboard" target="_blank" rel="noopener">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
-        Zum Repository
+        Go to repository
       </a>
-      <a class="btn btn-secondary" href="#installation">Installation ansehen</a>
-      <a class="btn btn-kofi" href="https://ko-fi.com/senseiissei" target="_blank" rel="noopener">☕ Mercy SF unterstützen</a>
+      <a class="btn btn-secondary" href="#installation">View installation</a>
+      <a class="btn btn-kofi" href="https://ko-fi.com/senseiissei" target="_blank" rel="noopener">☕ Support Mercy SF</a>
     </div>
   </div>
 </header>
 
 <div class="wrap">
   <div class="warning-banner">
-    ⚠️ <strong>Experimentell, Nutzung auf eigenes Risiko.</strong> Dieses Dashboard befindet sich in aktiver Entwicklung und kann Fehler enthalten. Automatisiertes Spielen (Botting) verstößt in der Regel gegen die Nutzungsbedingungen von Shakes&nbsp;&amp;&nbsp;Fidget — es besteht grundsätzlich das Risiko einer Account-Sperrung, unabhängig davon, ob die Automatisierung über dieses Dashboard oder direkt über die CLI läuft.
+    ⚠️ <strong>Experimental, use at your own risk.</strong> This dashboard is under active development and may contain bugs. Automated play (botting) generally violates Shakes&nbsp;&amp;&nbsp;Fidget's terms of service — there is an inherent risk of account suspension, regardless of whether the automation runs through this dashboard or directly via the CLI.
   </div>
 </div>
 
-<section id="was-ist-das">
+<section id="what-is-this">
   <div class="wrap">
-    <h2><span class="num">01</span>Was ist das?</h2>
-    <p class="section-sub">Alles läuft auf Basis der offiziellen Mercy&nbsp;SF-CLI — es wird nichts am Bot selbst verändert, nur ein komplettes Web-Interface drumherum gebaut. Zusätzlich holt das Dashboard über <a href="https://github.com/the-marenga/sf-api" target="_blank" rel="noopener">sf-api</a> von the-marenga Live-Daten (Ausrüstung, Gilde, Taverne, Mail) direkt vom Spieleserver.</p>
+    <h2><span class="num">01</span>What is this?</h2>
+    <p class="section-sub">Everything runs on top of the official Mercy&nbsp;SF CLI — nothing about the bot itself is changed, this just builds a complete web interface around it. It also pulls live data (equipment, guild, tavern, mail) directly from the game server via <a href="https://github.com/the-marenga/sf-api" target="_blank" rel="noopener">sf-api</a> by the-marenga.</p>
   </div>
 </section>
 
 <section id="screenshots">
   <div class="wrap">
     <h2><span class="num">02</span>Screenshots</h2>
-    <p class="section-sub">Live aus einem laufenden Dashboard mit 30 Accounts — Anonym-Modus an, daher sind Charakternamen verpixelt.</p>
+    <p class="section-sub">Live from a running dashboard with 30 accounts — anonymous mode is on, so character names are pixelated.</p>
 
     <div class="shot-group">
       <h4>Desktop</h4>
       <div class="shot-grid-desktop">
         <div>
           <button type="button" class="shot-frame" data-full="screenshots/desktop-overview.png">
-            <img src="screenshots/desktop-overview.png" alt="Overview-Seite: Accounts-Tabelle, Charakter-Stats, Ausrüstung, Taverne, Gilde" loading="lazy" />
+            <img src="screenshots/desktop-overview.png" alt="Overview page: accounts table, character stats, equipment, tavern, guild" loading="lazy" />
           </button>
           <div class="shot-caption">Overview</div>
         </div>
         <div>
           <button type="button" class="shot-frame" data-full="screenshots/desktop-accounts.png">
-            <img src="screenshots/desktop-accounts.png" alt="Account-Verwaltung: laufende Charaktere mit Session-Stats, letzten Aktionen und gescouteten Spielern" loading="lazy" />
+            <img src="screenshots/desktop-accounts.png" alt="Account management: running characters with session stats, recent actions, and scouted players" loading="lazy" />
           </button>
-          <div class="shot-caption">Account-Verwaltung</div>
+          <div class="shot-caption">Account Management</div>
         </div>
         <div>
           <button type="button" class="shot-frame" data-full="screenshots/desktop-analytics.png">
-            <img src="screenshots/desktop-analytics.png" alt="Analysen-Seite mit Zeitreihen-Charts und täglichen Erträgen" loading="lazy" />
+            <img src="screenshots/desktop-analytics.png" alt="Analytics page with time-series charts and daily earnings" loading="lazy" />
           </button>
-          <div class="shot-caption">Analysen</div>
+          <div class="shot-caption">Analytics</div>
         </div>
       </div>
     </div>
 
     <div class="shot-group">
-      <h4>Mobil</h4>
+      <h4>Mobile</h4>
       <div class="shot-grid-mobile">
         <div>
           <button type="button" class="shot-frame" data-full="screenshots/mobile-overview.png">
-            <img src="screenshots/mobile-overview.png" alt="Overview-Seite in der mobilen Ansicht" loading="lazy" />
+            <img src="screenshots/mobile-overview.png" alt="Overview page in mobile view" loading="lazy" />
           </button>
           <div class="shot-caption">Overview</div>
         </div>
         <div>
           <button type="button" class="shot-frame" data-full="screenshots/mobile-accounts.png">
-            <img src="screenshots/mobile-accounts.png" alt="Account-Verwaltung in der mobilen Ansicht" loading="lazy" />
+            <img src="screenshots/mobile-accounts.png" alt="Account management in mobile view" loading="lazy" />
           </button>
-          <div class="shot-caption">Account-Verwaltung</div>
+          <div class="shot-caption">Account Management</div>
         </div>
         <div>
           <button type="button" class="shot-frame" data-full="screenshots/mobile-analytics.png">
-            <img src="screenshots/mobile-analytics.png" alt="Analysen-Seite in der mobilen Ansicht" loading="lazy" />
+            <img src="screenshots/mobile-analytics.png" alt="Analytics page in mobile view" loading="lazy" />
           </button>
-          <div class="shot-caption">Analysen</div>
+          <div class="shot-caption">Analytics</div>
         </div>
       </div>
     </div>
@@ -272,78 +272,78 @@
 
 <section id="features">
   <div class="wrap">
-    <h2><span class="num">03</span>Funktionen</h2>
-    <p class="section-sub">Ein Überblick über alles, was das Dashboard mitbringt.</p>
+    <h2><span class="num">03</span>Features</h2>
+    <p class="section-sub">An overview of everything the dashboard brings along.</p>
     <div class="feature-grid">
       <div class="feature-card">
         <span class="icon">🖧</span>
-        <h3>Nodes (Multi-Server)</h3>
-        <p>Accounts müssen nicht auf dem Server laufen, auf dem das Dashboard selbst installiert ist. Weitere Server bekommen einen schlanken Node-Agent, per IP + zeitlich begrenztem Pairing-Code verbunden — Steuerung, Konsole, Statistiken sowie CLI-/Node-Agent-Updates laufen transparent über den jeweiligen Node.</p>
+        <h3>Nodes (multi-server)</h3>
+        <p>Accounts don't have to run on the server the dashboard itself is installed on. Additional servers get a lightweight node agent, connected via IP + a time-limited pairing code — control, console, stats, and CLI/node-agent updates all run transparently through the respective node.</p>
       </div>
       <div class="feature-card">
         <span class="icon">▦</span>
-        <h3>Übersicht</h3>
-        <p>Ein-/ausklappbare Karten (Zustand bleibt gespeichert): Accounts-Tabelle, Charakter-Stats, Ausrüstung, Taverne, Gilde, Mail, Kampfhistorie, Activity-Log.</p>
+        <h3>Overview</h3>
+        <p>Collapsible cards (state is remembered): accounts table, character stats, equipment, tavern, guild, mail, battle history, activity log.</p>
       </div>
       <div class="feature-card">
         <span class="icon">🗂</span>
-        <h3>Account-Verwaltung</h3>
-        <p>Einmal einloggen — alle Charaktere eines Logins werden automatisch über alle Server hinweg gefunden. Passwörter liegen AES-256-verschlüsselt auf der Platte. Start/Stop/Pause/"Einlösen" pro Account, Bulk-Aktionen pro Login.</p>
+        <h3>Account management</h3>
+        <p>Log in once — every character on a login is found automatically across all servers. Passwords are stored AES-256-encrypted on disk. Start/stop/pause/"claim" per account, bulk actions per login.</p>
       </div>
       <div class="feature-card">
         <span class="icon">⚔</span>
-        <h3>Kampfhistorie</h3>
-        <p>Echte, vom CLI-Prozess lokal aufgezeichnete Kämpfe — Gegner, Arena/Dungeon/Sammelalbum, Sieg/Niederlage, EP/Gold/Ehre — über den nicht-interaktiven CLI-Befehl <code>--history</code>.</p>
+        <h3>Battle history</h3>
+        <p>Real fights recorded locally by the CLI process — opponent, arena/dungeon/scrapbook, win/loss, XP/gold/honor — via the non-interactive CLI command <code>--history</code>.</p>
       </div>
       <div class="feature-card">
         <span class="icon">⌨</span>
-        <h3>Web-Terminal</h3>
-        <p>Pro Account eine eigene Konsolen-Session im Browser (xterm.js), inklusive automatisiertem Login-Durchklicken bis zum laufenden Bot.</p>
+        <h3>Web terminal</h3>
+        <p>Its own console session per account in the browser (xterm.js), including automated login click-through all the way to the running bot.</p>
       </div>
       <div class="feature-card">
         <span class="icon">🛡</span>
-        <h3>Live-Spieldaten</h3>
-        <p>Ausrüstung, Gilde, Taverne und Mail direkt vom Spieleserver (read-only, lokaler Rust-Dienst). Abfrage-Intervall frei einstellbar (10&nbsp;Min / 1×Std / 1×Tag).</p>
+        <h3>Live game data</h3>
+        <p>Equipment, guild, tavern, and mail directly from the game server (read-only, local Rust service). Polling interval freely configurable (10&nbsp;min / 1×/hour / 1×/day).</p>
       </div>
       <div class="feature-card">
         <span class="icon">📈</span>
-        <h3>Analysen & Erträge</h3>
-        <p>SQLite-gestützte Auswertung von EP/Gold/Ehre pro Tag, erkannte Kampf-Fenster, Zeitreihen-Charts für Level, Erfahrung, Gold, Pilze, Ehre, Rang.</p>
+        <h3>Analytics & earnings</h3>
+        <p>SQLite-backed breakdown of XP/gold/honor per day, detected fight windows, time-series charts for level, experience, gold, mushrooms, honor, rank.</p>
       </div>
       <div class="feature-card">
         <span class="icon">⚙</span>
-        <h3>Einstellungen & Vorlagen</h3>
-        <p>Alle Bot-Konfig-Schalter direkt im Browser — Lesen und die offiziell unterstützten <code>auto_*</code>-Schalter über den nicht-interaktiven CLI-Befehl <code>--config</code>. Konfiguration als Vorlage speichern und auf andere Charaktere anwenden, oder aus einem Windows-App-Backup importieren.</p>
+        <h3>Settings & templates</h3>
+        <p>Every bot config toggle right in the browser — reading and the officially supported <code>auto_*</code> toggles go through the non-interactive CLI command <code>--config</code>. Save config as a template and apply it to other characters, or import from a Windows-app backup.</p>
       </div>
       <div class="feature-card">
         <span class="icon">🔔</span>
-        <h3>Benachrichtigungen</h3>
-        <p>Erkennt Fehler/Warnungen automatisch aus dem Log-Output — Glocke mit Badge und Toast-Popups.</p>
+        <h3>Notifications</h3>
+        <p>Automatically detects errors/warnings from the log output — a bell with a badge and toast popups.</p>
       </div>
       <div class="feature-card">
         <span class="icon">🕶</span>
-        <h3>Anonym-Modus</h3>
-        <p>Charakternamen verpixeln, z.&nbsp;B. für Screenshots oder Streaming — ein Klick, sofort wirksam.</p>
+        <h3>Anonymous mode</h3>
+        <p>Pixelates character names, e.g. for screenshots or streaming — one click, effective immediately.</p>
       </div>
       <div class="feature-card">
         <span class="icon">🔁</span>
-        <h3>Auto-Wiederanlauf</h3>
-        <p>Charaktere, die vor einem Neustart/Update aktiv liefen, starten danach automatisch wieder — zeitversetzt, damit nicht alle gleichzeitig einloggen.</p>
+        <h3>Auto-restart</h3>
+        <p>Characters that were active before a restart/update start back up automatically afterward — staggered, so they don't all log in at once.</p>
       </div>
       <div class="feature-card">
         <span class="icon">📱</span>
-        <h3>Mobil nutzbar</h3>
-        <p>Vollständig responsives Layout — Navigation als Menü, Tabellen und Konsole passen sich der Bildschirmbreite an.</p>
+        <h3>Mobile-friendly</h3>
+        <p>Fully responsive layout — navigation as a menu, tables and console adapt to screen width.</p>
       </div>
       <div class="feature-card">
         <span class="icon">⟳</span>
-        <h3>Auto-Update-Check</h3>
-        <p>CLI und Dashboard zeigen permanent ihren Update-Status; ein Klick installiert automatisch (git pull + Neubau bzw. Binary-Austausch).</p>
+        <h3>Auto update check</h3>
+        <p>CLI and dashboard permanently show their update status; one click installs automatically (git pull + rebuild or binary swap).</p>
       </div>
       <div class="feature-card">
         <span class="icon">🔐</span>
-        <h3>Zugangsschutz</h3>
-        <p>Ein Dashboard-Zugang (Single-Admin) mit Setup-Assistent, 12-Wort-Wiederherstellungsschlüssel und Passwort-Änderung direkt im Interface.</p>
+        <h3>Access protection</h3>
+        <p>One dashboard account (single admin) with a setup wizard, 12-word recovery phrase, and password change right in the interface.</p>
       </div>
     </div>
   </div>
@@ -352,71 +352,71 @@
 <section id="installation">
   <div class="wrap">
     <h2><span class="num">04</span>Installation</h2>
-    <p class="section-sub">Auf einem frischen Debian/Ubuntu-Server, als root.</p>
+    <p class="section-sub">On a fresh Debian/Ubuntu server, as root.</p>
     <pre><code>curl -fsSL https://raw.githubusercontent.com/dandulox/MercySF_Dashboard/main/install.sh | bash</code></pre>
     <ul class="install-steps">
       <li>
-        <h4>Abhängigkeiten & Dienste</h4>
-        <p>Das Skript installiert Node.js, Rust/Cargo für die sf-api-Bridge, Build-Tools für native Module sowie die Mercy-SF-CLI, richtet ein selbstsigniertes TLS-Zertifikat ein und startet Dashboard sowie sf-api-Bridge als systemd-Dienste.</p>
+        <h4>Dependencies & services</h4>
+        <p>The script installs Node.js, Rust/Cargo for the sf-api bridge, build tools for native modules, and the Mercy SF CLI, sets up a self-signed TLS certificate, and starts the dashboard and sf-api bridge as systemd services.</p>
       </li>
       <li>
-        <h4>Erster Aufruf</h4>
-        <p>Danach ist das Dashboard unter <code>https://&lt;server-ip&gt;:8080</code> erreichbar — eine Setup-Seite führt durch das Anlegen des einen Dashboard-Zugangs.</p>
+        <h4>First visit</h4>
+        <p>The dashboard is then reachable at <code>https://&lt;server-ip&gt;:8080</code> — a setup page walks you through creating the single dashboard account.</p>
       </li>
       <li>
         <h4>Updates</h4>
-        <p>Erneutes Ausführen des Skripts aktualisiert nur Code und Dependencies — vorhandene Account-Daten, Zertifikate und die installierte CLI-Version bleiben unangetastet.</p>
+        <p>Running the script again only updates code and dependencies — existing account data, certificates, and the installed CLI version are left untouched.</p>
       </li>
       <li>
-        <h4>Mehrere Server (Nodes)</h4>
-        <p>Auf jedem weiteren Server reicht ein schlanker Node-Agent statt des vollen Dashboards — installierbar mit demselben Skript und dem Flag <code>--node</code>. Am Ende zeigt es IP und einen 15&nbsp;Minuten gültigen Pairing-Code an, den man im Dashboard unter „Nodes“ eingibt.</p>
+        <h4>Multiple servers (nodes)</h4>
+        <p>Each additional server only needs a lightweight node agent instead of the full dashboard — installable with the same script and the <code>--node</code> flag. At the end it shows the IP and a pairing code valid for 15&nbsp;minutes, which you enter in the dashboard under "Nodes".</p>
         <pre style="margin-top:8px;"><code>curl -fsSL https://raw.githubusercontent.com/dandulox/MercySF_Dashboard/main/install.sh | bash -s -- --node</code></pre>
       </li>
     </ul>
 
-    <h4 style="margin-top:32px;font-size:14px;">Deinstallation</h4>
+    <h4 style="margin-top:32px;font-size:14px;">Uninstallation</h4>
     <pre><code>curl -fsSL https://raw.githubusercontent.com/dandulox/MercySF_Dashboard/main/install.sh | bash -s -- --uninstall</code></pre>
-    <p class="section-sub" style="margin-top:10px;">Entfernt <strong>alles</strong>: beide systemd-Dienste, den kompletten <code>/opt/mercy</code>-Ordner inkl. Dashboard-Code, Zertifikate, CLI-Binary, gespeicherte Bot-Zugangsdaten, Dashboard-Zugang und die Ertrags-Statistik-Datenbank. Kein Zwischenschritt, keine Rückfrage.</p>
+    <p class="section-sub" style="margin-top:10px;">Removes <strong>everything</strong>: both systemd services, the entire <code>/opt/mercy</code> folder including dashboard code, certificates, the CLI binary, saved bot credentials, the dashboard account, and the earnings-statistics database. No intermediate step, no confirmation prompt.</p>
   </div>
 </section>
 
 <section id="limitations">
   <div class="wrap">
-    <h2><span class="num">05</span>Bekannte Einschränkungen</h2>
-    <p class="section-sub">Seit Version 2.13.0 bietet die CLI einen dokumentierten, nicht-interaktiven JSON-Modus, den das Dashboard für Einstellungen, Kampfhistorie und "Einlösen" nutzt. Der eigentliche Bot-Start/Login-Ablauf im Web-Terminal läuft aber weiterhin über das klassische interaktive Text-Menü — dafür basiert die Automatisierung dort nach wie vor auf Pattern-Matching des Terminal-Outputs. Ändert sich dort der Wortlaut eines CLI-Menüs, kann die Automatisierung brechen, bis der Code angepasst wird.</p>
+    <h2><span class="num">05</span>Known limitations</h2>
+    <p class="section-sub">Since version 2.13.0, the CLI offers a documented, non-interactive JSON mode, which the dashboard uses for settings, battle history, and "claim". The actual bot start/login flow in the web terminal, however, still runs through the classic interactive text menu — so automation there still relies on pattern-matching the terminal output. If the wording of a CLI menu changes there, the automation can break until the code is adjusted.</p>
     <ul class="limits-list">
-      <li><span class="dot"></span><span class="text">Kein natives Pause-Kommando — "Pause" schaltet stattdessen alle aktiven <code>auto_*</code>-Konfig-Schalter aus.</span></li>
-      <li><span class="dot"></span><span class="text">Nur ~20 <code>auto_*</code>-Schalter sind über die CLI selbst offiziell änderbar (<code>--config --set</code>) — alle übrigen Einstellungsfelder schreibt das Dashboard weiterhin direkt in die Config-Datei.</span></li>
-      <li><span class="dot"></span><span class="text">Keine offizielle Versions-API für die CLI — der Update-Check vergleicht MD5-Hashes gegen die öffentliche Download-Datei.</span></li>
-      <li><span class="dot"></span><span class="text">Ein Dashboard-Selbst-Update unterbricht kurz die Verbindung, während sich beide systemd-Dienste neu starten.</span></li>
-      <li><span class="dot"></span><span class="text"><code>sf-api</code> liefert keine lesbaren Item-Namen (nur numerische IDs) — die Ausrüstungs-Anzeige zeigt Slot, Typ, Attribute und Qualität, keine Klarnamen.</span></li>
-      <li><span class="dot"></span><span class="text">Die täglichen Gold-Erträge sind eine Netto-Veränderung pro Zeitfenster (kann Ausgaben enthalten) — EP und Ehre sind exakt.</span></li>
-      <li><span class="dot"></span><span class="text">Kein Rate-Limiting auf Login-/Passwort-Reset-Versuche — relevant vor allem, falls das Dashboard über das eigene LAN hinaus erreichbar gemacht wird.</span></li>
-      <li><span class="dot"></span><span class="text">Das Activity-Log auf der Übersichtsseite bleibt für Node-Accounts leer, da deren PTY-Output nicht durch den lokalen Log-Puffer des Dashboards läuft — Analysen, Erträge und der Node-Status funktionieren dagegen auch für Node-Accounts.</span></li>
-      <li><span class="dot"></span><span class="text">Ein Node-Agent akzeptiert immer nur genau ein gepairtes Dashboard gleichzeitig — erneutes Pairen trennt ein zuvor verbundenes Dashboard kommentarlos.</span></li>
+      <li><span class="dot"></span><span class="text">No native pause command — "Pause" instead turns off all active <code>auto_*</code> config toggles.</span></li>
+      <li><span class="dot"></span><span class="text">Only ~20 <code>auto_*</code> toggles are officially changeable through the CLI itself (<code>--config --set</code>) — all other settings fields are still written directly to the config file by the dashboard.</span></li>
+      <li><span class="dot"></span><span class="text">No official version API for the CLI — the update check compares MD5 hashes against the public download file.</span></li>
+      <li><span class="dot"></span><span class="text">A dashboard self-update briefly interrupts the connection while both systemd services restart.</span></li>
+      <li><span class="dot"></span><span class="text"><code>sf-api</code> doesn't provide readable item names (only numeric IDs) — the equipment display shows slot, type, attributes, and quality, not display names.</span></li>
+      <li><span class="dot"></span><span class="text">Daily gold earnings are a net change per time window (can include expenses) — XP and honor are exact.</span></li>
+      <li><span class="dot"></span><span class="text">No rate limiting on login/password-reset attempts — mainly relevant if the dashboard is ever exposed beyond its own LAN.</span></li>
+      <li><span class="dot"></span><span class="text">The activity log on the overview page stays empty for node accounts, since their PTY output doesn't flow through the dashboard's local log buffer — analytics, earnings, and node status do work for node accounts, though.</span></li>
+      <li><span class="dot"></span><span class="text">A node agent only ever accepts exactly one paired dashboard at a time — re-pairing silently disconnects a previously connected dashboard.</span></li>
     </ul>
   </div>
 </section>
 
-<section id="ressourcen">
+<section id="resources">
   <div class="wrap">
-    <h2><span class="num">06</span>Ressourcenverbrauch</h2>
-    <p class="section-sub">Zwei reale Testläufe mit unterschiedlicher Hardware und Account-Anzahl.</p>
+    <h2><span class="num">06</span>Resource usage</h2>
+    <p class="section-sub">Two real test runs with different hardware and account counts.</p>
     <div class="bench-grid">
       <div class="bench-card">
-        <h4>4 vCPU / 8 GB RAM — 11 laufende Accounts</h4>
+        <h4>4 vCPU / 8 GB RAM — 11 running accounts</h4>
         <table class="bench-table">
-          <tr><td>CPU-Auslastung</td><td>1,8&nbsp;%</td></tr>
-          <tr><td>RAM-Auslastung</td><td>217,6 MB von 8 GB (2,72&nbsp;%)</td></tr>
-          <tr><td>Bootdisk</td><td>13 GB von 49 GB (28&nbsp;%)</td></tr>
+          <tr><td>CPU usage</td><td>1.8%</td></tr>
+          <tr><td>RAM usage</td><td>217.6 MB of 8 GB (2.72%)</td></tr>
+          <tr><td>Boot disk</td><td>13 GB of 49 GB (28%)</td></tr>
         </table>
       </div>
       <div class="bench-card">
-        <h4>1 vCPU / 1 GB RAM (LXC) — 30 laufende Accounts</h4>
+        <h4>1 vCPU / 1 GB RAM (LXC) — 30 running accounts</h4>
         <table class="bench-table">
-          <tr><td>CPU-Auslastung</td><td>2,82&nbsp;%</td></tr>
-          <tr><td>RAM-Auslastung</td><td>226,7 MB von 1,07 GB (21,11&nbsp;%)</td></tr>
-          <tr><td>Bootdisk</td><td>3,95 GB von 8,35 GB (47,36&nbsp;%)</td></tr>
+          <tr><td>CPU usage</td><td>2.82%</td></tr>
+          <tr><td>RAM usage</td><td>226.7 MB of 1.07 GB (21.11%)</td></tr>
+          <tr><td>Boot disk</td><td>3.95 GB of 8.35 GB (47.36%)</td></tr>
         </table>
       </div>
     </div>
@@ -425,35 +425,35 @@
 
 <section id="stack">
   <div class="wrap">
-    <h2><span class="num">07</span>Tech-Stack</h2>
-    <p class="section-sub">Node.js + Express im Backend, Vanilla JS mit ES-Modulen im Frontend — bewusst ohne Build-Step. Die sf-api-Anbindung ist ein separater, zustandsloser Rust-Dienst, der nur auf <code>127.0.0.1</code> lauscht.</p>
+    <h2><span class="num">07</span>Tech stack</h2>
+    <p class="section-sub">Node.js + Express in the backend, vanilla JS with ES modules in the frontend — deliberately without a build step. The sf-api integration is a separate, stateless Rust service that listens on <code>127.0.0.1</code> only.</p>
     <div class="stack-pills">
       <span class="stack-pill">Node.js + Express</span>
-      <span class="stack-pill">Vanilla JS (ES-Module)</span>
+      <span class="stack-pill">Vanilla JS (ES modules)</span>
       <span class="stack-pill">node-pty + xterm.js</span>
       <span class="stack-pill">Chart.js</span>
       <span class="stack-pill">WebSocket (ws)</span>
       <span class="stack-pill">better-sqlite3</span>
       <span class="stack-pill">Rust + axum + sf-api</span>
       <span class="stack-pill">AES-256-GCM</span>
-      <span class="stack-pill">node-agent (Multi-Server)</span>
+      <span class="stack-pill">node-agent (multi-server)</span>
     </div>
   </div>
 </section>
 
-<section id="danksagung">
+<section id="acknowledgements">
   <div class="wrap">
-    <h2><span class="num">08</span>Danksagung</h2>
-    <p class="section-sub">Dieses Dashboard existiert nur, weil andere die eigentliche Grundlagenarbeit geleistet haben.</p>
+    <h2><span class="num">08</span>Acknowledgements</h2>
+    <p class="section-sub">This dashboard only exists because others did the actual groundwork.</p>
     <div class="thanks-grid">
       <div class="thanks-card">
         <h3>Mercy SF — Sensei Issei</h3>
-        <p>Die CLI/den Bot selbst, um den dieses Dashboard herum gebaut ist.</p>
+        <p>The CLI/bot itself that this dashboard is built around.</p>
         <a class="btn btn-secondary" style="padding:8px 16px;font-size:13px;" href="https://mercysf.app" target="_blank" rel="noopener">mercysf.app ↗</a>
       </div>
       <div class="thanks-card">
         <h3>sf-api — the-marenga</h3>
-        <p>Die Rust-Bibliothek, über die dieses Dashboard Live-Daten direkt vom Spieleserver abfragt.</p>
+        <p>The Rust library through which this dashboard queries live data directly from the game server.</p>
         <a class="btn btn-secondary" style="padding:8px 16px;font-size:13px;" href="https://github.com/the-marenga/sf-api" target="_blank" rel="noopener">Repository ↗</a>
       </div>
     </div>
@@ -462,7 +462,7 @@
 
 <footer>
   <div class="wrap">
-    <div>Lizenziert unter <a href="https://github.com/dandulox/MercySF_Dashboard/blob/main/LICENSE" target="_blank" rel="noopener">AGPLv3</a>.</div>
+    <div>Licensed under <a href="https://github.com/dandulox/MercySF_Dashboard/blob/main/LICENSE" target="_blank" rel="noopener">AGPLv3</a>.</div>
     <div class="foot-links">
       <a href="https://github.com/dandulox/MercySF_Dashboard" target="_blank" rel="noopener">GitHub</a>
       <a href="https://github.com/dandulox/MercySF_Dashboard#readme" target="_blank" rel="noopener">README</a>
@@ -472,7 +472,7 @@
 </footer>
 
 <div class="lightbox" id="lightbox">
-  <button type="button" class="lightbox-close" id="lightbox-close" aria-label="Schließen">✕</button>
+  <button type="button" class="lightbox-close" id="lightbox-close" aria-label="Close">✕</button>
   <img id="lightbox-img" src="" alt="" />
 </div>
 
