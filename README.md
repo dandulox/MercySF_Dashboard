@@ -1,3 +1,5 @@
+*[🇩🇪 Deutsch](README.md) | [🇬🇧 English](README.en.md)*
+
 # Mercy SF Web-Dashboard
 
 Ein Web-Dashboard für [Mercy SF](https://mercysf.app), das um die bestehende CLI herum gebaut ist — Übersicht, Steuerung und Analyse für alle Accounts direkt im Browser, statt über das Terminal-Menü. Zusätzlich holt es über [sf-api](https://github.com/the-marenga/sf-api) von the-marenga Live-Daten (Ausrüstung, Gilde, Taverne, Mail) direkt vom Spieleserver.
