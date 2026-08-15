@@ -329,6 +329,11 @@ export default {
   'accounts.addTesting': 'Logging in to test, searching for characters...',
   'accounts.addedCharacters': '{{count}} character(s) created: {{names}}',
   'accounts.noNewCharactersOnAdd': 'No new characters (may already exist).',
+  'accounts.consoleBtn': 'Console',
+  'accounts.filterSearchPlaceholder': 'Search by name, server...',
+  'accounts.filterStatusAll': 'All statuses',
+  'accounts.filterStatusRunning': 'Running',
+  'accounts.filterStatusStopped': 'Stopped',
 
   'overview.zeroMin': '0 min',
   'overview.durationHM': '{{h}}h {{m}}m',

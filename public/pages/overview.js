@@ -28,6 +28,14 @@ function escapeRegExp(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+function fmtRelTime(iso) {
+  if (!iso) return '';
+  const secs = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
+  if (secs < 60) return t('nodes.secsAgo', { secs });
+  if (secs < 3600) return t('nodes.minsAgo', { mins: Math.floor(secs / 60) });
+  return t('nodes.hoursAgo', { hours: Math.floor(secs / 3600) });
+}
+
 function highlightCharName(escapedLine, charName) {
   if (!charName) return escapedLine;
   const re = new RegExp(escapeRegExp(escapeHtml(charName)), 'g');
@@ -129,6 +137,14 @@ export default {
         </div>
         <div id="battle-history-body" class="muted">${t('overview.selectAccountBattleHistory')}</div>
       </section>
+      <section class="card collapsible-card" id="recent-actions-card">
+        <div class="card-header"><span>${t('accounts.lastActionsTitle')}</span></div>
+        <div id="recent-actions-body" class="muted">${t('overview.selectAccountLog')}</div>
+      </section>
+      <section class="card collapsible-card" id="scouted-players-card">
+        <div class="card-header"><span>${t('accounts.lastScoutedTitle')}</span></div>
+        <div id="scouted-players-body" class="muted">${t('overview.selectAccountLog')}</div>
+      </section>
       <section class="card collapsible-card" id="activity-log-card">
         <div class="card-header"><span>📜 Activity Log</span></div>
         <div id="activity-log" class="activity-log">${t('overview.selectAccountLog')}</div>
@@ -205,6 +221,11 @@ export default {
       .battle-history-note { font-size: 11px; color: var(--muted); margin-top: 8px; }
       .positive { color: var(--green); }
       .negative { color: var(--red); }
+      .mini-list { list-style: none; margin: 0; padding: 0; }
+      .mini-list li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 8px; padding: 6px 0; border-bottom: 1px solid var(--border); color: var(--text); }
+      .mini-list li:last-child { border-bottom: none; }
+      .mini-list li span:first-child { min-width: 0; overflow-wrap: break-word; }
+      .mini-list .mini-time { color: var(--muted); flex-shrink: 0; }
     `);
 
     let accountsPage = 0;
@@ -392,6 +413,38 @@ export default {
       return current ? current.profileId : null;
     }
 
+    async function renderRecentActions(profileId) {
+      const el = wrap.querySelector('#recent-actions-body');
+      if (!profileId) { el.textContent = t('overview.selectAccountLog'); return; }
+      try {
+        const profiles = await ctx.fetchJSON('/api/profiles');
+        const profile = profiles.find(p => p.id === profileId);
+        const history = profile ? (profile.activityHistory || []) : [];
+        el.innerHTML = history.length
+          ? `<ul class="mini-list">${history.map(h =>
+              `<li><span>${escapeHtml(h.label)}</span><span class="mini-time">${fmtRelTime(h.at)}</span></li>`).join('')}</ul>`
+          : t('accounts.noneRecordedYet');
+      } catch (err) {
+        el.textContent = t('analytics.loadError', { message: err.message });
+      }
+    }
+
+    async function renderScoutedPlayers(profileId) {
+      const el = wrap.querySelector('#scouted-players-body');
+      if (!profileId) { el.textContent = t('overview.selectAccountLog'); return; }
+      try {
+        const profiles = await ctx.fetchJSON('/api/profiles');
+        const profile = profiles.find(p => p.id === profileId);
+        const scouted = profile ? (profile.scoutedPlayers || []) : [];
+        el.innerHTML = scouted.length
+          ? `<ul class="mini-list">${scouted.map(s =>
+              `<li><span>${escapeHtml(s.name)}</span><span class="mini-time">${fmtRelTime(s.at)}</span></li>`).join('')}</ul>`
+          : t('accounts.noOneYet');
+      } catch (err) {
+        el.textContent = t('analytics.loadError', { message: err.message });
+      }
+    }
+
     function renderEquipmentBody(items) {
       const el = wrap.querySelector('#equipment-body');
       if (!items.length) { el.textContent = t('overview.noEquipmentFound'); return; }
@@ -507,12 +560,19 @@ export default {
       await renderLog(accountId, current ? current.charName : null);
     }
 
-    render().then(() => renderGameState(getCurrentProfileId()));
+    render().then(() => {
+      renderGameState(getCurrentProfileId());
+      renderRecentActions(getCurrentProfileId());
+      renderScoutedPlayers(getCurrentProfileId());
+    });
     const unsub = ctx.onAccountChange(render);
     const interval = setInterval(render, 5000);
 
     const unsubGameState = ctx.onAccountChange(() => renderGameState(getCurrentProfileId()));
     wrap.querySelector('#gamestate-refresh-btn').addEventListener('click', () => renderGameState(getCurrentProfileId()));
+
+    const unsubRecentActions = ctx.onAccountChange(() => renderRecentActions(getCurrentProfileId()));
+    const unsubScoutedPlayers = ctx.onAccountChange(() => renderScoutedPlayers(getCurrentProfileId()));
 
     // Eigener Login-Roundtrip pro Abruf (CLI --history) — bewusst nicht Teil des 5s-Polls von
     // render(), sonst würde bei offener Overview-Seite alle 5 Sekunden neu eingeloggt.
@@ -539,6 +599,6 @@ export default {
 
     wrap.querySelectorAll('.collapsible-card').forEach(cardEl => makeCollapsible(cardEl, cardEl.id));
 
-    return () => { unsub(); unsubGameState(); unsubBattleHistory(); clearInterval(interval); };
+    return () => { unsub(); unsubGameState(); unsubBattleHistory(); unsubRecentActions(); unsubScoutedPlayers(); clearInterval(interval); };
   }
 };

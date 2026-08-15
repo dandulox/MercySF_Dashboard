@@ -341,6 +341,11 @@ export default {
   'accounts.addTesting': 'Logge testweise ein, suche Charaktere...',
   'accounts.addedCharacters': '{{count}} Charakter(e) angelegt: {{names}}',
   'accounts.noNewCharactersOnAdd': 'Keine neuen Charaktere (evtl. schon vorhanden).',
+  'accounts.consoleBtn': 'Konsole',
+  'accounts.filterSearchPlaceholder': 'Suche nach Name, Server...',
+  'accounts.filterStatusAll': 'Alle Status',
+  'accounts.filterStatusRunning': 'Läuft',
+  'accounts.filterStatusStopped': 'Gestoppt',
 
   // overview.js (public/pages/overview.js)
   'overview.zeroMin': '0 Min',

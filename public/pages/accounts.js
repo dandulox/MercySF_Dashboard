@@ -24,14 +24,6 @@ function fmtUptime(startedAt) {
   return `${s}s`;
 }
 
-function fmtRelTime(iso) {
-  if (!iso) return '';
-  const secs = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
-  if (secs < 60) return t('nodes.secsAgo', { secs });
-  if (secs < 3600) return t('nodes.minsAgo', { mins: Math.floor(secs / 60) });
-  return t('nodes.hoursAgo', { hours: Math.floor(secs / 3600) });
-}
-
 export default {
   id: 'accounts',
   label: 'Account-Verwaltung',
@@ -110,16 +102,12 @@ export default {
       .accounts-page .status-text { font-size: 11px; color: var(--muted); white-space: nowrap; }
       .accounts-page .profile-term { display: none; border-top: 1px solid var(--border); padding: 10px; background: var(--surface-sunken); height: 420px; }
       .accounts-page .profile-term.open { display: block; }
-      .accounts-page .profile-details { display: flex; gap: 18px; flex-wrap: wrap; padding: 0 16px 14px; font-size: 11.5px; }
+      .accounts-page .profile-details { display: none; gap: 18px; flex-wrap: wrap; padding: 10px 14px 14px; border-top: 1px solid var(--border); font-size: 11.5px; }
+      .accounts-page .profile-card.expanded .profile-details { display: flex; }
       .accounts-page .detail-block { min-width: 160px; flex: 1; }
       .accounts-page .detail-block h4 { margin: 0 0 6px; font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; font-weight: 600; }
       .accounts-page .stat-line { color: var(--text); line-height: 1.7; }
       .accounts-page .stat-line b { color: var(--muted); font-weight: 500; }
-      .accounts-page .mini-list { list-style: none; margin: 0; padding: 0; }
-      .accounts-page .mini-list li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 8px; padding: 2px 0; color: var(--text); }
-      .accounts-page .mini-list li span:first-child { min-width: 0; overflow-wrap: break-word; }
-      .accounts-page .mini-list .mini-time { color: var(--muted); flex-shrink: 0; }
-      .accounts-page .mini-empty { color: var(--muted); }
       .accounts-page .empty-hint { color: var(--muted); font-size: 13px; padding: 20px 0; text-align: center; }
       .accounts-page .login-helper { display: none; padding: 12px 16px; border-top: 1px solid var(--border); background: var(--panel-2); }
       .accounts-page .login-helper.visible { display: block; }
@@ -136,9 +124,23 @@ export default {
       .accounts-page .login-group-count { font-size: 11px; color: var(--muted); font-weight: 400; }
       .accounts-page .login-group-actions { display: flex; gap: 6px; flex-wrap: wrap; }
       .accounts-page .login-group-actions button { width: auto; padding: 5px 10px; font-size: 11px; }
-      .accounts-page .login-group-body { border: 1px solid var(--border); border-top: none; border-radius: 0 0 10px 10px; padding: 10px; }
-      .accounts-page .login-group-body .profile-card:last-child { margin-bottom: 0; }
-      .accounts-page .login-group-status { font-size: 11px; color: var(--muted); width: 100%; margin-top: 4px; }
+      .accounts-page .login-group-body { border: 1px solid var(--border); border-top: none; border-radius: 0 0 10px 10px; padding: 10px; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; align-items: start; }
+      .accounts-page .login-group-status { font-size: 11px; color: var(--muted); width: 100%; margin-top: 4px; grid-column: 1 / -1; }
+      .accounts-page .profile-card { margin-bottom: 0; }
+      .accounts-page .profile-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; width: 100%; padding: 0 14px 12px; }
+      .accounts-page .profile-actions-primary { display: flex; gap: 6px; }
+      .accounts-page .profile-actions-extra { display: none; gap: 6px; flex-wrap: wrap; width: 100%; margin-top: 6px; padding-top: 8px; border-top: 1px solid var(--border); }
+      .accounts-page .profile-card.expanded .profile-actions-extra { display: flex; }
+      .accounts-page .profile-toggle-more { background: none; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); cursor: pointer; padding: 6px 10px; font-size: 12px; margin-left: auto; }
+      .accounts-page .profile-toggle-more:hover { color: var(--text); }
+      .accounts-page .filter-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+      .accounts-page .filter-bar input[type="text"] { background: var(--input-bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 7px 10px; font-size: 12.5px; min-width: 180px; }
+      .accounts-page .filter-bar select { background: var(--input-bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 7px 10px; font-size: 12.5px; }
+      .accounts-page .filter-chip {
+        display: inline-flex; align-items: center; gap: 4px; background: var(--panel-2); border: 1px solid var(--border);
+        border-radius: 20px; padding: 4px 10px; font-size: 11.5px; cursor: pointer; user-select: none; color: var(--muted);
+      }
+      .accounts-page .filter-chip.active { color: var(--text); border-color: var(--accent); }
       @media (max-width: 480px) {
         .accounts-page .profile-term { height: 320px; }
         .accounts-page .field input { min-width: 0; width: 100%; }
@@ -177,6 +179,15 @@ export default {
         </div>
         <div class="add-hint">${t('accounts.addHint')}</div>
         <div class="add-hint" id="acc-add-status"></div>
+      </div>
+      <div class="filter-bar">
+        <input type="text" id="acc-filter-search" placeholder="${t('accounts.filterSearchPlaceholder')}" />
+        <select id="acc-filter-status">
+          <option value="">${t('accounts.filterStatusAll')}</option>
+          <option value="running">${t('accounts.filterStatusRunning')}</option>
+          <option value="offline">${t('accounts.filterStatusStopped')}</option>
+        </select>
+        <div id="acc-filter-classes"></div>
       </div>
       <div id="profiles-list"></div>
     `;
@@ -245,6 +256,49 @@ export default {
       }
     }
 
+    // Klassen-Sichtbarkeit: neue Klassen werden beim ersten Erscheinen sichtbar
+    // hinzugefügt, ein späteres Abwählen bleibt aber über Neuladungen hinweg bestehen.
+    const visibleClasses = new Set();
+    const knownClasses = new Set();
+
+    function renderClassFilterChips(profileClasses) {
+      const chipsWrap = wrap.querySelector('#acc-filter-classes');
+      chipsWrap.innerHTML = profileClasses.map(c => `
+        <button type="button" class="filter-chip${visibleClasses.has(c) ? ' active' : ''}" data-value="${escapeHtml(c)}">${escapeHtml(c)}</button>
+      `).join('');
+      chipsWrap.querySelectorAll('.filter-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const value = btn.dataset.value;
+          if (visibleClasses.has(value)) visibleClasses.delete(value); else visibleClasses.add(value);
+          btn.classList.toggle('active');
+          applyFilters();
+        });
+      });
+    }
+
+    function applyFilters() {
+      const searchVal = (wrap.querySelector('#acc-filter-search')?.value || '').trim().toLowerCase();
+      const statusVal = wrap.querySelector('#acc-filter-status')?.value || '';
+      wrap.querySelectorAll('.login-group').forEach(group => {
+        let anyVisible = false;
+        group.querySelectorAll('.profile-card').forEach(card => {
+          const cls = card.dataset.class;
+          const status = card.dataset.status;
+          const haystack = `${card.querySelector('[data-role="nickname"]')?.textContent || ''} ${card.querySelector('[data-role="meta"]')?.textContent || ''}`.toLowerCase();
+          const matchesSearch = !searchVal || haystack.includes(searchVal);
+          const matchesStatus = !statusVal || status === statusVal;
+          const matchesClass = !cls || visibleClasses.has(cls);
+          const visible = matchesSearch && matchesStatus && matchesClass;
+          card.style.display = visible ? '' : 'none';
+          if (visible) anyVisible = true;
+        });
+        group.style.display = anyVisible ? '' : 'none';
+      });
+    }
+
+    wrap.querySelector('#acc-filter-search').addEventListener('input', applyFilters);
+    wrap.querySelector('#acc-filter-status').addEventListener('change', applyFilters);
+
     async function loadProfiles() {
       const list = wrap.querySelector('#profiles-list');
       await loadNodeOptions();
@@ -266,11 +320,14 @@ export default {
         groups.get(p.username).push(p);
       });
 
+      const profileClasses = [...new Set(profiles.map(p => p.characterClass).filter(Boolean))].sort();
+      profileClasses.forEach(c => {
+        if (!knownClasses.has(c)) { knownClasses.add(c); visibleClasses.add(c); }
+      });
+
       function detailsHtml(p) {
         if (!p.status.running) return '';
         const uptime = fmtUptime(p.status.startedAt);
-        const history = p.activityHistory || [];
-        const scouted = p.scoutedPlayers || [];
         return `
           <div class="profile-details">
             <div class="detail-block">
@@ -281,18 +338,6 @@ export default {
                 <b>${t('accounts.errorsWarningsLabel')}</b> ${p.status.errorsSeen ?? 0}
               </div>
             </div>
-            <div class="detail-block">
-              <h4>${t('accounts.lastActionsTitle')}</h4>
-              ${history.length ? `<ul class="mini-list">${history.map(h =>
-                `<li><span>${escapeHtml(h.label)}</span><span class="mini-time">${fmtRelTime(h.at)}</span></li>`).join('')}</ul>`
-                : `<div class="mini-empty">${t('accounts.noneRecordedYet')}</div>`}
-            </div>
-            <div class="detail-block">
-              <h4>${t('accounts.lastScoutedTitle')}</h4>
-              ${scouted.length ? `<ul class="mini-list">${scouted.map(s =>
-                `<li><span>${escapeHtml(s.name)}</span><span class="mini-time">${fmtRelTime(s.at)}</span></li>`).join('')}</ul>`
-                : `<div class="mini-empty">${t('accounts.noOneYet')}</div>`}
-            </div>
           </div>`;
       }
 
@@ -301,7 +346,7 @@ export default {
         const paused = (p.pausedKeys || []).length > 0;
         const st = statusInfo(p.status.botState, p.currentActivity);
         return `
-        <div class="profile-card" data-id="${p.id}">
+        <div class="profile-card" data-id="${p.id}" data-class="${escapeHtml(p.characterClass || '')}" data-status="${p.status.running ? 'running' : 'offline'}">
           <div class="profile-head">
             <div class="status-wrap">
               <span class="status-dot ${st.cls}" data-role="dot"></span>
@@ -314,14 +359,19 @@ export default {
               </div>
               <div class="profile-meta char-name" data-role="meta">${metaLine(p)}</div>
             </div>
-            <div class="profile-actions">
+          </div>
+          <div class="profile-actions">
+            <div class="profile-actions-primary">
               <button class="btn btn-primary" data-action="start" ${p.status.running ? 'disabled' : ''}>Start</button>
               <button class="btn-secondary" data-action="stop" ${p.status.running ? '' : 'disabled'}>Stop</button>
+            </div>
+            <button type="button" class="profile-toggle-more" data-action="toggle-more">⋯</button>
+            <div class="profile-actions-extra">
               <button class="btn-secondary" data-action="pause" ${hasCharacter && !paused ? '' : 'disabled'} title="${t('accounts.pauseTitle')}">${paused ? t('accounts.paused') : 'Pause'}</button>
               <button class="btn-secondary" data-action="resume" ${paused ? '' : 'disabled'}>${t('accounts.resumeBtn')}</button>
               <button class="btn-secondary" data-action="claim" ${hasCharacter && p.hasPassword ? '' : 'disabled'} title="${t('accounts.claimTitle')}">${t('accounts.claimBtn')}</button>
               <button class="btn-secondary" data-action="detect-class" ${hasCharacter && p.hasPassword ? '' : 'disabled'} title="${t('accounts.detectClassTitle')}">${t('accounts.detectClassBtn')}</button>
-              <button class="btn-secondary" data-action="toggle-term">${t('nav.console')}</button>
+              <button class="btn-secondary" data-action="toggle-term">${t('accounts.consoleBtn')}</button>
               <select class="node-select" data-action="move-node" title="${t('accounts.moveNodeTitle')}">${nodeOptionsHtml(p.nodeId)}</select>
               <button class="btn-danger" data-action="delete">${t('settings.deleteBtn')}</button>
             </div>
@@ -352,6 +402,8 @@ export default {
         </div>
       `).join('');
 
+      renderClassFilterChips(profileClasses);
+
       list.querySelectorAll('.profile-card').forEach(card => {
         const id = card.dataset.id;
         const profile = profiles.find(p => p.id === id);
@@ -375,6 +427,10 @@ export default {
         card.querySelector('[data-action="rename"]').addEventListener('click', () => {
           const next = prompt(t('accounts.renameNicknamePrompt'), profile.nickname);
           if (next !== null) renameProfile(next);
+        });
+
+        card.querySelector('[data-action="toggle-more"]').addEventListener('click', () => {
+          card.classList.toggle('expanded');
         });
 
         card.querySelector('[data-action="start"]').addEventListener('click', async () => {
@@ -620,6 +676,8 @@ export default {
           await loadProfiles();
         });
       });
+
+      applyFilters();
     }
 
     wrap.querySelector('#acc-add-btn').addEventListener('click', async () => {
