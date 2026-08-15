@@ -24,6 +24,7 @@ export default {
       }
       .system-settings-page .panel-settings-card h3, .system-settings-page .vpn-profiles-card h3, .system-settings-page .vpn-targets-title { margin: 0 0 4px; font-size: 13px; }
       .system-settings-page .panel-settings-desc, .system-settings-page .vpn-profiles-desc { font-size: 11.5px; color: var(--muted); margin-bottom: 10px; line-height: 1.4; }
+      .system-settings-page .vpn-profiles-desc a { color: var(--accent); }
       .system-settings-page .panel-settings-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
       .system-settings-page select, .system-settings-page input[type="text"] {
         background: var(--input-bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 6px 10px; font-size: 13px;
@@ -149,8 +150,12 @@ export default {
       const fileInput = wrap.querySelector('#vpn-profile-file');
       const status = wrap.querySelector('#vpn-profile-add-status');
       const file = fileInput.files[0];
-      if (!labelInput.value.trim() || !file) {
-        status.textContent = t('systemSettings.vpnConfigInvalidHint');
+      if (!labelInput.value.trim()) {
+        status.textContent = t('systemSettings.vpnLabelMissingHint');
+        return;
+      }
+      if (!file) {
+        status.textContent = t('systemSettings.vpnFileMissingHint');
         return;
       }
       status.textContent = t('systemSettings.vpnProfileAdding');
