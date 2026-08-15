@@ -101,7 +101,7 @@ export default {
     const wrap = document.createElement('div');
     wrap.className = 'nodes-page';
     wrap.innerHTML = `
-      <h1 class="page-title">Nodes</h1>
+      <h1 class="page-title">${t('nodes.title')}</h1>
       <div class="add-card">
         <div class="add-header">
           <div class="add-icon">🖧</div>
@@ -165,7 +165,7 @@ export default {
             </div>
             <div class="node-info">
               <div class="node-name-row">
-                <span class="node-name char-name" data-role="name">${escapeHtml(n.name)}</span>
+                <span class="node-name char-name" data-role="name">${escapeHtml(n.name)}${n.isLocal ? ' ' + t('nodes.localDashboardSuffix') : ''}</span>
                 ${n.isLocal ? `<span class="node-badge-local">${t('nodes.localBadge')}</span>` : `<button class="rename-btn" data-action="rename" title="${t('nodes.renameTitle')}">✏️</button>`}
               </div>
               <div class="node-meta" data-role="meta">${n.isLocal
@@ -174,7 +174,7 @@ export default {
             </div>
             <div class="node-ping-row">
               <button class="btn-secondary vpn-status-badge${vpnConnected ? ' vpn-active' : ''}" data-action="vpn-status" title="${t('nodes.vpnStatusTitle')}">${vpnConnected ? t('nodes.vpnActive') : t('nodes.vpnInactive')}</button>
-              <button class="btn-secondary" data-action="ping">Ping</button>
+              <button class="btn-secondary" data-action="ping">${t('nodes.pingBtn')}</button>
             </div>
           </div>
           <div class="ping-result" data-role="ping-result"></div>

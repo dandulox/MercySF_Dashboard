@@ -60,7 +60,7 @@ export default {
   mount(container, ctx) {
     const wrap = document.createElement('div');
     wrap.innerHTML = `
-      <h1 class="page-title">Overview</h1>
+      <h1 class="page-title">${t('overview.title')}</h1>
       <section class="card" id="no-data-card" style="display:none">
         <p>${t('overview.noDataHint')}</p>
       </section>

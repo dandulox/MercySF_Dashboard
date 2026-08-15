@@ -31,7 +31,10 @@ function countAssigned(nodeId) {
 function localNodeEntry() {
   return {
     id: LOCAL_ID,
-    name: `${os.hostname()} (dieses Dashboard)`,
+    // Kein sprachabhängiger Text im Namen — der "(dieses Dashboard)"-Zusatz wird im Frontend
+    // lokalisiert angehängt (siehe public/pages/nodes.js, isLocal-Fall), da diese API-Antwort
+    // sprachneutral bleiben soll.
+    name: os.hostname(),
     host: 'localhost',
     port: null,
     useTls: null,
