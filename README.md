@@ -1,108 +1,104 @@
-*[🇩🇪 Deutsch](README.md) | [🇬🇧 English](README.en.md)*
+*[🇬🇧 English](README.md) | [🇩🇪 Deutsch](README.de.md)*
 
-# Mercy SF Web-Dashboard
+# Mercy SF Web Dashboard
 
-Ein Web-Dashboard für [Mercy SF](https://mercysf.app), das um die bestehende CLI herum gebaut ist — Übersicht, Steuerung und Analyse für alle Accounts direkt im Browser, statt über das Terminal-Menü. Zusätzlich holt es über [sf-api](https://github.com/the-marenga/sf-api) von the-marenga Live-Daten (Ausrüstung, Gilde, Taverne, Mail) direkt vom Spieleserver.
+A web dashboard for [Mercy SF](https://mercysf.app), built around the existing CLI — overview, control, and analytics for all accounts right in the browser, instead of the terminal menu. It also pulls live data (equipment, guild, tavern, mail) directly from the game server via [sf-api](https://github.com/the-marenga/sf-api) by the-marenga.
 
-Alles läuft auf Basis der offiziellen CLI. Es wird nichts am Bot selbst verändert, nur ein Interface drumherum gebaut.
+Everything runs on top of the official CLI. Nothing about the bot itself is changed — this just builds an interface around it.
 
-> ⚠️ **Experimentell, Nutzung auf eigenes Risiko.** Dieses Dashboard befindet sich in aktiver Entwicklung, es kann Fehler enthalten. Außerdem: Automatisiertes Spielen (Botting) verstößt in der Regel gegen die Nutzungsbedingungen von Shakes & Fidget — es besteht grundsätzlich das Risiko einer Account-Sperrung, unabhängig davon, ob die Automatisierung über dieses Dashboard oder direkt über die CLI läuft. Nutzung auf eigene Verantwortung.
+> ⚠️ **Experimental, use at your own risk.** This dashboard is under active development and may contain bugs. Also: automated play (botting) generally violates Shakes & Fidget's terms of service — there is an inherent risk of account suspension, regardless of whether the automation runs through this dashboard or directly via the CLI. Use at your own responsibility.
 
 ## Installation
 
-Auf einem frischen Debian/Ubuntu-Server, als root:
+On a fresh Debian/Ubuntu server, as root:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/dandulox/MercySF_Dashboard/main/install.sh | bash
 ```
 
-Das Skript installiert alle Abhängigkeiten (Node.js, Rust/Cargo für die sf-api-Bridge, Build-Tools für native Module, die Mercy-SF-CLI), richtet ein selbstsigniertes TLS-Zertifikat ein und startet Dashboard sowie sf-api-Bridge als systemd-Dienste. Danach ist es unter `https://<server-ip>:8080` erreichbar — beim ersten Aufruf führt eine Setup-Seite durch das Anlegen des einen Dashboard-Zugangs.
+The script installs all dependencies (Node.js, Rust/Cargo for the sf-api bridge, build tools for native modules, the Mercy SF CLI), sets up a self-signed TLS certificate, and starts the dashboard and sf-api bridge as systemd services. It's then reachable at `https://<server-ip>:8080` — the first visit leads to a setup page that walks you through creating the single dashboard account.
 
-Erneutes Ausführen des Skripts aktualisiert nur Code und Dependencies — vorhandene Account-Daten, Zertifikate und die installierte CLI-Version bleiben unangetastet.
+Running the script again only updates code and dependencies — existing account data, certificates, and the installed CLI version are left untouched.
 
-### Mehrere Server (Nodes)
+### Multiple servers (nodes)
 
-Ein Dashboard kann Accounts auf mehreren, physisch getrennten Servern steuern, statt nur auf dem, auf dem es selbst installiert ist. Dafür läuft auf jedem weiteren Server ein schlanker **Node-Agent** (kein eigenes Web-UI, keine sf-api-Bridge) — Installation genauso einfach wie das Dashboard selbst:
+A single dashboard can control accounts across multiple, physically separate servers, not just the one it's installed on. Each additional server runs a lightweight **node agent** (no web UI of its own, no sf-api bridge) — installed just as easily as the dashboard itself:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/dandulox/MercySF_Dashboard/main/install.sh | bash -s -- --node
 ```
 
-Am Ende zeigt das Skript die IP-Adresse und einen 15 Minuten gültigen Pairing-Code an (bei Bedarf erneut einsehbar über `journalctl -u mercy-node-agent`). Im Dashboard unter **Nodes** → „Node pairen“ IP, Port (Standard `8090`) und Code eingeben — danach lässt sich beim Anlegen eines Accounts (oder nachträglich über das Dropdown an jedem Account-Profil) auswählen, auf welchem Node er läuft. Start/Stop/Status/Einstellungen/Kampfhistorie/„Einlösen“/Web-Terminal/Statistiken/Analysen funktionieren für Node-Accounts identisch zu lokalen Accounts, laufen aber transparent über den jeweiligen Node-Agent. Auf der **Nodes**-Seite lässt sich außerdem pro Node die CLI-Version prüfen/aktualisieren und der Node-Agent selbst per Klick aktualisieren (`git pull` + Neustart des Dienstes) — beides ohne SSH-Zugriff auf den jeweiligen Server. Die Übersichtsseite zeigt zusätzlich eine Node-Karte: Klick auf einen Node blendet dessen Accounts mit Level/Gold/Ehre direkt ein.
+At the end, the script shows the IP address and a pairing code valid for 15 minutes (retrievable again via `journalctl -u mercy-node-agent` if needed). In the dashboard, under **Nodes** → "Pair a node", enter the IP, port (default `8090`), and code — after that, you can choose which node an account runs on when creating it (or later, via the dropdown on each account profile). Start/stop/status/settings/battle history/"claim"/web terminal/stats/analytics all work identically for node accounts as for local ones, but run transparently through the respective node agent. The **Nodes** page also lets you check/update the CLI version per node and update the node agent itself with a click (`git pull` + service restart) — both without SSH access to the respective server. The overview page additionally shows a node card: clicking a node expands its accounts with level/gold/honor inline.
 
-Für den Fall, dass sich ein Bot oder ein ganzer Node mal aufgehängt hat, gibt es auf der **Nodes**-Seite pro Node eine Schnellsteuerung: nur die aktiven Bot-Sessions neu starten, den Node-Agent-Dienst neu starten, oder den kompletten Server rebooten (`systemctl reboot`) — zuletzt laufende Bots werden danach automatisch wieder gestartet, kein manuelles Nachklicken nötig. Ping zeigt jetzt sichtbar Online/Offline samt Antwortzeit an, und eine grobe Auslastungsanzeige (CPU-Load, RAM-Auslastung, Uptime) läuft mit. Das Dashboard selbst taucht dabei ebenfalls als Node in der Liste auf (Server, auf dem das Dashboard installiert ist) — dieselbe Schnellsteuerung, Updates und Auslastungsanzeige funktionieren also auch für den Dashboard-Server selbst, nicht nur für angebundene Nodes.
-
-### Deinstallation
+### Uninstallation
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/dandulox/MercySF_Dashboard/main/install.sh | bash -s -- --uninstall
 ```
 
-Entfernt **alles**: alle systemd-Dienste (Dashboard, sf-api-Bridge und/oder Node-Agent, je nachdem was installiert ist), den kompletten `/opt/mercy`-Ordner inkl. Code, Zertifikate, CLI-Binary, gespeicherte Bot-Zugangsdaten, Dashboard-Zugang und die Ertrags-Statistik-Datenbank. Kein Zwischenschritt, keine Rückfrage — vor dem Ausführen sicher sein, dass wirklich alles weg soll. Läuft derselbe Befehl auf einem Node-Server, entfernt er dort entsprechend nur den Node-Agent.
+Removes **everything**: all systemd services (dashboard, sf-api bridge, and/or node agent, whichever is installed), the entire `/opt/mercy` folder including code, certificates, the CLI binary, saved bot credentials, the dashboard account, and the earnings-statistics database. No intermediate step, no confirmation prompt — make sure you really want everything gone before running it. Running the same command on a node server correspondingly removes only the node agent there.
 
-## Funktionen
+## Features
 
-- **Nodes (Multi-Server)** — Accounts müssen nicht auf dem Server laufen, auf dem das Dashboard selbst installiert ist: weitere Server bekommen einen schlanken Node-Agent, werden per IP + zeitlich begrenztem Pairing-Code mit dem Dashboard verbunden und tauchen danach als Zielauswahl beim Anlegen/Verschieben eines Accounts auf. Steuerung, Konsole, Einstellungen, Kampfhistorie, tägliche Erträge und Analysen laufen für Node-Accounts genauso wie für lokale, transparent über den jeweiligen Node-Agent abgefragt. CLI-Version und Node-Agent-Software lassen sich pro Node direkt aus dem Dashboard heraus prüfen und aktualisieren, ohne SSH. Ping zeigt Online/Offline samt Antwortzeit, eine Auslastungsanzeige (CPU-Load, RAM, Uptime) läuft mit, und eine Schnellsteuerung erlaubt bei hängenden Bots/Servern einen gezielten Neustart (nur die Bot-Sessions, den Node-Agent-Dienst, oder den kompletten Server per Reboot — zuletzt laufende Bots starten danach automatisch wieder). Das Dashboard selbst erscheint dabei ebenfalls als Node in der Liste, mit derselben Steuerung für den eigenen Server. Die Übersichtsseite zeigt zusätzlich eine Node-Karte mit Online/Offline-Status, die sich pro Node zu einer Mini-Accountliste (Level/Gold/Ehre) aufklappen lässt
-- **Übersicht** — modulare, ein-/ausklappbare Karten (Zustand bleibt gespeichert): Accounts-Tabelle, Charakter-Stats, Ausrüstung, Taverne (inkl. Abenteuerlust als Balkenanzeige), Gilde, Mail, Kampfhistorie, Activity-Log
-- **Account-Verwaltung** — einmal einloggen, alle Charaktere eines Logins werden automatisch über alle Server hinweg gefunden und als eigene Profile angelegt; Passwörter liegen AES-256-verschlüsselt auf der Platte; pro Account: Start/Stop/Pause, "Einlösen" (Kalender/Tagesaufgaben/ausstehende Freischaltungen). Charaktere, die beim letzten Neustart/Update noch liefen, starten danach automatisch wieder (zeitversetzt, damit nicht alle gleichzeitig einloggen)
-- **Eingebautes Web-Terminal** — pro Account eine eigene Konsolen-Session im Browser (xterm.js), inklusive automatisiertem Login-Durchklicken
-- **Live-Spieldaten über sf-api** — Ausrüstung (Slot/Typ/Attribute/Qualität), Gilde (Ehre, Rang, Mitgliederliste), Taverne (Abenteuerlust, aktuelle Aktion, verfügbare Quests) und Mail/Postfach werden direkt vom Spieleserver abgefragt (read-only, ein zustandsloser Rust-Dienst nur auf localhost); wie oft dabei nachgefragt wird, ist unter Einstellungen als globales Panel-Intervall einstellbar (Standard 10 Minuten, 1×/Stunde, 1×/Tag)
-- **Kampfhistorie** — echte, vom CLI-Prozess lokal aufgezeichnete Kämpfe (Gegner, Arena/Dungeon/Sammelalbum, Sieg/Niederlage, EP/Gold/Ehre) über den nicht-interaktiven CLI-Befehl `--history`
-- **Tägliche Erträge** — SQLite-gestützte Auswertung, wie viel EP/Gold/Ehre ein Account pro Tag erwirtschaftet, plus eine Liste einzeln erkannter Kampf-Fenster (Arena/Dungeon), gespeist aus den ohnehin laufend geschriebenen CLI-Analytics-Dateien — keine zusätzlichen Logins gegen den Spieleserver nötig
-- **Analysen** — Zeitreihen-Charts für Level, Erfahrung, Gold, Pilze, Ehre, Rang, Rüstung
-- **Einstellungen** — alle Bot-Konfig-Schalter direkt im Browser lesbar und schreibbar, gruppiert nach Bereich. Lesen läuft über den nicht-interaktiven CLI-Befehl `--config`; Schreiben der von der CLI selbst als offiziell änderbar gemeldeten `auto_*`-Schalter läuft über den unterstützten `--config --set`-Weg, alle übrigen Felder (Zahlen, Strings) weiterhin über die Config-Datei, da die CLI dafür noch keinen Weg anbietet. Zusätzlich **Einstellungs-Vorlagen**: aktuelle Konfiguration eines Charakters als Vorlage speichern und auf beliebig viele andere Charaktere anwenden (legt deren Config bei Bedarf auch neu an), oder eine Vorlage direkt aus einer hochgeladenen Backup-Datei der Windows-App importieren — Felder, die die jeweils andere Version nicht kennt, werden gefiltert bzw. automatisch mit zuvor aus echten Accounts gelernten Standardwerten aufgefüllt
-- **Benachrichtigungen** — erkennt Fehler/Warnungen automatisch aus dem Log-Output, Glocke mit Badge + Toast-Popups
-- **Anonym-Modus** — Charakternamen verpixeln, z. B. für Screenshots/Streaming
-- **Mobile-Ansicht** — vollständig nutzbar auf dem Smartphone: Navigation als ausklappbares Menü, Tabellen/Konsole passen sich der Bildschirmbreite an
-- **Automatischer Update-Check für CLI und Dashboard** — der BOT-ENGINE-Kasten in der Sidebar zeigt permanent den Status beider Komponenten ("Up To Date" / "Update Available"): die CLI wird 1×/Tag per MD5-Vergleich gegen die offizielle Download-Datei geprüft, das Dashboard selbst 1×/Tag gegen den neuesten Commit auf GitHub. Ein Klick auf "Update" installiert automatisch (`git pull` + Neubau + Neustart beim Dashboard, Download + Austausch beim CLI-Binary) — die Seite lädt danach selbstständig neu. Die laufende Dashboard-Version steht zusätzlich im Sidebar-Footer.
-- **Login/Zugangsschutz** — genau ein Dashboard-Zugang (Single-Admin), erster Besuch nach der Installation führt zur Setup-Seite; dort werden einmalig der AES-Schlüssel (verschlüsselt die gespeicherten Bot-Zugangsdaten) und ein 12-Wort-Wiederherstellungsschlüssel angezeigt (mit Pflicht-Bestätigung und Druck-Option), über den sich das Passwort später ohne E-Mail zurücksetzen lässt. Passwort-ändern und Logout direkt im Dashboard.
+- **Nodes (multi-server)** — accounts don't have to run on the server the dashboard itself is installed on: additional servers get a lightweight node agent, connect to the dashboard via IP + a time-limited pairing code, and then show up as a target choice when creating/moving an account. Control, console, settings, battle history, daily earnings, and analytics all work the same for node accounts as for local ones, queried transparently through the respective node agent. CLI version and node agent software can be checked and updated per node directly from the dashboard, without SSH. The overview page additionally shows a node card with online/offline status that expands per node into a mini account list (level/gold/honor)
+- **Overview** — modular, collapsible cards (state is remembered): accounts table, character stats, equipment, tavern (including adventure points as a progress bar), guild, mail, battle history, activity log
+- **Account management** — log in once, every character on a login is found automatically across all servers and set up as its own profile; passwords are stored AES-256-encrypted on disk; per account: start/stop/pause, "claim" (calendar/daily tasks/pending unlocks). Characters that were still running at the last restart/update start back up automatically afterward (staggered, so they don't all log in at once)
+- **Built-in web terminal** — its own console session per account in the browser (xterm.js), including automated login click-through
+- **Live game data via sf-api** — equipment (slot/type/attributes/quality), guild (honor, rank, member list), tavern (adventure points, current action, available quests), and mail/inbox are queried directly from the game server (read-only, a stateless Rust service on localhost only); how often it polls is configurable under Settings as a global panel interval (default 10 minutes, 1×/hour, 1×/day)
+- **Battle history** — real fights recorded locally by the CLI process (opponent, arena/dungeon/scrapbook, win/loss, XP/gold/honor) via the non-interactive CLI command `--history`
+- **Daily earnings** — SQLite-backed breakdown of how much XP/gold/honor an account earns per day, plus a list of individually detected fight windows (arena/dungeon), fed from the CLI analytics files that are written continuously anyway — no extra logins against the game server needed
+- **Analytics** — time-series charts for level, experience, gold, mushrooms, honor, rank, armor
+- **Settings** — every bot config toggle readable and writable right in the browser, grouped by area. Reading goes through the non-interactive CLI command `--config`; writing the `auto_*` toggles the CLI itself reports as officially changeable goes through the supported `--config --set` path, all other fields (numbers, strings) still go through the config file directly, since the CLI doesn't offer a way for those yet. Also **settings templates**: save a character's current config as a template and apply it to any number of other characters (creating their config if needed), or import a template directly from an uploaded backup file from the Windows app — fields unknown to either version are filtered out or automatically filled in with default values learned from real accounts
+- **Notifications** — automatically detects errors/warnings from the log output, a bell with a badge + toast popups
+- **Anonymous mode** — pixelates character names, e.g. for screenshots/streaming
+- **Mobile view** — fully usable on a phone: navigation as a collapsible menu, tables/console adapt to screen width
+- **Automatic update check for CLI and dashboard** — the BOT ENGINE box in the sidebar permanently shows the status of both components ("Up To Date" / "Update Available"): the CLI is checked once a day via MD5 comparison against the official download file, the dashboard itself once a day against the latest commit on GitHub. Clicking "Update" installs automatically (`git pull` + rebuild + restart for the dashboard, download + swap for the CLI binary) — the page reloads on its own afterward. The running dashboard version is also shown in the sidebar footer
+- **Login/access protection** — exactly one dashboard account (single admin), the first visit after installation leads to the setup page; it shows the AES key (encrypts the stored bot credentials) and a 12-word recovery phrase once (with mandatory confirmation and a print option), which can later reset the password without email. Change password and logout right in the dashboard
 
-## Bekannte Einschränkungen
+## Known limitations
 
-Seit Version 2.13.0 bietet die CLI einen dokumentierten, nicht-interaktiven JSON-Modus (`--user`/`--character`/`--password-stdin`), den das Dashboard für Einstellungen, Kampfhistorie und "Einlösen" nutzt. Der eigentliche Bot-Start/Login-Ablauf im Web-Terminal läuft aber weiterhin über das klassische interaktive Text-Menü — dafür basiert die Automatisierung nach wie vor auf Pattern-Matching des Terminal-Outputs (`Select option:`, `Username:`, `Password:`, `Select character index:`, `Bot Menu` …). Ändert sich dort der Wortlaut eines CLI-Menüs, kann die Automatisierung brechen, bis der Code entsprechend angepasst wird. Weitere bekannte Lücken:
+Since version 2.13.0, the CLI offers a documented, non-interactive JSON mode (`--user`/`--character`/`--password-stdin`), which the dashboard uses for settings, battle history, and "claim". The actual bot start/login flow in the web terminal, however, still runs through the classic interactive text menu — so that automation still relies on pattern-matching the terminal output (`Select option:`, `Username:`, `Password:`, `Select character index:`, `Bot Menu` …). If the wording of a CLI menu changes there, the automation can break until the code is adjusted accordingly. Further known gaps:
 
-- Kein natives Pause-Kommando — "Pause" schaltet stattdessen alle aktiven `auto_*`-Konfig-Schalter aus; ob das eine bereits laufende Bot-Schleife sofort stoppt oder erst beim nächsten Durchlauf, ist nicht verifiziert
-- Nur ~20 `auto_*`-Schalter sind über die CLI selbst offiziell änderbar (`--config --set`) — alle übrigen Einstellungsfelder (Zahlen, Strings, restliche Booleans) schreibt das Dashboard weiterhin direkt in die Config-Datei, da die CLI dafür noch keinen unterstützten Weg anbietet
-- Keine offizielle Versions-/Update-API für die CLI — der Update-Check vergleicht MD5-Hashes gegen die öffentliche Download-Datei
-- Ein Dashboard-Selbst-Update (`git pull` + Neubau) unterbricht kurz die laufende Verbindung, während sich beide systemd-Dienste neu starten — die Seite lädt automatisch neu, sobald der Server wieder antwortet
-- `sf-api` liefert keine lesbaren Item-Namen (nur numerische IDs/Enum-Typen) — die Ausrüstungs-Anzeige zeigt Slot, Item-Typ, Attribute und Qualität, keine Klarnamen
-- Die täglichen Erträge sind bei Gold eine **Netto-Veränderung** pro Zeitfenster (kann Ausgaben wie Reparaturen/Shop-Käufe enthalten) — EP und Ehre sind exakt, da sie sich nur durch Kämpfe/Quests ändern; welche CLI-Befehle im selben Fenster liefen, wird zusätzlich angezeigt
-- Kein Rate-Limiting auf Login/Passwort-Reset-Versuche — kein Schutz gegen Brute-Force, relevant vor allem falls das Dashboard je über das eigene LAN hinaus erreichbar gemacht wird
-- Das eigentliche Activity-Log (Rohzeilen) auf der Übersichtsseite bleibt für Node-Accounts leer — der PTY-Output eines Nodes läuft nicht durch den lokalen Log-Ringpuffer des Dashboards. "Letzte Aktionen"/"Zuletzt gescoutet" auf den Account-Karten, Analysen, tägliche Erträge und die Node-Karte auf der Übersicht funktionieren dagegen auch für Node-Accounts, da diese Daten aktiv vom jeweiligen Node abgefragt werden, nicht aus dem PTY-Log mitgelesen
-- Ein Node-Agent akzeptiert immer nur genau ein gepairtes Dashboard gleichzeitig — erneutes Pairen (z. B. mit einem neuen Code) trennt ein zuvor verbundenes Dashboard kommentarlos
-- Ein Node-Agent-Selbst-Update prüft den aktuell ausgecheckten Git-Branch gegen GitHub — das setzt voraus, dass dieser Branch auch tatsächlich auf GitHub existiert (bei einem lokalen/nicht gepushten Branch schlägt die Prüfung fehl, statt „kein Update“ zu melden)
-- Die Auslastungsanzeige (CPU/RAM) auf der Nodes-Seite nutzt nur Node-Bordmittel (`os`-Modul, kein natives Addon) — reicht für einen groben Überblick, ist aber keine präzise Systemmetrik
-- "Server neu starten" auf der Nodes-Seite führt einen echten `systemctl reboot` aus — auch für den Dashboard-Server selbst, wenn man ihn dort als lokalen Eintrag auswählt. Es gibt außer dem Bestätigungsdialog im Browser keine weitere Sicherung, entsprechend mit Bedacht einsetzen
+- No native pause command — "Pause" instead turns off all active `auto_*` config toggles; whether that stops an already-running bot loop immediately or only on its next pass is unverified
+- Only ~20 `auto_*` toggles are officially changeable through the CLI itself (`--config --set`) — all other settings fields (numbers, strings, remaining booleans) are still written directly to the config file by the dashboard, since the CLI doesn't offer a supported way for those yet
+- No official version/update API for the CLI — the update check compares MD5 hashes against the public download file
+- A dashboard self-update (`git pull` + rebuild) briefly interrupts the active connection while both systemd services restart — the page reloads automatically once the server responds again
+- `sf-api` doesn't provide readable item names (only numeric IDs/enum types) — the equipment display shows slot, item type, attributes, and quality, not display names
+- Daily earnings for gold are a **net change** per time window (can include expenses like repairs/shop purchases) — XP and honor are exact, since they only change through fights/quests; which CLI commands ran in the same window is shown alongside
+- No rate limiting on login/password-reset attempts — no brute-force protection, mainly relevant if the dashboard is ever exposed beyond its own LAN
+- The activity log on the overview page stays empty for node accounts — a node's PTY output doesn't flow through the dashboard's local log ring buffer. Analytics, daily earnings, and the node card on the overview do work for node accounts, though, since that data is actively queried from the respective node rather than read from the PTY log
+- A node agent only ever accepts exactly one paired dashboard at a time — re-pairing (e.g. with a new code) silently disconnects a previously connected dashboard
+- A node agent self-update checks the currently checked-out git branch against GitHub — that assumes the branch actually exists on GitHub (for a local/unpushed branch, the check fails instead of reporting "no update")
 
-## Ressourcenverbrauch
+## Resource usage
 
-**Test 1** — 4 vCPU / 8 GB RAM, 11 gleichzeitig laufende Accounts:
+**Test 1** — 4 vCPU / 8 GB RAM, 11 concurrently running accounts:
 
-| Metrik | Wert |
+| Metric | Value |
 |---|---|
-| CPU-Auslastung | 1,8 % |
-| RAM-Auslastung | 217,6 MB von 8 GB (2,72 %) |
-| Bootdisk | 13 GB von 49 GB (28 %) |
+| CPU usage | 1.8% |
+| RAM usage | 217.6 MB of 8 GB (2.72%) |
+| Boot disk | 13 GB of 49 GB (28%) |
 
-**Test 2** — 1 vCPU / 1 GB RAM (Proxmox-LXC-Container), 30 gleichzeitig laufende Accounts:
+**Test 2** — 1 vCPU / 1 GB RAM (Proxmox LXC container), 30 concurrently running accounts:
 
-| Metrik | Wert |
+| Metric | Value |
 |---|---|
-| CPU-Auslastung | 2,82 % |
-| RAM-Auslastung | 226,7 MB von 1,07 GB (21,11 %) |
-| Bootdisk | 3,95 GB von 8,35 GB (47,36 %) |
+| CPU usage | 2.82% |
+| RAM usage | 226.7 MB of 1.07 GB (21.11%) |
+| Boot disk | 3.95 GB of 8.35 GB (47.36%) |
 
-## Tech-Stack
+## Tech stack
 
-Node.js + Express (Backend), Vanilla JS mit ES-Modulen (Frontend, kein Build-Step), `node-pty` + `xterm.js` (Konsole), `chart.js` (Analysen/Erträge), `ws` (WebSocket), `better-sqlite3` (Ertrags-Tracking), `crypto` (Node-Bordmittel für Login-/Session-Hashing, keine zusätzliche Auth-Bibliothek). Die sf-api-Anbindung ist ein separater, zustandsloser Rust-Dienst (`sfapi-bridge/`, `axum` + [`sf-api`](https://github.com/the-marenga/sf-api)), der nur auf `127.0.0.1` lauscht. Für Multi-Server-Setups gibt es zusätzlich `node-agent/` — eine eigenständige, minimale Node.js + Express/`ws`-App (eigenes `package.json`, kein Rust, kein Frontend), die auf entfernten Servern läuft und sich per IP + Pairing-Code mit dem Dashboard verbindet (Bearer-Token-Auth nach dem Pairing).
+Node.js + Express (backend), vanilla JS with ES modules (frontend, no build step), `node-pty` + `xterm.js` (console), `chart.js` (analytics/earnings), `ws` (WebSocket), `better-sqlite3` (earnings tracking), `crypto` (Node's built-in module for login/session hashing, no extra auth library). The sf-api integration is a separate, stateless Rust service (`sfapi-bridge/`, `axum` + [`sf-api`](https://github.com/the-marenga/sf-api)) that listens on `127.0.0.1` only. For multi-server setups there's also `node-agent/` — a standalone, minimal Node.js + Express/`ws` app (its own `package.json`, no Rust, no frontend) that runs on remote servers and connects to the dashboard via IP + pairing code (bearer-token auth after pairing).
 
-## Danksagung
+## Acknowledgements
 
-Dieses Dashboard existiert nur, weil andere die eigentliche Grundlagenarbeit geleistet haben:
+This dashboard only exists because others did the actual groundwork:
 
-- **[Mercy SF](https://mercysf.app)** (Sensei Issei) — die CLI/den Bot selbst, um den dieses Dashboard herum gebaut ist. Wer das Projekt unterstützen möchte: [Ko-fi](https://ko-fi.com/senseiissei).
-- **[sf-api](https://github.com/the-marenga/sf-api)** (the-marenga) — die Rust-Bibliothek, über die dieses Dashboard Live-Daten (Ausrüstung, Gilde, Taverne, Mail) direkt vom Spieleserver abfragt.
+- **[Mercy SF](https://mercysf.app)** (Sensei Issei) — the CLI/bot itself that this dashboard is built around. If you'd like to support the project: [Ko-fi](https://ko-fi.com/senseiissei).
+- **[sf-api](https://github.com/the-marenga/sf-api)** (the-marenga) — the Rust library through which this dashboard queries live data (equipment, guild, tavern, mail) directly from the game server.
 
-## Lizenz
+## License
 
-AGPLv3, siehe [LICENSE](LICENSE).
+AGPLv3, see [LICENSE](LICENSE).
