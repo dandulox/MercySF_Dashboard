@@ -286,14 +286,24 @@
         <p>Manage WireGuard profiles centrally via upload and assign them per target — local or an individual node. Per-target gate mode: off, block (bot start only with an active VPN connection), or auto-connect (connects automatically before the bot starts) — checked both in the dashboard and directly in the node agent. A "Check public IP" button and a VPN badge on node cards confirm the tunnel status at a glance.</p>
       </div>
       <div class="feature-card">
+        <span class="icon">⚙</span>
+        <h3>Settings panel</h3>
+        <p>Bot Settings and System Settings live in a right-side slide-out panel with tabs, opened from a topbar gear icon — single-column, individually collapsible groups instead of separate nav pages.</p>
+      </div>
+      <div class="feature-card">
         <span class="icon">▦</span>
         <h3>Overview</h3>
-        <p>Collapsible cards (state is remembered): accounts table, character stats, equipment, tavern, guild, mail, battle history, activity log.</p>
+        <p>Collapsible cards (state is remembered): accounts table, character stats, equipment, guild, mail, battle history — the tavern now lives as a sub-section of the character card, and Recent Actions, Scouted Players, and the activity log sit side by side in a compact row.</p>
       </div>
       <div class="feature-card">
         <span class="icon">🗂</span>
         <h3>Account management</h3>
-        <p>Log in once — every character on a login is found automatically across all servers. Passwords are stored AES-256-encrypted on disk. Start/stop/pause/"claim" per account, bulk actions per login.</p>
+        <p>Log in once — every character on a login is found automatically across all servers. Passwords are stored AES-256-encrypted on disk. A filterable tile grid (search/status/class) with the primary Start/Stop on the tile; secondary actions and session stats live behind a "…" popup, and the console opens as its own window.</p>
+      </div>
+      <div class="feature-card">
+        <span class="icon">🎲</span>
+        <h3>Account-Randomizer</h3>
+        <p>Schedules each login's bot time automatically instead of manual clicking — Manual (set hours/blocks/city-guard count, only timing is randomized) or Random mode (everything re-rolled daily). Enabled accounts are prioritized and auto-distributed across all online nodes, each running its queue strictly sequentially since a node holds one VPN identity at a time; each account can carry its own VPN profile, switched automatically between accounts. City-guard pulses share one queue on a reserved node. Topbar chips show how many accounts are active and how many are still pending today.</p>
       </div>
       <div class="feature-card">
         <span class="icon">⚔</span>
@@ -313,12 +323,22 @@
       <div class="feature-card">
         <span class="icon">📈</span>
         <h3>Analytics & earnings</h3>
-        <p>SQLite-backed breakdown of XP/gold/honor per day, detected fight windows, time-series charts for level, experience, gold, mushrooms, honor, rank.</p>
+        <p>SQLite-backed breakdown of XP/gold/honor per day, detected fight windows, time-series charts for level, experience, gold, mushrooms, honor, rank — the character list can be sorted and filtered by class/server so it stays manageable with many accounts.</p>
       </div>
       <div class="feature-card">
-        <span class="icon">⚙</span>
+        <span class="icon">🧩</span>
         <h3>Settings & templates</h3>
         <p>Every bot config toggle right in the browser — reading and the officially supported <code>auto_*</code> toggles go through the non-interactive CLI command <code>--config</code>. Save config as a template and apply it to other characters, or import from a Windows-app backup.</p>
+      </div>
+      <div class="feature-card">
+        <span class="icon">🌐</span>
+        <h3>Marketplace</h3>
+        <p>Publish a settings template to a shared, opt-in catalog on a central collector; browse, search, and import templates from other players with one click. Optionally link a real character (anonymized hash, never a raw ID) to show aggregate stats — level, gold, arena win rate — on the listing.</p>
+      </div>
+      <div class="feature-card">
+        <span class="icon">🐞</span>
+        <h3>Bug reporting</h3>
+        <p>A "Report bug" tab sends title/description/severity plus an automatic diagnostic snapshot (instance, dashboard version, uptime, per-node status/versions) to a central collector — tracked as a ticket with a status, no back-and-forth needed to reproduce.</p>
       </div>
       <div class="feature-card">
         <span class="icon">🔔</span>
@@ -349,6 +369,11 @@
         <span class="icon">🔐</span>
         <h3>Access protection</h3>
         <p>One dashboard account (single admin) with a setup wizard, 12-word recovery phrase, and password change right in the interface.</p>
+      </div>
+      <div class="feature-card">
+        <span class="icon">📊</span>
+        <h3>Anonymous usage stats (opt-out)</h3>
+        <p>An anonymous ping (random instance ID, uptime, connected-node count, optionally version numbers) can go to a central collector purely for install statistics — no account data, credentials, or character info ever leaves through this channel.</p>
       </div>
     </div>
   </div>
@@ -402,6 +427,10 @@
       <li><span class="dot"></span><span class="text">"Reboot server" in the Node tab runs a real <code>systemctl reboot</code> (including for the dashboard server itself, selected as a local entry) — there's no safeguard beyond the confirmation dialog.</span></li>
       <li><span class="dot"></span><span class="text">Connecting the VPN for the "local" target routes that server's entire traffic through the tunnel, not just the bot's — a misconfigured or unreachable VPN endpoint can cut off the dashboard itself.</span></li>
       <li><span class="dot"></span><span class="text">A node agent only ever connects one VPN profile at a time — assigning a second profile to the same node's target just swaps which one is active.</span></li>
+      <li><span class="dot"></span><span class="text">The Randomizer queues accounts sharing a node strictly one after another (same "one VPN identity per node" constraint as above) — if a node runs out of room before the cutoff, lower-priority accounts are simply skipped for that day.</span></li>
+      <li><span class="dot"></span><span class="text">Randomizer config changes only take effect in the next day's plan — editing hours, VPN, or priority after today's schedule was generated doesn't reshuffle it.</span></li>
+      <li><span class="dot"></span><span class="text">By default the Randomizer won't touch a bot that was already running before it took over — it only reacts to its own tracked transitions, unless "hard enforce" is switched on.</span></li>
+      <li><span class="dot"></span><span class="text">Marketplace publishing has no automated abuse/spam protection beyond duplicate-config rejection — moderation is manual, via the collector's admin panel.</span></li>
     </ul>
   </div>
 </section>
@@ -446,6 +475,7 @@
       <span class="stack-pill">AES-256-GCM</span>
       <span class="stack-pill">node-agent (multi-server)</span>
       <span class="stack-pill">WireGuard (VPN)</span>
+      <span class="stack-pill">Collector service (Marketplace/bug reports)</span>
     </div>
   </div>
 </section>

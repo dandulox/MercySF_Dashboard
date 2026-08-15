@@ -286,14 +286,24 @@
         <p>WireGuard-Profile per Upload zentral verwalten und pro Ziel (lokal oder ein Node) zuweisen. Gate-Modus pro Ziel: Aus, Blockieren (Bot-Start nur bei aktiver VPN-Verbindung) oder Auto-Connect (verbindet vor dem Bot-Start automatisch) — geprüft im Dashboard und direkt im Node-Agent. Ein „Öffentliche IP prüfen“-Button und ein VPN-Badge auf den Node-Karten bestätigen den Tunnel-Status auf einen Blick.</p>
       </div>
       <div class="feature-card">
+        <span class="icon">⚙</span>
+        <h3>Einstellungs-Panel</h3>
+        <p>Bot-Einstellungen und System-Einstellungen liegen in einem rechten Slide-out-Panel mit Tabs (Zahnrad-Icon in der Topbar) — einspaltig, einzeln ein-/ausklappbar, statt eigener Nav-Seiten.</p>
+      </div>
+      <div class="feature-card">
         <span class="icon">▦</span>
         <h3>Übersicht</h3>
-        <p>Ein-/ausklappbare Karten (Zustand bleibt gespeichert): Accounts-Tabelle, Charakter-Stats, Ausrüstung, Taverne, Gilde, Mail, Kampfhistorie, Activity-Log.</p>
+        <p>Ein-/ausklappbare Karten (Zustand bleibt gespeichert): Accounts-Tabelle, Charakter-Stats, Ausrüstung, Gilde, Mail, Kampfhistorie — die Taverne ist jetzt Unterabschnitt der Charakter-Karte, Letzte Aktionen, Zuletzt gescoutet und das Activity-Log stehen kompakt nebeneinander.</p>
       </div>
       <div class="feature-card">
         <span class="icon">🗂</span>
         <h3>Account-Verwaltung</h3>
-        <p>Einmal einloggen — alle Charaktere eines Logins werden automatisch über alle Server hinweg gefunden. Passwörter liegen AES-256-verschlüsselt auf der Platte. Start/Stop/Pause/"Einlösen" pro Account, Bulk-Aktionen pro Login.</p>
+        <p>Einmal einloggen — alle Charaktere eines Logins werden automatisch über alle Server hinweg gefunden. Passwörter liegen AES-256-verschlüsselt auf der Platte. Filterbares Kachel-Raster (Suche/Status/Klasse) mit Start/Stop direkt auf der Kachel; Zusatzaktionen und Session-Stats liegen hinter einem „⋯"-Popup, die Konsole öffnet als eigenes Fenster.</p>
+      </div>
+      <div class="feature-card">
+        <span class="icon">🎲</span>
+        <h3>Account-Randomizer</h3>
+        <p>Plant automatisch, wann welches Login bottet, statt manuell Start/Stop zu klicken — Manuell (Stunden/Blöcke/Stadtwache festlegen, nur Timing wird gewürfelt) oder Willkür (alles täglich neu gewürfelt). Aktivierte Accounts werden nach Priorität automatisch auf alle Online-Nodes verteilt, jeder Node arbeitet seine Warteschlange strikt nacheinander ab, da ein Node immer nur eine VPN-Identität gleichzeitig hält; jeder Account kann ein eigenes VPN-Profil bekommen, automatisch beim Accountwechsel umgeschaltet. Stadtwache-Pulse teilen sich eine Warteschlange auf einem Reserve-Node. Topbar-Chips zeigen, wie viele Accounts aktiv sind und wie viele heute noch anstehen.</p>
       </div>
       <div class="feature-card">
         <span class="icon">⚔</span>
@@ -313,12 +323,22 @@
       <div class="feature-card">
         <span class="icon">📈</span>
         <h3>Analysen & Erträge</h3>
-        <p>SQLite-gestützte Auswertung von EP/Gold/Ehre pro Tag, erkannte Kampf-Fenster, Zeitreihen-Charts für Level, Erfahrung, Gold, Pilze, Ehre, Rang.</p>
+        <p>SQLite-gestützte Auswertung von EP/Gold/Ehre pro Tag, erkannte Kampf-Fenster, Zeitreihen-Charts für Level, Erfahrung, Gold, Pilze, Ehre, Rang — die Charakter-Liste lässt sich sortieren und nach Klasse/Server filtern.</p>
       </div>
       <div class="feature-card">
-        <span class="icon">⚙</span>
+        <span class="icon">🧩</span>
         <h3>Einstellungen & Vorlagen</h3>
         <p>Alle Bot-Konfig-Schalter direkt im Browser — Lesen und die offiziell unterstützten <code>auto_*</code>-Schalter über den nicht-interaktiven CLI-Befehl <code>--config</code>. Konfiguration als Vorlage speichern und auf andere Charaktere anwenden, oder aus einem Windows-App-Backup importieren.</p>
+      </div>
+      <div class="feature-card">
+        <span class="icon">🌐</span>
+        <h3>Marktplatz</h3>
+        <p>Eine Einstellungs-Vorlage in einen gemeinsamen, opt-in Katalog auf einem zentralen Collector veröffentlichen; Vorlagen anderer Spieler durchsuchen, filtern und mit einem Klick importieren. Optional mit einem echten Charakter verknüpfen (anonymisierter Hash, nie eine rohe ID), um aggregierte Statistiken anzuzeigen.</p>
+      </div>
+      <div class="feature-card">
+        <span class="icon">🐞</span>
+        <h3>Bug-Reports</h3>
+        <p>Ein „Bug melden"-Tab schickt Titel/Beschreibung/Schweregrad plus automatischen Diagnose-Snapshot (Instanz, Dashboard-Version, Laufzeit, Node-Status/-Versionen) an einen zentralen Collector — als Ticket mit Status verfolgt, kein Hin-und-Her zur Reproduktion nötig.</p>
       </div>
       <div class="feature-card">
         <span class="icon">🔔</span>
@@ -349,6 +369,11 @@
         <span class="icon">🔐</span>
         <h3>Zugangsschutz</h3>
         <p>Ein Dashboard-Zugang (Single-Admin) mit Setup-Assistent, 12-Wort-Wiederherstellungsschlüssel und Passwort-Änderung direkt im Interface.</p>
+      </div>
+      <div class="feature-card">
+        <span class="icon">📊</span>
+        <h3>Anonyme Nutzungsstatistik (Opt-out)</h3>
+        <p>Ein anonymer Ping (zufällige Instanz-ID, Laufzeit, Anzahl verbundener Nodes, optional Versionsnummern) kann an einen zentralen Collector gehen, rein für Installationsstatistiken — über diesen Kanal verlassen niemals Account-Daten, Zugangsdaten oder Charakterinfos das Dashboard.</p>
       </div>
     </div>
   </div>
@@ -402,6 +427,10 @@
       <li><span class="dot"></span><span class="text">"Server neu starten" im Node-Tab führt einen echten <code>systemctl reboot</code> aus (auch für den Dashboard-Server selbst als lokaler Eintrag) — außer dem Bestätigungsdialog gibt es keine weitere Sicherung.</span></li>
       <li><span class="dot"></span><span class="text">Das Verbinden der VPN für das Ziel "lokal" leitet den kompletten Traffic dieses Servers durch den Tunnel, nicht nur den des Bots — ein falsch konfigurierter oder nicht erreichbarer VPN-Endpunkt kann das Dashboard selbst kappen.</span></li>
       <li><span class="dot"></span><span class="text">Ein Node-Agent verbindet immer nur ein VPN-Profil gleichzeitig — wird demselben Node-Ziel ein zweites Profil zugewiesen, wechselt nur, welches davon aktiv ist.</span></li>
+      <li><span class="dot"></span><span class="text">Der Randomizer plant Accounts, die sich einen Node teilen, strikt nacheinander ein (gleiche „eine VPN-Identität pro Node"-Grenze wie oben) — reicht die Zeit nicht bis zum Cutoff, entfallen niedrig priorisierte Accounts einfach für den Tag.</span></li>
+      <li><span class="dot"></span><span class="text">Randomizer-Konfigurationsänderungen wirken erst im Plan des nächsten Tages — Stunden, VPN oder Priorität nachträglich zu ändern würfelt den bereits generierten Tagesplan nicht neu.</span></li>
+      <li><span class="dot"></span><span class="text">Der Randomizer rührt standardmäßig einen bereits laufenden Bot nicht an — er reagiert nur auf eigene Übergänge, außer „Hart durchsetzen" ist aktiviert.</span></li>
+      <li><span class="dot"></span><span class="text">Marktplatz-Veröffentlichungen haben außer der Ablehnung doppelter Configs keinen automatisierten Missbrauchsschutz — Moderation läuft manuell über das Collector-Admin-Panel.</span></li>
     </ul>
   </div>
 </section>
@@ -446,6 +475,7 @@
       <span class="stack-pill">AES-256-GCM</span>
       <span class="stack-pill">node-agent (Multi-Server)</span>
       <span class="stack-pill">WireGuard (VPN)</span>
+      <span class="stack-pill">Collector-Dienst (Marktplatz/Bug-Reports)</span>
     </div>
   </div>
 </section>
