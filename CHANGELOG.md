@@ -5,6 +5,37 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.5.0] - 2026-08-16
+
+### Added
+- Randomizer: per-account VPN assignment (pick an existing VPN profile,
+  or explicitly "no VPN" — no implicit fallback) and a priority (1-100,
+  higher = scheduled first).
+- Randomizer: automatic node distribution. Enabled accounts are sorted by
+  priority and round-robin assigned across all online nodes (+ Local),
+  minus one node reserved exclusively for city-guard pulses. Each node
+  runs its assigned accounts **sequentially** (never overlapping), since
+  a node can only hold one VPN identity at a time — switching to the next
+  account explicitly disconnects the previous VPN and applies the new
+  account's assignment (local via `vpnTargets`, remote via the node-
+  agent's existing `/vpn/config` and `/vpn/disconnect` endpoints) before
+  starting it, including updating the character's `nodeId` so the start
+  actually routes to the node the randomizer chose. Each node processes
+  its own queue independently — no waiting on other nodes.
+- Randomizer: all accounts' city-guard pulses (regardless of their main
+  node) share one combined queue on the reserve node, in priority order —
+  if the day doesn't have room for everything, the lowest-priority pulses
+  are dropped first.
+- New global settings: reserve node picker, node handoff buffer (VPN
+  switch time between two accounts on the same node), and a hard cutoff
+  after which nothing new starts on any node.
+
+### Changed
+- Randomizer's day-plan generation replaced the old "independent accounts
+  with a minimum stagger" model with the node-queue model above — this
+  also removes the `minStaggerMinutes` setting (superseded by per-node
+  sequential placement).
+
 ## [2.4.1] - 2026-08-16
 
 ### Fixed
