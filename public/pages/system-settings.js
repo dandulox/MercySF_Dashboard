@@ -14,7 +14,7 @@ function gateLabels() {
   };
 }
 
-const TABS = ['general', 'node', 'vpn'];
+const TABS = ['general', 'node', 'vpn', 'stats'];
 
 export default {
   id: 'system-settings',
@@ -72,6 +72,7 @@ export default {
         <button class="settings-tab active" data-tab="general">${t('systemSettings.tabGeneral')}</button>
         <button class="settings-tab" data-tab="node">${t('systemSettings.tabNode')}</button>
         <button class="settings-tab" data-tab="vpn">${t('systemSettings.tabVpn')}</button>
+        <button class="settings-tab" data-tab="stats">${t('systemSettings.tabStats')}</button>
       </div>
       <div class="settings-tab-panel" data-panel="general">
         <div class="panel-settings-card">
@@ -99,6 +100,19 @@ export default {
         </div>
         <h3 class="vpn-targets-title">${t('systemSettings.vpnTargetsTitle')}</h3>
         <div id="vpn-targets-list">${t('common.loading')}</div>
+      </div>
+      <div class="settings-tab-panel" data-panel="stats" hidden>
+        <div class="panel-settings-card">
+          <h3>${t('systemSettings.statsTitle')}</h3>
+          <div class="panel-settings-desc">${t('systemSettings.statsDesc')}</div>
+          <div class="panel-settings-row">
+            <label style="display:flex;align-items:center;gap:8px;">
+              <input type="checkbox" id="telemetry-enabled-checkbox" />
+              ${t('systemSettings.statsCheckboxLabel')}
+            </label>
+            <span id="telemetry-status"></span>
+          </div>
+        </div>
       </div>
     `;
     container.appendChild(wrap);
@@ -140,6 +154,33 @@ export default {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ preset: select.value }),
+        });
+        status.textContent = t('systemSettings.applied');
+      } catch (err) {
+        status.textContent = t('analytics.loadError', { message: err.message });
+      }
+    });
+
+    // --- Statistik ---
+    async function loadTelemetrySettings() {
+      const checkbox = wrap.querySelector('#telemetry-enabled-checkbox');
+      const status = wrap.querySelector('#telemetry-status');
+      try {
+        const data = await ctx.fetchJSON('/api/telemetry-settings');
+        checkbox.checked = data.enabled;
+      } catch (err) {
+        status.textContent = t('analytics.loadError', { message: err.message });
+      }
+    }
+
+    wrap.querySelector('#telemetry-enabled-checkbox').addEventListener('change', async (e) => {
+      const status = wrap.querySelector('#telemetry-status');
+      status.textContent = t('systemSettings.saving');
+      try {
+        await ctx.fetchJSON('/api/telemetry-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled: e.target.checked }),
         });
         status.textContent = t('systemSettings.applied');
       } catch (err) {
@@ -342,6 +383,7 @@ export default {
 
     loadPanelSettings();
     loadVpnProfiles().then(loadVpnTargets);
+    loadTelemetrySettings();
 
     return () => {
       if (typeof nodeUnmount === 'function') nodeUnmount();
