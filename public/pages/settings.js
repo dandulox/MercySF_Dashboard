@@ -484,6 +484,8 @@ export default {
       .settings-page .publish-form { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
       .settings-page .publish-form.open { display: block; }
       .settings-page .publish-form input[type="text"] { width: 100%; margin-bottom: 6px; background: var(--panel-2); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 6px 10px; font-size: 12.5px; }
+      .settings-page .publish-link-list { display: flex; flex-direction: column; gap: 4px; max-height: 140px; overflow-y: auto; margin-bottom: 8px; }
+      .settings-page .publish-link-list label { display: flex; align-items: center; gap: 8px; font-size: 12.5px; cursor: pointer; }
     `;
     ctx.injectStyleOnce('settings', css);
 
@@ -571,6 +573,11 @@ export default {
             <span data-role="apply-status" class="muted" style="margin-left:8px;font-size:11.5px;"></span>
           </div>
           <div class="publish-form" data-role="publish-form">
+            <div class="publish-link-list">
+              ${allAccounts.map(acc => `
+                <label><input type="checkbox" class="publish-link-checkbox" value="${escapeHtml(acc.id)}" /> <span class="char-name">${escapeHtml(acc.charName)}</span> <span class="muted">(${escapeHtml(acc.server)})</span></label>
+              `).join('') || `<span class="muted">${t('settings.noAccounts')}</span>`}
+            </div>
             <input type="text" data-field="title" placeholder="${t('settings.marketplacePublishTitleLabel')}" value="${escapeHtml(tpl.name)}" />
             <input type="text" data-field="description" placeholder="${t('settings.marketplacePublishDescLabel')}" />
             <input type="text" data-field="tags" placeholder="${t('settings.marketplacePublishTagsLabel')}" />
@@ -599,16 +606,23 @@ export default {
           const description = form.querySelector('[data-field="description"]').value.trim();
           const tags = form.querySelector('[data-field="tags"]').value.split(',').map(s => s.trim()).filter(Boolean);
           const displayName = form.querySelector('[data-field="displayName"]').value.trim();
+          const linkedAccountIds = [...form.querySelectorAll('.publish-link-checkbox:checked')].map(cb => cb.value);
           if (!title) { statusEl.textContent = t('settings.marketplaceTitleRequired'); return; }
           statusEl.textContent = t('settings.marketplacePublishing');
           try {
-            await ctx.fetchJSON(`/api/marketplace-publish/${encodeURIComponent(id)}`, {
+            const publishResult = await ctx.fetchJSON(`/api/marketplace-publish/${encodeURIComponent(id)}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ title, description, tags, displayName }),
             });
+            for (const accountId of linkedAccountIds) {
+              await ctx.fetchJSON('/api/marketplace-links', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ marketplaceId: publishResult.marketplaceId, localTemplateId: id, accountId }),
+              });
+            }
             statusEl.textContent = t('settings.marketplacePublished');
-            await loadMarketplace();
           } catch (err) {
             statusEl.textContent = t('settings.marketplacePublishFailed', { message: err.message });
           }
