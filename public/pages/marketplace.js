@@ -16,19 +16,19 @@ export default {
       .marketplace-page .marketplace-tile:hover { border-color: var(--accent); }
       .marketplace-page .marketplace-tile-title { font-weight: 600; font-size: 13px; margin-bottom: 6px; }
       .marketplace-page .marketplace-tile-meta { font-size: 11px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 8px; }
-      .marketplace-page .marketplace-tag { display: inline-block; background: var(--panel-2); border-radius: 10px; padding: 1px 8px; font-size: 10.5px; margin-right: 4px; }
-      .marketplace-page .marketplace-rating-stars { cursor: pointer; }
-      .marketplace-page .marketplace-rating-stars .star { opacity: 0.35; }
-      .marketplace-page .marketplace-rating-stars .star.filled { opacity: 1; }
-      .marketplace-page .marketplace-item-stats { font-size: 11px; color: var(--green); margin-top: 4px; }
-      .marketplace-page .marketplace-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
-      .marketplace-page .marketplace-modal { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; max-width: 480px; width: 100%; max-height: 80vh; overflow-y: auto; position: relative; }
-      .marketplace-page .marketplace-modal-close { position: absolute; top: 12px; right: 14px; background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; line-height: 1; padding: 0; }
-      .marketplace-page .marketplace-modal-close:hover { color: var(--text); }
-      .marketplace-page .marketplace-modal-title { font-weight: 600; font-size: 15px; margin: 0 0 10px; padding-right: 24px; }
-      .marketplace-page .marketplace-modal-desc { font-size: 12.5px; color: var(--text); white-space: pre-wrap; margin-bottom: 12px; line-height: 1.4; }
-      .marketplace-page .marketplace-modal-meta { font-size: 11.5px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
-      .marketplace-page .marketplace-modal-actions { display: flex; align-items: center; gap: 10px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+      .marketplace-modal-backdrop .marketplace-item-stats { font-size: 11px; color: var(--green); margin-top: 4px; }
+      .marketplace-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+      .marketplace-modal { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; max-width: 480px; width: 100%; max-height: 80vh; overflow-y: auto; position: relative; }
+      .marketplace-modal-close { position: absolute; top: 12px; right: 14px; background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; line-height: 1; padding: 0; }
+      .marketplace-modal-close:hover { color: var(--text); }
+      .marketplace-modal-title { font-weight: 600; font-size: 15px; margin: 0 0 10px; padding-right: 24px; }
+      .marketplace-modal-desc { font-size: 12.5px; color: var(--text); white-space: pre-wrap; margin-bottom: 12px; line-height: 1.4; }
+      .marketplace-modal-meta { font-size: 11.5px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+      .marketplace-modal-meta .marketplace-tag { display: inline-block; background: var(--panel-2); border-radius: 10px; padding: 1px 8px; font-size: 10.5px; margin-right: 4px; }
+      .marketplace-modal-actions { display: flex; align-items: center; gap: 10px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+      .marketplace-modal-actions .marketplace-rating-stars { cursor: pointer; }
+      .marketplace-modal-actions .marketplace-rating-stars .star { opacity: 0.35; }
+      .marketplace-modal-actions .marketplace-rating-stars .star.filled { opacity: 1; }
     `;
     ctx.injectStyleOnce('marketplace', css);
 
@@ -127,6 +127,8 @@ export default {
     }
 
     function openDetailModal(item) {
+      document.querySelectorAll('.marketplace-modal-backdrop').forEach(el => el.remove());
+
       const backdrop = document.createElement('div');
       backdrop.className = 'marketplace-modal-backdrop';
       backdrop.innerHTML = `
