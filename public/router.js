@@ -46,9 +46,7 @@ const PAGES = [
   { id: 'overview', icon: '▦', labelKey: 'nav.overview' },
   { id: 'accounts', icon: '🗂', labelKey: 'nav.accounts' },
   { id: 'analytics-compare', icon: '🧬', labelKey: 'nav.analyticsCompare' },
-  { id: 'settings', icon: '⚙', labelKey: 'nav.settings' },
   { id: 'marketplace', icon: '🌐', labelKey: 'nav.marketplace' },
-  { id: 'system-settings', icon: '🖥', labelKey: 'nav.systemSettings' },
 ];
 
 let currentUnmount = null;
@@ -270,6 +268,13 @@ async function loadAccounts() {
 
 async function renderRoute() {
   const hash = location.hash.replace(/^#\/?/, '') || 'overview';
+
+  if (hash === 'settings' || hash === 'system-settings') {
+    location.hash = '#/overview';
+    openSettingsPanel(hash);
+    return;
+  }
+
   const pageMeta = PAGES.find(p => p.id === hash) || PAGES[0];
 
   document.querySelectorAll('.nav-item').forEach(el => {
