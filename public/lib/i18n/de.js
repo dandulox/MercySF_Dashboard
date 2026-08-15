@@ -344,7 +344,6 @@ export default {
   'overview.win': 'Sieg',
   'overview.loss': 'Niederlage',
   'overview.battleHistoryNote': '{{returned}} von {{total}} aufgezeichneten Kämpfen — lokal von der CLI erfasst, nicht vom Spieleserver.',
-  'overview.noNodeDataHint': 'Noch keine Daten von diesem Node — Account dort starten, um Statistiken zu sehen.',
   'overview.noEquipmentFound': 'Keine Ausrüstung gefunden.',
   'overview.qualityLabel': 'Qualität {{quality}} · +{{upgrade}}',
   'overview.noGuildMember': 'Kein Gildenmitglied.',
