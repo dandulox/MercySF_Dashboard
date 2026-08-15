@@ -11,12 +11,10 @@ export default {
   // nav — page labels rendered by router.js
   'nav.overview': 'Overview',
   'nav.accounts': 'Account-Verwaltung',
-  'nav.analytics': 'Analysen',
   'nav.analyticsCompare': 'Account-Analyse',
   'nav.settings': 'Bot-Einstellungen',
   'nav.marketplace': 'Marktplatz',
   'nav.systemSettings': 'System-Einstellungen',
-  'nav.console': 'Konsole',
 
   // topbar — index.html static parts + router.js dynamic parts
   'topbar.menuTitle': 'Menü',

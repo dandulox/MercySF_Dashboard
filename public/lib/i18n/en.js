@@ -9,12 +9,10 @@ export default {
 
   'nav.overview': 'Overview',
   'nav.accounts': 'Account Management',
-  'nav.analytics': 'Analytics',
   'nav.analyticsCompare': 'Account Analysis',
   'nav.settings': 'Bot Settings',
   'nav.marketplace': 'Marketplace',
   'nav.systemSettings': 'System Settings',
-  'nav.console': 'Console',
 
   'topbar.menuTitle': 'Menu',
   'topbar.menuAria': 'Open menu',
