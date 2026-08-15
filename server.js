@@ -10,6 +10,7 @@ const sessionStore = require('./lib/sessionStore');
 const accountsRegistry = require('./lib/accountsRegistry');
 const ptyManager = require('./lib/ptyManager');
 require('./lib/statsCollector');
+require('./lib/telemetry');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
