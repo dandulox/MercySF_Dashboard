@@ -20,6 +20,9 @@ const cliUpdate = require('./lib/cliUpdate');
 const selfUpdate = require('./lib/selfUpdate');
 const statsDb = require('./lib/statsDb');
 const logBuffer = require('./lib/logBuffer');
+const vpnConfigStore = require('./lib/vpnConfigStore');
+const vpnStore = require('./lib/vpnStore');
+const vpnManager = require('./lib/vpnManager');
 require('./lib/statsCollector');
 
 const app = express();
@@ -129,8 +132,40 @@ app.delete('/profiles/:id', (req, res) => {
   res.json({ ok: true });
 });
 
-app.post('/profiles/:id/start', (req, res) => {
+// Prüft die lokal gespeicherte VPN-Zuweisung (vom Dashboard per POST /vpn/config gesetzt) —
+// bewusst lokal statt über einen Dashboard-Roundtrip, damit dieser Node auch bei
+// Dashboard-Ausfall autonom entscheiden kann.
+async function enforceVpnGate() {
+  const assignment = vpnStore.getAssignment();
+  if (!assignment || assignment.gate === 'off') return;
+  if (!assignment.vpnProfileId) {
+    throw Object.assign(new Error('VPN-Gate ist aktiv, aber kein VPN-Profil zugewiesen'), { status: 409 });
+  }
+  const status = await vpnManager.status();
+  if (status.connected) return;
+  if (assignment.gate === 'block') {
+    throw Object.assign(new Error('VPN nicht verbunden — Start blockiert'), { status: 409 });
+  }
+  const configContent = vpnConfigStore.getConfig(assignment.vpnProfileId);
+  if (!configContent) {
+    throw Object.assign(new Error('Gespeicherte VPN-Config nicht gefunden'), { status: 409 });
+  }
+  await vpnManager.connect(assignment.interfaceName, configContent);
+  for (let i = 0; i < 10; i++) {
+    const s = await vpnManager.status();
+    if (s.connected) return;
+    await new Promise(r => setTimeout(r, 1000));
+  }
+  throw Object.assign(new Error('VPN-Auto-Verbindung fehlgeschlagen (kein Handshake nach 10s)'), { status: 502 });
+}
+
+app.post('/profiles/:id/start', async (req, res) => {
   if (!profileStore.get(req.params.id)) return res.status(404).json({ error: 'Profil nicht gefunden' });
+  try {
+    await enforceVpnGate();
+  } catch (err) {
+    return res.status(err.status || 502).json({ error: err.message });
+  }
   ptyManager.ensurePty(req.params.id);
   profileStore.setRunning(req.params.id, true);
   res.json(ptyManager.getStatus(req.params.id));
@@ -406,6 +441,44 @@ app.get('/system/stats', (req, res) => {
     memUsedPercent: Math.round(((total - free) / total) * 1000) / 10,
     uptimeSec: Math.floor(os.uptime()),
   });
+});
+
+app.post('/vpn/config', express.json({ limit: '256kb' }), (req, res) => {
+  const { vpnProfileId, interfaceName, configContent, gate } = req.body || {};
+  if (configContent) vpnConfigStore.setConfig(vpnProfileId, configContent);
+  vpnStore.setAssignment({ vpnProfileId, interfaceName, gate });
+  res.json({ ok: true });
+});
+
+app.post('/vpn/connect', async (req, res) => {
+  const assignment = vpnStore.getAssignment();
+  if (!assignment || !assignment.vpnProfileId) return res.status(400).json({ error: 'Kein VPN-Profil zugewiesen' });
+  const configContent = vpnConfigStore.getConfig(assignment.vpnProfileId);
+  if (!configContent) return res.status(400).json({ error: 'Gespeicherte VPN-Config nicht gefunden' });
+  try {
+    await vpnManager.connect(assignment.interfaceName, configContent);
+    res.json(await vpnManager.status());
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+app.post('/vpn/disconnect', async (req, res) => {
+  const assignment = vpnStore.getAssignment();
+  try {
+    if (assignment?.interfaceName) await vpnManager.disconnect(assignment.interfaceName);
+    res.json(await vpnManager.status());
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+app.get('/vpn/status', async (req, res) => {
+  try {
+    res.json(await vpnManager.status());
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
 });
 
 app.use((err, req, res, next) => {
