@@ -5,6 +5,12 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.5.3] - 2026-08-16
+
+### Fixed
+- Randomizer: the English UI left "Willkür" untranslated in three spots
+  (mode button label, min/max hours field hints) — now "Random".
+
 ## [2.5.2] - 2026-08-16
 
 ### Added
