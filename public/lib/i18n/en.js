@@ -139,6 +139,12 @@ export default {
   'analyticsCompare.classesLabel': 'Classes',
   'analyticsCompare.noClassesHint': 'No classes detected yet (see Account Management).',
   'analyticsCompare.noAccountsHint': 'No accounts set up yet.',
+  'analyticsCompare.sortLabel': 'Sort by',
+  'analyticsCompare.sortName': 'Name',
+  'analyticsCompare.sortClass': 'Class',
+  'analyticsCompare.sortServer': 'Server',
+  'analyticsCompare.filterServerLabel': 'Server',
+  'analyticsCompare.filterClassLabel': 'Class',
 
   'nodes.never': 'never',
   'nodes.secsAgo': '{{secs}}s ago',

@@ -148,6 +148,12 @@ export default {
   'analyticsCompare.classesLabel': 'Klassen',
   'analyticsCompare.noClassesHint': 'Noch keine Klassen erkannt (siehe Account-Verwaltung).',
   'analyticsCompare.noAccountsHint': 'Noch keine Accounts angelegt.',
+  'analyticsCompare.sortLabel': 'Sortieren nach',
+  'analyticsCompare.sortName': 'Name',
+  'analyticsCompare.sortClass': 'Klasse',
+  'analyticsCompare.sortServer': 'Server',
+  'analyticsCompare.filterServerLabel': 'Server',
+  'analyticsCompare.filterClassLabel': 'Klasse',
 
   // nodes.js (public/pages/nodes.js)
   'nodes.never': 'nie',

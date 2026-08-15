@@ -57,6 +57,11 @@ export default {
       .analytics-compare-page .filter-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
       .analytics-compare-page .filter-row label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-right: 4px; }
       .analytics-compare-page select { background: var(--input-bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 6px 10px; font-size: 13px; }
+      .analytics-compare-page .filter-chip {
+        display: inline-flex; align-items: center; gap: 4px; background: var(--panel-2); border: 1px solid var(--border);
+        border-radius: 20px; padding: 4px 10px; font-size: 11.5px; cursor: pointer; user-select: none; color: var(--muted);
+      }
+      .analytics-compare-page .filter-chip.active { color: var(--text); border-color: var(--accent); }
       .analytics-compare-page .target-section { margin-top: 10px; }
       .analytics-compare-page .target-section h3 { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 8px; }
       .analytics-compare-page .target-checks { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -89,6 +94,22 @@ export default {
             ${Object.entries(rangeLabels()).map(([v, l]) => `<option value="${v}">${l}</option>`).join('')}
           </select>
         </div>
+        <div class="filter-row">
+          <label>${t('analyticsCompare.sortLabel')}</label>
+          <select id="sort-select">
+            <option value="name">${t('analyticsCompare.sortName')}</option>
+            <option value="class">${t('analyticsCompare.sortClass')}</option>
+            <option value="server">${t('analyticsCompare.sortServer')}</option>
+          </select>
+        </div>
+        <div class="target-section">
+          <h3>${t('analyticsCompare.filterServerLabel')}</h3>
+          <div class="target-checks" id="server-filter-checks"></div>
+        </div>
+        <div class="target-section">
+          <h3>${t('analyticsCompare.filterClassLabel')}</h3>
+          <div class="target-checks" id="class-filter-checks"></div>
+        </div>
         <div class="target-section">
           <h3>${t('analyticsCompare.charactersLabel')}</h3>
           <div class="target-checks" id="account-checks"></div>
@@ -105,8 +126,11 @@ export default {
 
     let accounts = [];
     let classes = [];
+    let servers = [];
     const selectedAccounts = new Set();
     const selectedClasses = new Set();
+    const visibleServers = new Set();
+    const visibleClasses = new Set();
     let charts = [];
 
     function destroyCharts() {
@@ -138,9 +162,45 @@ export default {
       return SERIES_COLORS[Math.max(idx, 0) % SERIES_COLORS.length];
     }
 
+    function renderFilterChecks() {
+      const serverWrap = wrap.querySelector('#server-filter-checks');
+      serverWrap.innerHTML = servers.map(s => `
+        <button type="button" class="filter-chip${visibleServers.has(s) ? ' active' : ''}" data-filter="server" data-value="${escapeHtml(s)}">${escapeHtml(s)}</button>
+      `).join('') || `<span class="empty-classes-hint">${t('analyticsCompare.noAccountsHint')}</span>`;
+
+      const classWrap = wrap.querySelector('#class-filter-checks');
+      classWrap.innerHTML = classes.length
+        ? classes.map(c => `
+          <button type="button" class="filter-chip${visibleClasses.has(c) ? ' active' : ''}" data-filter="class" data-value="${escapeHtml(c)}">${escapeHtml(c)}</button>
+        `).join('')
+        : `<span class="empty-classes-hint">${t('analyticsCompare.noClassesHint')}</span>`;
+
+      wrap.querySelectorAll('.filter-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const set = btn.dataset.filter === 'server' ? visibleServers : visibleClasses;
+          const value = btn.dataset.value;
+          if (set.has(value)) set.delete(value); else set.add(value);
+          renderFilterChecks();
+          renderTargetChecks();
+        });
+      });
+    }
+
+    function sortedFilteredAccounts() {
+      const sortMode = wrap.querySelector('#sort-select')?.value || 'name';
+      const visible = accounts.filter(a =>
+        visibleServers.has(a.server) && (!a.characterClass || visibleClasses.has(a.characterClass)));
+      const sorters = {
+        name: (a, b) => a.charName.localeCompare(b.charName),
+        class: (a, b) => (a.characterClass || '').localeCompare(b.characterClass || '') || a.charName.localeCompare(b.charName),
+        server: (a, b) => a.server.localeCompare(b.server) || a.charName.localeCompare(b.charName),
+      };
+      return [...visible].sort(sorters[sortMode] || sorters.name);
+    }
+
     function renderTargetChecks() {
       const accWrap = wrap.querySelector('#account-checks');
-      accWrap.innerHTML = accounts.map(a => {
+      accWrap.innerHTML = sortedFilteredAccounts().map(a => {
         const key = `account:${a.id}`;
         const active = selectedAccounts.has(a.id);
         const color = colorForTarget(key);
@@ -173,6 +233,7 @@ export default {
     }
 
     wrap.querySelector('#range-select').addEventListener('change', loadAndRender);
+    wrap.querySelector('#sort-select').addEventListener('change', renderTargetChecks);
 
     function renderCharts(requestSeries, response) {
       destroyCharts();
@@ -261,7 +322,11 @@ export default {
     async function init() {
       accounts = await ctx.fetchJSON('/api/accounts');
       classes = [...new Set(accounts.map(a => a.characterClass).filter(Boolean))].sort();
+      servers = [...new Set(accounts.map(a => a.server).filter(Boolean))].sort();
+      servers.forEach(s => visibleServers.add(s));
+      classes.forEach(c => visibleClasses.add(c));
       if (accounts.length) selectedAccounts.add(accounts[0].id);
+      renderFilterChecks();
       renderTargetChecks();
       loadAndRender();
     }
