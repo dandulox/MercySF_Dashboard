@@ -5,6 +5,21 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.4.1] - 2026-08-16
+
+### Fixed
+- Randomizer: "Account" was implemented at the character level (per
+  profile) — corrected to operate at the login level, so a login with
+  multiple characters gets one shared schedule and all its characters
+  start/stop together (same grouping as the "start all"/"stop all" login
+  actions on the Accounts page).
+- Randomizer: Willkür mode is now a dedicated on/off button per account
+  instead of a mode dropdown — clearer, and the three manual fields grey
+  out (disabled, not hidden) instead of disappearing when Willkür is on.
+- Removed the `<select>` from the randomizer row entirely — it rendered
+  with poor contrast (light text on a light dropdown background) in some
+  browsers.
+
 ## [2.4.0] - 2026-08-16
 
 ### Added

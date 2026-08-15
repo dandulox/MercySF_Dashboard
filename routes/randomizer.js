@@ -39,7 +39,7 @@ router.get('/configs', (req, res) => {
   res.json(randomizer.getAllConfigs());
 });
 
-router.post('/configs/:id', express.json(), (req, res) => {
+router.post('/configs/:username', express.json(), (req, res) => {
   const settings = randomizer.getSettings();
   const { enabled, mode, hoursPerDay, blockCount, stadtwacheCount } = req.body || {};
   const patch = {};
@@ -65,11 +65,11 @@ router.post('/configs/:id', express.json(), (req, res) => {
     if (!Number.isInteger(s) || s < 1 || s > 5) return res.status(400).json({ error: 'Stadtwache-Anzahl muss 1-5 sein' });
     patch.stadtwacheCount = s;
   }
-  res.json(randomizer.setConfig(req.params.id, patch));
+  res.json(randomizer.setConfig(req.params.username, patch));
 });
 
-router.get('/plan/:id', (req, res) => {
-  res.json({ plan: randomizer.getTodayPlan(req.params.id) });
+router.get('/plan/:username', (req, res) => {
+  res.json({ plan: randomizer.getTodayPlan(req.params.username) });
 });
 
 module.exports = router;

@@ -56,14 +56,18 @@ export default {
       .randomizer-row-name { font-weight: 600; font-size: 13.5px; }
       .randomizer-row-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
       .randomizer-row-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-      .randomizer-row-controls select {
-        background: var(--input-bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 6px 10px; font-size: 12.5px;
+      .randomizer-willkur-btn {
+        background: var(--panel-2); border: 1px solid var(--border); color: var(--text); border-radius: 8px;
+        cursor: pointer; padding: 6px 12px; font-size: 12.5px; font-weight: 600;
       }
-      .randomizer-manual-fields { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+      .randomizer-willkur-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+      .randomizer-manual-fields { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; transition: opacity .15s; }
+      .randomizer-manual-fields.disabled { opacity: 0.4; pointer-events: none; }
       .randomizer-manual-fields label { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); }
       .randomizer-manual-fields input {
         width: 56px; background: var(--input-bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 5px 6px; font-size: 12.5px;
       }
+      .randomizer-manual-fields input:disabled { cursor: not-allowed; }
       .randomizer-plan-btn { background: none; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); cursor: pointer; padding: 6px 10px; font-size: 12px; }
       .randomizer-plan-btn:hover { color: var(--text); }
       .randomizer-plan-body { flex-basis: 100%; font-size: 12px; color: var(--text); background: var(--panel-2); border-radius: 8px; padding: 10px 12px; margin-top: 4px; }
@@ -116,32 +120,27 @@ export default {
       }
     });
 
-    function modeOptionsHtml(current) {
+    function rowHtml(username, members, config) {
+      const isWillkur = config.mode === 'willkuer';
+      const charNames = members.map(m => m.characterName || m.nickname).filter(Boolean).join(', ');
+      const countLabel = members.length === 1 ? t('accounts.characterSingular') : t('accounts.characterPlural');
       return `
-        <option value="manual" ${current === 'manual' ? 'selected' : ''}>${t('randomizer.modeManual')}</option>
-        <option value="willkuer" ${current === 'willkuer' ? 'selected' : ''}>${t('randomizer.modeWillkur')}</option>
-      `;
-    }
-
-    function rowHtml(profile, config) {
-      const meta = profile.server && profile.characterName
-        ? `${escapeHtml(profile.characterName)} @ ${escapeHtml(profile.server)}`
-        : escapeHtml(profile.username);
-      return `
-        <div class="randomizer-row" data-id="${profile.id}">
+        <div class="randomizer-row" data-username="${escapeHtml(username)}">
           <div class="randomizer-row-info">
-            <div class="randomizer-row-name char-name">${escapeHtml(profile.nickname)}</div>
-            <div class="randomizer-row-meta char-name">${meta}</div>
+            <div class="randomizer-row-name char-name">${escapeHtml(username)}</div>
+            <div class="randomizer-row-meta char-name">${members.length} ${countLabel}${charNames ? ` · ${charNames}` : ''}</div>
           </div>
           <div class="randomizer-row-controls">
             <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);">
               <input type="checkbox" data-role="enabled" ${config.enabled ? 'checked' : ''} /> ${t('randomizer.enabledLabel')}
             </label>
-            <select data-role="mode">${modeOptionsHtml(config.mode)}</select>
-            <div class="randomizer-manual-fields" data-role="manual-fields" ${config.mode === 'willkuer' ? 'hidden' : ''}>
-              <label>${t('randomizer.hoursLabel')} <input type="number" min="1" max="24" step="0.5" data-role="hoursPerDay" value="${config.hoursPerDay}" /></label>
-              <label>${t('randomizer.blocksLabel')} <input type="number" min="1" max="4" data-role="blockCount" value="${config.blockCount}" /></label>
-              <label>${t('randomizer.stadtwacheLabel')} <input type="number" min="1" max="5" data-role="stadtwacheCount" value="${config.stadtwacheCount}" /></label>
+            <button type="button" class="randomizer-willkur-btn ${isWillkur ? 'active' : ''}" data-role="willkur-toggle">
+              ${t('randomizer.willkurBtnLabel')}: ${isWillkur ? t('randomizer.willkurOn') : t('randomizer.willkurOff')}
+            </button>
+            <div class="randomizer-manual-fields ${isWillkur ? 'disabled' : ''}" data-role="manual-fields">
+              <label>${t('randomizer.hoursLabel')} <input type="number" min="1" max="24" step="0.5" data-role="hoursPerDay" value="${config.hoursPerDay}" ${isWillkur ? 'disabled' : ''} /></label>
+              <label>${t('randomizer.blocksLabel')} <input type="number" min="1" max="4" data-role="blockCount" value="${config.blockCount}" ${isWillkur ? 'disabled' : ''} /></label>
+              <label>${t('randomizer.stadtwacheLabel')} <input type="number" min="1" max="5" data-role="stadtwacheCount" value="${config.stadtwacheCount}" ${isWillkur ? 'disabled' : ''} /></label>
             </div>
             <button type="button" class="randomizer-plan-btn" data-role="plan-toggle">${t('randomizer.planBtn')}</button>
           </div>
@@ -179,20 +178,29 @@ export default {
         return;
       }
 
+      const groups = new Map();
+      profiles.forEach(p => {
+        if (!groups.has(p.username)) groups.set(p.username, []);
+        groups.get(p.username).push(p);
+      });
+
       const defaultConfig = { enabled: false, mode: 'manual', hoursPerDay: 6, blockCount: 2, stadtwacheCount: 2 };
-      list.innerHTML = profiles.map(p => rowHtml(p, { ...defaultConfig, ...(configs[p.id] || {}) })).join('');
+      list.innerHTML = [...groups.entries()]
+        .map(([username, members]) => rowHtml(username, members, { ...defaultConfig, ...(configs[username] || {}) }))
+        .join('');
 
       list.querySelectorAll('.randomizer-row').forEach(row => {
-        const id = row.dataset.id;
-        const modeSelect = row.querySelector('[data-role="mode"]');
+        const username = row.dataset.username;
+        const willkurBtn = row.querySelector('[data-role="willkur-toggle"]');
         const manualFields = row.querySelector('[data-role="manual-fields"]');
+        const manualInputs = row.querySelectorAll('[data-role="manual-fields"] input');
         const enabledCheckbox = row.querySelector('[data-role="enabled"]');
         const planToggleBtn = row.querySelector('[data-role="plan-toggle"]');
         const planBody = row.querySelector('[data-role="plan-body"]');
 
         async function saveConfig(patch) {
           try {
-            await ctx.fetchJSON(`/api/randomizer/configs/${encodeURIComponent(id)}`, {
+            await ctx.fetchJSON(`/api/randomizer/configs/${encodeURIComponent(username)}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(patch),
@@ -204,9 +212,12 @@ export default {
 
         enabledCheckbox.addEventListener('change', () => saveConfig({ enabled: enabledCheckbox.checked }));
 
-        modeSelect.addEventListener('change', () => {
-          manualFields.hidden = modeSelect.value === 'willkuer';
-          saveConfig({ mode: modeSelect.value });
+        willkurBtn.addEventListener('click', () => {
+          const isWillkur = willkurBtn.classList.toggle('active');
+          willkurBtn.textContent = `${t('randomizer.willkurBtnLabel')}: ${isWillkur ? t('randomizer.willkurOn') : t('randomizer.willkurOff')}`;
+          manualFields.classList.toggle('disabled', isWillkur);
+          manualInputs.forEach(input => { input.disabled = isWillkur; });
+          saveConfig({ mode: isWillkur ? 'willkuer' : 'manual' });
         });
 
         ['hoursPerDay', 'blockCount', 'stadtwacheCount'].forEach(role => {
@@ -219,7 +230,7 @@ export default {
           planBody.hidden = false;
           planBody.innerHTML = t('overview.loadingEllipsis');
           try {
-            const { plan } = await ctx.fetchJSON(`/api/randomizer/plan/${encodeURIComponent(id)}`);
+            const { plan } = await ctx.fetchJSON(`/api/randomizer/plan/${encodeURIComponent(username)}`);
             planBody.innerHTML = planBodyHtml(plan);
           } catch (err) {
             planBody.innerHTML = t('analytics.loadError', { message: err.message });
