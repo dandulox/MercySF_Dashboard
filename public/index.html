@@ -95,6 +95,7 @@
           </label>
           <button class="icon-btn lang-toggle-btn" id="lang-toggle-btn" data-i18n-attr="title:topbar.langToggleTitle" title="Sprache wechseln">DE</button>
           <button class="icon-btn" id="theme-toggle-btn" data-i18n-attr="title:topbar.themeToggleTitle" title="Hell-/Dunkelmodus umschalten">🌙</button>
+          <button class="icon-btn" id="settings-panel-toggle-btn" data-i18n-attr="title:topbar.settingsPanelTitle" title="Einstellungen">⚙</button>
           <div class="notif-dropdown" id="access-dropdown">
             <button class="icon-btn" id="access-btn" data-i18n-attr="title:topbar.accessBtnTitle" title="Zugang">🔐</button>
             <div class="notif-panel" id="access-panel" hidden style="width:260px;">
@@ -132,6 +133,21 @@
       <div id="page-root"></div>
       <div id="toast-stack" class="toast-stack"></div>
     </main>
+
+    <div class="settings-panel-backdrop" id="settings-panel-backdrop"></div>
+    <aside class="settings-panel" id="settings-panel">
+      <div class="settings-panel-header">
+        <div class="settings-panel-tabs">
+          <button class="settings-panel-tab active" id="settings-panel-tab-settings" data-tab="settings" data-i18n="nav.settings">Bot-Einstellungen</button>
+          <button class="settings-panel-tab" id="settings-panel-tab-system-settings" data-tab="system-settings" data-i18n="nav.systemSettings">System-Einstellungen</button>
+        </div>
+        <button class="settings-panel-close-btn" id="settings-panel-close-btn" data-i18n-attr="aria-label:topbar.settingsPanelClose" aria-label="Schließen">×</button>
+      </div>
+      <div class="settings-panel-body">
+        <div class="settings-panel-content active" id="settings-panel-content-settings"></div>
+        <div class="settings-panel-content" id="settings-panel-content-system-settings"></div>
+      </div>
+    </aside>
   </div>
 
   <script type="module">

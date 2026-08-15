@@ -23,6 +23,8 @@ export default {
   'topbar.anonLabel': '🕶 Anonym',
   'topbar.anonTitle': 'Charakternamen verpixeln (z. B. für Screenshots/Streaming)',
   'topbar.themeToggleTitle': 'Hell-/Dunkelmodus umschalten',
+  'topbar.settingsPanelTitle': 'Einstellungen',
+  'topbar.settingsPanelClose': 'Schließen',
   'topbar.langToggleTitle': 'Sprache wechseln',
   'topbar.accessTitle': 'Zugang',
   'topbar.accessBtnTitle': 'Zugang',

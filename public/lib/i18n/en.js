@@ -20,6 +20,8 @@ export default {
   'topbar.anonLabel': '🕶 Anonymous',
   'topbar.anonTitle': 'Pixelate character names (e.g. for screenshots/streaming)',
   'topbar.themeToggleTitle': 'Toggle light/dark mode',
+  'topbar.settingsPanelTitle': 'Settings',
+  'topbar.settingsPanelClose': 'Close',
   'topbar.langToggleTitle': 'Switch language',
   'topbar.accessTitle': 'Access',
   'topbar.accessBtnTitle': 'Access',
