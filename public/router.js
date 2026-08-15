@@ -182,6 +182,7 @@ async function loadCliUpdateStatus() {
 }
 
 let lastDashboardStatus = null;
+let updatePopupDismissedVersion = null;
 
 function renderDashboardUpdateStatus() {
   const status = lastDashboardStatus;
@@ -204,6 +205,37 @@ function renderDashboardUpdateStatus() {
     pill.className = 'pill pill-on';
     btn.style.display = 'none';
   }
+  renderUpdatePopup(status);
+}
+
+function renderUpdatePopup(status) {
+  const existing = document.getElementById('update-popup');
+  const shouldShow = status.updateAvailable && !status.applying && status.remoteVersion !== updatePopupDismissedVersion;
+
+  if (!shouldShow) {
+    if (existing) existing.remove();
+    return;
+  }
+  if (existing) return; // already showing for this version, don't rebuild on every 5s poll
+
+  const popup = document.createElement('div');
+  popup.className = 'update-popup';
+  popup.id = 'update-popup';
+  popup.innerHTML = `
+    <button class="update-popup-close" aria-label="${t('router.updatePopupDismiss')}">×</button>
+    <div class="update-popup-title">${t('router.updatePopupTitle')}</div>
+    <div class="update-popup-body">${t('router.updatePopupBody', { version: status.remoteVersion || '?', current: status.currentVersion || '?' })}</div>
+    <button class="btn btn-primary update-popup-btn">${t('router.updatePopupUpdateBtn')}</button>
+  `;
+  popup.querySelector('.update-popup-close').addEventListener('click', () => {
+    updatePopupDismissedVersion = status.remoteVersion;
+    popup.remove();
+  });
+  popup.querySelector('.update-popup-btn').addEventListener('click', () => {
+    document.getElementById('dashboard-update-btn')?.click();
+    popup.remove();
+  });
+  document.body.appendChild(popup);
 }
 
 async function loadDashboardUpdateStatus() {
