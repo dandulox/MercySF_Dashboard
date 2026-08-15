@@ -155,7 +155,7 @@ export default {
     container.appendChild(wrap);
 
     ctx.injectStyleOnce('overview-gamestate', `
-      .gamestate-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; align-items: start; }
+      .gamestate-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
       .gamestate-grid .stat-grid { grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); margin-bottom: 0; }
       @media (max-width: 900px) {
         .gamestate-grid { grid-template-columns: 1fr; }
