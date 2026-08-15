@@ -467,6 +467,8 @@ export default {
       .settings-page .publish-form { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
       .settings-page .publish-form.open { display: block; }
       .settings-page .publish-form input[type="text"] { width: 100%; margin-bottom: 6px; background: var(--panel-2); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 6px 10px; font-size: 12.5px; }
+      .settings-page .publish-form textarea { width: 100%; margin-bottom: 6px; background: var(--panel-2); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 6px 10px; font-size: 12.5px; font-family: inherit; resize: vertical; }
+      .settings-page .publish-form select { width: 100%; margin-bottom: 6px; background: var(--panel-2); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 6px 10px; font-size: 12.5px; }
       .settings-page .publish-link-list { display: flex; flex-direction: column; gap: 4px; max-height: 140px; overflow-y: auto; margin-bottom: 8px; }
       .settings-page .publish-link-list label { display: flex; align-items: center; gap: 8px; font-size: 12.5px; cursor: pointer; }
     `;
@@ -544,7 +546,7 @@ export default {
               `).join('') || `<span class="muted">${t('settings.noAccounts')}</span>`}
             </div>
             <input type="text" data-field="title" placeholder="${t('settings.marketplacePublishTitleLabel')}" value="${escapeHtml(tpl.name)}" />
-            <input type="text" data-field="description" placeholder="${t('settings.marketplacePublishDescLabel')}" />
+            <textarea data-field="description" placeholder="${t('settings.marketplacePublishDescLabel')}" rows="3"></textarea>
             <input type="text" data-field="tags" placeholder="${t('settings.marketplacePublishTagsLabel')}" />
             <input type="text" data-field="displayName" placeholder="${t('settings.marketplacePublishNameLabel')}" />
             <button class="btn btn-primary" data-action="confirm-publish" style="width:auto;padding:6px 14px;font-size:12px;">${t('settings.marketplacePublishSubmitBtn')}</button>
