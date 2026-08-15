@@ -506,6 +506,69 @@ function initMobileNav() {
   window.addEventListener('hashchange', close);
 }
 
+const settingsPanelMountedTabs = {};
+
+async function mountSettingsPanelTab(tabId) {
+  if (settingsPanelMountedTabs[tabId]) return;
+  const container = document.getElementById(`settings-panel-content-${tabId}`);
+  if (!container) return;
+  try {
+    const mod = await import(`/pages/${tabId}.js`);
+    const page = mod.default;
+    const unmount = page.mount(container, ctx);
+    settingsPanelMountedTabs[tabId] = typeof unmount === 'function' ? unmount : () => {};
+  } catch (err) {
+    container.innerHTML = `<div class="card"><p>${t('router.pageLoadError', { page: tabId, message: err.message })}</p></div>`;
+    settingsPanelMountedTabs[tabId] = () => {};
+  }
+}
+
+function switchSettingsPanelTab(tabId) {
+  document.querySelectorAll('.settings-panel-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tabId);
+  });
+  document.querySelectorAll('.settings-panel-content').forEach(el => {
+    el.classList.toggle('active', el.id === `settings-panel-content-${tabId}`);
+  });
+  mountSettingsPanelTab(tabId);
+}
+
+function openSettingsPanel(tabId = 'settings') {
+  const panel = document.getElementById('settings-panel');
+  const backdrop = document.getElementById('settings-panel-backdrop');
+  if (!panel || !backdrop) return;
+  switchSettingsPanelTab(tabId);
+  panel.classList.add('open');
+  backdrop.classList.add('visible');
+}
+
+function closeSettingsPanel() {
+  const panel = document.getElementById('settings-panel');
+  const backdrop = document.getElementById('settings-panel-backdrop');
+  if (!panel || !backdrop) return;
+  panel.classList.remove('open');
+  backdrop.classList.remove('visible');
+}
+
+function initSettingsPanel() {
+  const toggleBtn = document.getElementById('settings-panel-toggle-btn');
+  const closeBtn = document.getElementById('settings-panel-close-btn');
+  const backdrop = document.getElementById('settings-panel-backdrop');
+  if (!toggleBtn || !closeBtn || !backdrop) return;
+
+  toggleBtn.addEventListener('click', () => openSettingsPanel());
+  closeBtn.addEventListener('click', closeSettingsPanel);
+  backdrop.addEventListener('click', closeSettingsPanel);
+
+  document.querySelectorAll('.settings-panel-tab').forEach(btn => {
+    btn.addEventListener('click', () => switchSettingsPanelTab(btn.dataset.tab));
+  });
+
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.addEventListener('click', closeSettingsPanel);
+  });
+}
+
 window.addEventListener('hashchange', renderRoute);
 
 document.getElementById('refresh-btn')?.addEventListener('click', () => {
@@ -568,6 +631,7 @@ wireForceCheckButton('dashboard-force-check-btn', '/api/dashboard-update/check',
 initAnonMode();
 initThemeToggle();
 initLangToggle();
+initSettingsPanel();
 initNotifications();
 initAccessMenu();
 initMobileNav();
