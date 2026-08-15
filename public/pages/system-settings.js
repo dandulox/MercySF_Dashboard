@@ -1,4 +1,5 @@
 import { t } from '/lib/i18n.js';
+import nodesPage from './nodes.js';
 
 function escapeHtml(s) {
   return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -13,12 +14,22 @@ function gateLabels() {
   };
 }
 
+const TABS = ['general', 'node', 'vpn'];
+
 export default {
   id: 'system-settings',
   label: 'System-Einstellungen',
   icon: '🖥',
   mount(container, ctx) {
     const css = `
+      .system-settings-page .settings-tabs { display: flex; gap: 4px; margin-bottom: 14px; border-bottom: 1px solid var(--border); }
+      .system-settings-page .settings-tab {
+        background: none; border: none; padding: 8px 12px; margin-bottom: -1px; border-bottom: 2px solid transparent;
+        color: var(--muted); cursor: pointer; font-size: 13px; font-weight: 600;
+      }
+      .system-settings-page .settings-tab.active { color: var(--text); border-bottom-color: var(--accent); }
+      .system-settings-page .settings-tab-panel[hidden] { display: none; }
+      .system-settings-page .settings-tab-panel[data-panel="node"] .page-title { display: none; }
       .system-settings-page .panel-settings-card, .system-settings-page .vpn-profiles-card {
         background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px 14px; margin-bottom: 14px;
       }
@@ -56,32 +67,57 @@ export default {
     wrap.className = 'system-settings-page';
     wrap.innerHTML = `
       <h1 class="page-title">${t('systemSettings.title')}</h1>
-      <div class="panel-settings-card">
-        <h3>${t('systemSettings.panelSettingsTitle')}</h3>
-        <div class="panel-settings-desc">${t('systemSettings.panelSettingsDesc')}</div>
-        <div class="panel-settings-row">
-          <select id="gamestate-interval-select"><option>${t('common.loading')}</option></select>
-          <button class="btn btn-primary" id="gamestate-interval-save" style="width:auto;padding:7px 16px;">${t('systemSettings.applyBtn')}</button>
-          <span id="panel-settings-status"></span>
+      <div class="settings-tabs">
+        <button class="settings-tab active" data-tab="general">${t('systemSettings.tabGeneral')}</button>
+        <button class="settings-tab" data-tab="node">${t('systemSettings.tabNode')}</button>
+        <button class="settings-tab" data-tab="vpn">${t('systemSettings.tabVpn')}</button>
+      </div>
+      <div class="settings-tab-panel" data-panel="general">
+        <div class="panel-settings-card">
+          <h3>${t('systemSettings.panelSettingsTitle')}</h3>
+          <div class="panel-settings-desc">${t('systemSettings.panelSettingsDesc')}</div>
+          <div class="panel-settings-row">
+            <select id="gamestate-interval-select"><option>${t('common.loading')}</option></select>
+            <button class="btn btn-primary" id="gamestate-interval-save" style="width:auto;padding:7px 16px;">${t('systemSettings.applyBtn')}</button>
+            <span id="panel-settings-status"></span>
+          </div>
         </div>
       </div>
-      <div class="vpn-profiles-card">
-        <h3>${t('systemSettings.vpnProfilesTitle')}</h3>
-        <div class="vpn-profiles-desc">${t('systemSettings.vpnProfilesDesc')}</div>
-        <div id="vpn-profiles-list">${t('common.loading')}</div>
-        <div class="vpn-profile-add-row">
-          <input type="text" id="vpn-profile-label" placeholder="${t('systemSettings.vpnProfileLabelPlaceholder')}" />
-          <input type="file" id="vpn-profile-file" accept=".conf,text/plain" />
-          <button class="btn btn-primary" id="vpn-profile-add-btn" style="width:auto;padding:7px 16px;">${t('systemSettings.vpnProfileAddBtn')}</button>
+      <div class="settings-tab-panel" data-panel="node" hidden></div>
+      <div class="settings-tab-panel" data-panel="vpn" hidden>
+        <div class="vpn-profiles-card">
+          <h3>${t('systemSettings.vpnProfilesTitle')}</h3>
+          <div class="vpn-profiles-desc">${t('systemSettings.vpnProfilesDesc')}</div>
+          <div id="vpn-profiles-list">${t('common.loading')}</div>
+          <div class="vpn-profile-add-row">
+            <input type="text" id="vpn-profile-label" placeholder="${t('systemSettings.vpnProfileLabelPlaceholder')}" />
+            <input type="file" id="vpn-profile-file" accept=".conf,text/plain" />
+            <button class="btn btn-primary" id="vpn-profile-add-btn" style="width:auto;padding:7px 16px;">${t('systemSettings.vpnProfileAddBtn')}</button>
+          </div>
+          <div id="vpn-profile-add-status"></div>
         </div>
-        <div id="vpn-profile-add-status"></div>
+        <h3 class="vpn-targets-title">${t('systemSettings.vpnTargetsTitle')}</h3>
+        <div id="vpn-targets-list">${t('common.loading')}</div>
       </div>
-      <h3 class="vpn-targets-title">${t('systemSettings.vpnTargetsTitle')}</h3>
-      <div id="vpn-targets-list">${t('common.loading')}</div>
     `;
     container.appendChild(wrap);
 
-    // --- Panel-Einstellungen (1:1 aus der alten settings.js übernommen) ---
+    // --- Tabs ---
+    const tabButtons = wrap.querySelectorAll('.settings-tab');
+    const panels = wrap.querySelectorAll('.settings-tab-panel');
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabButtons.forEach(b => b.classList.toggle('active', b === btn));
+        panels.forEach(p => { p.hidden = p.dataset.panel !== btn.dataset.tab; });
+      });
+    });
+
+    // --- Node-Tab: bestehende nodes.js-Seite wiederverwendet, unverändert — mount() ist bereits
+    // so gebaut, dass es in einen beliebigen Container gerendert werden kann (kein Sonderfall
+    // nötig für "innerhalb eines Tabs statt als eigene Route").
+    const nodeUnmount = nodesPage.mount(wrap.querySelector('[data-panel="node"]'), ctx);
+
+    // --- Panel-Einstellungen ---
     async function loadPanelSettings() {
       const select = wrap.querySelector('#gamestate-interval-select');
       const status = wrap.querySelector('#panel-settings-status');
@@ -125,7 +161,7 @@ export default {
         ? vpnProfiles.map(p => `
           <div class="vpn-profile-row" data-id="${p.id}">
             <span>${escapeHtml(p.label)}</span>
-            <span class="interface-name">${escapeHtml(p.interfaceName)}</span>
+            <span class="interface-name">${escapeHtml(p.interfaceName)}${p.endpointHost ? ' · ' + escapeHtml(p.endpointHost) : ''}</span>
             <button class="btn-danger" data-action="delete-profile">${t('systemSettings.vpnProfileDeleteBtn')}</button>
           </div>`).join('')
         : `<span>${t('systemSettings.vpnProfilesEmpty')}</span>`;
@@ -189,9 +225,12 @@ export default {
 
     function statusText(target) {
       if (!target.lastStatus || !target.lastStatus.updatedAt) return t('systemSettings.vpnStatusNever');
-      return target.lastStatus.connected
-        ? t('systemSettings.vpnStatusConnected', { interface: target.lastStatus.interfaceName || '' })
-        : t('systemSettings.vpnStatusDisconnected');
+      if (!target.lastStatus.connected) return t('systemSettings.vpnStatusDisconnected');
+      const profile = vpnProfiles.find(p => p.id === target.vpnProfileId);
+      return t('systemSettings.vpnStatusConnected', {
+        interface: target.lastStatus.interfaceName || '',
+        ip: profile?.endpointHost || '?',
+      });
     }
 
     async function loadVpnTargets() {
@@ -234,18 +273,39 @@ export default {
       list.querySelectorAll('.vpn-target-card').forEach(card => {
         const id = card.dataset.id;
 
-        card.querySelector('[data-role="save"]').addEventListener('click', async () => {
+        // Speichert die aktuelle Dropdown-Auswahl (Profil + Gate) für dieses Ziel.
+        async function saveTargetConfig() {
           const vpnProfileId = card.querySelector('[data-role="profile"]').value || null;
           const gate = card.querySelector('[data-role="gate"]').value;
+          await ctx.fetchJSON(`/api/vpn/targets/${encodeURIComponent(id)}/config`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ vpnProfileId, gate }),
+          });
+        }
+
+        card.querySelector('[data-role="save"]').addEventListener('click', async () => {
           try {
-            await ctx.fetchJSON(`/api/vpn/targets/${encodeURIComponent(id)}/config`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ vpnProfileId, gate }),
-            });
+            await saveTargetConfig();
             await loadVpnTargets();
           } catch (err) {
             alert(err.message);
+          }
+        });
+
+        // "Verbinden" speichert die aktuelle Dropdown-Auswahl automatisch mit, statt einen
+        // separaten "erst Speichern, dann Verbinden"-Schritt vom Nutzer zu verlangen — ein
+        // gewähltes, aber nicht explizit gespeichertes Profil führte sonst zu "Kein VPN-Profil
+        // für dieses Ziel zugewiesen", obwohl im Dropdown längst eins ausgewählt war.
+        card.querySelector('[data-role="connect"]').addEventListener('click', async () => {
+          const statusEl = card.querySelector('[data-role="status-text"]');
+          statusEl.textContent = t('common.loading');
+          try {
+            await saveTargetConfig();
+            await ctx.fetchJSON(`/api/vpn/targets/${encodeURIComponent(id)}/connect`, { method: 'POST' });
+            await loadVpnTargets();
+          } catch (err) {
+            statusEl.textContent = t('analytics.loadError', { message: err.message });
           }
         });
 
@@ -261,7 +321,6 @@ export default {
             }
           });
         }
-        wireAction('connect', '/connect', 'POST');
         wireAction('disconnect', '/disconnect', 'POST');
         wireAction('refresh', '/status', 'GET');
       });
@@ -269,5 +328,9 @@ export default {
 
     loadPanelSettings();
     loadVpnProfiles().then(loadVpnTargets);
+
+    return () => {
+      if (typeof nodeUnmount === 'function') nodeUnmount();
+    };
   },
 };

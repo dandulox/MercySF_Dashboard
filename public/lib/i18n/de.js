@@ -10,7 +10,6 @@ export default {
   // nav — page labels rendered by router.js
   'nav.overview': 'Overview',
   'nav.accounts': 'Account-Verwaltung',
-  'nav.nodes': 'Nodes',
   'nav.analytics': 'Analysen',
   'nav.analyticsCompare': 'Account-Analyse',
   'nav.settings': 'Bot-Einstellungen',
@@ -373,6 +372,9 @@ export default {
   'systemSettings.applyBtn': 'Übernehmen',
   'systemSettings.saving': 'Speichere...',
   'systemSettings.applied': 'Übernommen.',
+  'systemSettings.tabGeneral': 'Allgemein',
+  'systemSettings.tabNode': 'Node',
+  'systemSettings.tabVpn': 'VPN',
   'systemSettings.vpnProfilesTitle': '🔒 VPN-Profile',
   'systemSettings.vpnProfilesDesc': 'Pro ProtonVPN-Account+Standort einmalig eine WireGuard-Config aus dem <a href="https://account.protonvpn.com/downloads" target="_blank" rel="noopener">ProtonVPN-Dashboard</a> herunterladen und hier hochladen.',
   'systemSettings.vpnProfileLabelPlaceholder': 'Bezeichnung, z. B. "Account A – Niederlande"',
@@ -394,7 +396,7 @@ export default {
   'systemSettings.vpnDisconnectBtn': 'Trennen',
   'systemSettings.vpnRefreshBtn': '🔄 Status',
   'systemSettings.vpnStatusNever': 'Noch nie geprüft',
-  'systemSettings.vpnStatusConnected': '🟢 Verbunden ({{interface}})',
+  'systemSettings.vpnStatusConnected': '🟢 Verbunden ({{interface}}) – {{ip}}',
   'systemSettings.vpnStatusDisconnected': '🔴 Getrennt',
   'systemSettings.vpnDuplicateWarning': '⚠ Dieses Profil ist mehreren Zielen zugewiesen — gleichzeitig verbinden funktioniert bei ProtonVPN in der Regel nicht.',
 };

@@ -8,7 +8,6 @@ export default {
 
   'nav.overview': 'Overview',
   'nav.accounts': 'Account Management',
-  'nav.nodes': 'Nodes',
   'nav.analytics': 'Analytics',
   'nav.analyticsCompare': 'Account Analysis',
   'nav.settings': 'Bot Settings',
@@ -359,6 +358,9 @@ export default {
   'systemSettings.applyBtn': 'Apply',
   'systemSettings.saving': 'Saving...',
   'systemSettings.applied': 'Applied.',
+  'systemSettings.tabGeneral': 'General',
+  'systemSettings.tabNode': 'Node',
+  'systemSettings.tabVpn': 'VPN',
   'systemSettings.vpnProfilesTitle': '🔒 VPN profiles',
   'systemSettings.vpnProfilesDesc': 'Download a WireGuard config once per ProtonVPN account+location from the <a href="https://account.protonvpn.com/downloads" target="_blank" rel="noopener">ProtonVPN dashboard</a>, then upload it here.',
   'systemSettings.vpnProfileLabelPlaceholder': 'Label, e.g. "Account A – Netherlands"',
@@ -380,7 +382,7 @@ export default {
   'systemSettings.vpnDisconnectBtn': 'Disconnect',
   'systemSettings.vpnRefreshBtn': '🔄 Status',
   'systemSettings.vpnStatusNever': 'Never checked',
-  'systemSettings.vpnStatusConnected': '🟢 Connected ({{interface}})',
+  'systemSettings.vpnStatusConnected': '🟢 Connected ({{interface}}) – {{ip}}',
   'systemSettings.vpnStatusDisconnected': '🔴 Disconnected',
   'systemSettings.vpnDuplicateWarning': '⚠ This profile is assigned to more than one target — connecting both at once usually doesn\'t work with ProtonVPN.',
 };
