@@ -545,6 +545,12 @@ export default {
                 <label><input type="checkbox" class="publish-link-checkbox" value="${escapeHtml(acc.id)}" /> <span class="char-name">${escapeHtml(acc.charName)}</span> <span class="muted">(${escapeHtml(acc.server)})</span></label>
               `).join('') || `<span class="muted">${t('settings.noAccounts')}</span>`}
             </div>
+            <select data-field="characterClass">
+              <option value="">${t('settings.marketplacePublishClassNone')}</option>
+              ${[...new Set(allAccounts.map(a => a.characterClass).filter(Boolean))].sort().map(c => `
+                <option value="${escapeHtml(c)}" ${c === tpl.characterClass ? 'selected' : ''}>${escapeHtml(c)}</option>
+              `).join('')}
+            </select>
             <input type="text" data-field="title" placeholder="${t('settings.marketplacePublishTitleLabel')}" value="${escapeHtml(tpl.name)}" />
             <textarea data-field="description" placeholder="${t('settings.marketplacePublishDescLabel')}" rows="3"></textarea>
             <input type="text" data-field="tags" placeholder="${t('settings.marketplacePublishTagsLabel')}" />
@@ -573,6 +579,7 @@ export default {
           const description = form.querySelector('[data-field="description"]').value.trim();
           const tags = form.querySelector('[data-field="tags"]').value.split(',').map(s => s.trim()).filter(Boolean);
           const displayName = form.querySelector('[data-field="displayName"]').value.trim();
+          const characterClass = form.querySelector('[data-field="characterClass"]').value;
           const linkedAccountIds = [...form.querySelectorAll('.publish-link-checkbox:checked')].map(cb => cb.value);
           if (!title) { statusEl.textContent = t('settings.marketplaceTitleRequired'); return; }
           statusEl.textContent = t('settings.marketplacePublishing');
@@ -580,7 +587,7 @@ export default {
             const publishResult = await ctx.fetchJSON(`/api/marketplace-publish/${encodeURIComponent(id)}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ title, description, tags, displayName }),
+              body: JSON.stringify({ title, description, tags, displayName, characterClass }),
             });
             for (const accountId of linkedAccountIds) {
               await ctx.fetchJSON('/api/marketplace-links', {

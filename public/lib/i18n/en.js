@@ -247,6 +247,7 @@ export default {
   'settings.marketplacePublishDescLabel': 'Description (optional)',
   'settings.marketplacePublishTagsLabel': 'Tags, comma-separated (optional)',
   'settings.marketplacePublishNameLabel': 'Display name (optional)',
+  'settings.marketplacePublishClassNone': 'No class',
   'settings.marketplacePublishSubmitBtn': 'Publish',
   'settings.marketplacePublishCancelBtn': 'Cancel',
   'settings.marketplacePublishing': 'Publishing...',

@@ -10,7 +10,7 @@ const router = express.Router();
 router.post('/:localTemplateId', express.json(), async (req, res) => {
   const template = templates.get(req.params.localTemplateId);
   if (!template) return res.status(404).json({ error: 'Vorlage nicht gefunden' });
-  const { displayName, title, description, tags } = req.body || {};
+  const { displayName, title, description, tags, characterClass } = req.body || {};
   if (!title || !title.trim()) return res.status(400).json({ error: 'Titel erforderlich' });
 
   let response;
@@ -22,7 +22,7 @@ router.post('/:localTemplateId', express.json(), async (req, res) => {
         title: title.trim(),
         description: description || undefined,
         displayName: displayName || undefined,
-        characterClass: template.characterClass || undefined,
+        characterClass: characterClass || template.characterClass || undefined,
         tags: Array.isArray(tags) ? tags : undefined,
         settings: template.settings,
         instanceId: getOrCreateInstanceId(),
