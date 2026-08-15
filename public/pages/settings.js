@@ -426,9 +426,17 @@ export default {
   icon: '⚙',
   mount(container, ctx) {
     const css = `
-      .settings-page #settings-groups { column-count: 2; column-gap: 14px; }
-      .settings-page .group { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 10px 12px; margin-bottom: 10px; break-inside: avoid; display: inline-block; width: 100%; }
-      .settings-page .group h3 { margin: 0 0 6px; font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+      .settings-page #settings-groups { display: flex; flex-direction: column; gap: 10px; }
+      .settings-page .group { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+      .settings-page .group-toggle {
+        display: flex; align-items: center; justify-content: space-between; width: 100%;
+        background: none; border: none; cursor: pointer; padding: 10px 12px; text-align: left;
+      }
+      .settings-page .group-toggle h3 { margin: 0; font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+      .settings-page .group-toggle-caret { color: var(--muted); font-size: 11px; transition: transform .15s ease; }
+      .settings-page .group.open .group-toggle-caret { transform: rotate(90deg); }
+      .settings-page .group-body { display: none; padding: 0 12px 10px; }
+      .settings-page .group.open .group-body { display: block; }
       .settings-page .row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 10px; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 12.5px; }
       .settings-page .row:last-child { border-bottom: none; }
       .settings-page .row-label { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
@@ -439,9 +447,6 @@ export default {
       .settings-page input[type="number"], .settings-page input[type="text"] { background: var(--panel-2); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 3px 6px; width: 110px; font-size: 12px; }
       .settings-page .save-bar { position: sticky; bottom: 0; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
       .settings-page .readonly-value { color: var(--muted); font-size: 11px; font-family: "Consolas", "SF Mono", monospace; max-width: 160px; overflow-x: auto; white-space: nowrap; }
-      @media (max-width: 900px) {
-        .settings-page #settings-groups { column-count: 1; }
-      }
 
       .settings-page .templates-card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px 14px; margin-bottom: 10px; }
       .settings-page .templates-card h3 { margin: 0 0 4px; font-size: 13px; }
@@ -728,27 +733,38 @@ export default {
       const orderedGroups = GROUP_ORDER.filter(g => groups[g]).map(g => [g, groups[g]]);
 
       body.innerHTML = `<div id="settings-groups">` + orderedGroups.map(([g, entries]) => `
-        <div class="group">
-          <h3>${groupLabels()[g] || g}</h3>
-          ${entries.map(([key, value]) => {
-            const meta = currentLabels()[key];
-            const label = meta ? meta.label : humanizeKey(key);
-            const desc = meta && meta.desc ? `<span class="row-desc">${escapeHtml(meta.desc)}</span>` : '';
-            return `
-            <div class="row">
-              <div class="row-label">
-                <span class="row-label-text">${escapeHtml(label)}</span>
-                ${desc}
-                <span class="row-key">${key}</span>
-              </div>
-              <div class="row-input">${renderField(key, value)}</div>
-            </div>`;
-          }).join('')}
+        <div class="group" data-group="${g}">
+          <button type="button" class="group-toggle">
+            <h3>${groupLabels()[g] || g}</h3>
+            <span class="group-toggle-caret">▶</span>
+          </button>
+          <div class="group-body">
+            ${entries.map(([key, value]) => {
+              const meta = currentLabels()[key];
+              const label = meta ? meta.label : humanizeKey(key);
+              const desc = meta && meta.desc ? `<span class="row-desc">${escapeHtml(meta.desc)}</span>` : '';
+              return `
+              <div class="row">
+                <div class="row-label">
+                  <span class="row-label-text">${escapeHtml(label)}</span>
+                  ${desc}
+                  <span class="row-key">${key}</span>
+                </div>
+                <div class="row-input">${renderField(key, value)}</div>
+              </div>`;
+            }).join('')}
+          </div>
         </div>`).join('') + `</div>
         <div class="save-bar">
           <span id="settings-status" class="muted"></span>
           <button class="btn btn-primary" id="settings-save" style="width:auto;padding:8px 20px;">${t('settings.saveBtn')}</button>
         </div>`;
+
+      body.querySelectorAll('.group-toggle').forEach(toggle => {
+        toggle.addEventListener('click', () => {
+          toggle.closest('.group').classList.toggle('open');
+        });
+      });
 
       body.querySelectorAll('input[data-key]').forEach(input => {
         input.addEventListener('change', () => {
