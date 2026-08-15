@@ -40,22 +40,32 @@ export default {
 
     ctx.injectStyleOnce('randomizer-page', `
       .randomizer-page .page-hint { color: var(--muted); font-size: 12.5px; margin: -6px 0 14px; }
-      .randomizer-settings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
-      .randomizer-settings-grid label { display: flex; flex-direction: column; gap: 4px; font-size: 10.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+      .randomizer-settings-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px 16px; align-items: start;
+      }
+      .randomizer-settings-grid label {
+        display: flex; flex-direction: column; gap: 4px; font-size: 10.5px; font-weight: 700; color: var(--muted);
+        text-transform: uppercase; letter-spacing: 0.04em; min-height: 32px; justify-content: flex-end;
+      }
       .randomizer-settings-grid input, .randomizer-settings-grid select {
         background: var(--input-bg); border: 1px solid var(--border); color: var(--text);
         border-radius: 8px; padding: 7px 10px; font-size: 13px; font-weight: 400; text-transform: none; letter-spacing: normal;
+        width: 100%; box-sizing: border-box;
       }
       .randomizer-settings-grid select option, .randomizer-row-controls select option {
         background: var(--panel-2); color: var(--text);
       }
-      .randomizer-settings-footer { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+      .randomizer-settings-footer { display: flex; align-items: center; gap: 10px; margin-top: 16px; }
       .randomizer-settings-footer .btn { width: auto; padding: 8px 18px; }
-      .randomizer-row {
-        display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 0; border-bottom: 1px solid var(--border);
+
+      #randomizer-accounts-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+      @media (max-width: 900px) {
+        #randomizer-accounts-list { grid-template-columns: 1fr; }
       }
-      .randomizer-row:last-child { border-bottom: none; }
-      .randomizer-row-info { flex: 1; min-width: 180px; }
+      .randomizer-row {
+        display: flex; flex-direction: column; gap: 10px; padding: 14px;
+        background: var(--panel-2); border: 1px solid var(--border); border-radius: var(--radius-lg);
+      }
       .randomizer-row-name { font-weight: 600; font-size: 13.5px; }
       .randomizer-row-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
       .randomizer-row-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -67,7 +77,7 @@ export default {
         width: 48px; background: var(--input-bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 5px 6px; font-size: 12.5px;
       }
       .randomizer-willkur-btn {
-        background: var(--panel-2); border: 1px solid var(--border); color: var(--text); border-radius: 8px;
+        background: var(--panel); border: 1px solid var(--border); color: var(--text); border-radius: 8px;
         cursor: pointer; padding: 6px 12px; font-size: 12.5px; font-weight: 600;
       }
       .randomizer-willkur-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
@@ -80,12 +90,12 @@ export default {
       .randomizer-manual-fields input:disabled { cursor: not-allowed; }
       .randomizer-plan-btn { background: none; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); cursor: pointer; padding: 6px 10px; font-size: 12px; }
       .randomizer-plan-btn:hover { color: var(--text); }
-      .randomizer-plan-body { flex-basis: 100%; font-size: 12px; color: var(--text); background: var(--panel-2); border-radius: 8px; padding: 10px 12px; margin-top: 4px; }
+      .randomizer-plan-body { font-size: 12px; color: var(--text); background: var(--panel); border-radius: 8px; padding: 10px 12px; }
       .randomizer-plan-body .muted { color: var(--muted); }
       .randomizer-plan-node { font-weight: 600; margin-bottom: 6px; }
       .randomizer-plan-list { list-style: none; margin: 4px 0 0; padding: 0; }
       .randomizer-plan-list li { padding: 2px 0; }
-      .empty-hint { color: var(--muted); font-size: 13px; padding: 20px 0; text-align: center; }
+      .randomizer-page .empty-hint { color: var(--muted); font-size: 13px; padding: 20px 0; text-align: center; grid-column: 1 / -1; }
     `);
 
     let settings = null;

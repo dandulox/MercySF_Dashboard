@@ -5,6 +5,16 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.5.1] - 2026-08-16
+
+### Fixed
+- Randomizer: global-limits fields no longer misalign when a label wraps
+  to two lines (e.g. "Latest start (hard cutoff)") — labels now reserve
+  a fixed height so every input in a row lines up. Account rows now lay
+  out two per row (cards) instead of one cramped full-width line each.
+- Scoped `.empty-hint` under `.randomizer-page` — it was unscoped and
+  could have leaked into other pages using the same class name.
+
 ## [2.5.0] - 2026-08-16
 
 ### Added
