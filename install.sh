@@ -76,9 +76,14 @@ mkdir -p "$INSTALL_DIR"
 
 if [[ -d "$DASHBOARD_DIR/.git" ]]; then
   log "Bestehende Installation gefunden — aktualisiere Code (Branch: $BRANCH)"
+  # --depth 1 clones sind implizit --single-branch: der ursprüngliche Fetch-Refspec kennt nur den
+  # Branch, mit dem installiert wurde. "fetch origin $BRANCH" holt die Commits zwar in FETCH_HEAD,
+  # legt aber keinen origin/$BRANCH-Tracking-Branch an — ein reines "checkout $BRANCH" bzw.
+  # "reset --hard origin/$BRANCH" schlägt daher beim Wechsel auf einen anderen Branch fehl.
+  # "checkout -B $BRANCH FETCH_HEAD" erstellt/setzt den lokalen Branch direkt aus FETCH_HEAD,
+  # unabhängig davon, ob ein Remote-Tracking-Branch existiert.
   git -C "$DASHBOARD_DIR" fetch --depth 1 origin "$BRANCH"
-  git -C "$DASHBOARD_DIR" checkout "$BRANCH"
-  git -C "$DASHBOARD_DIR" reset --hard "origin/$BRANCH"
+  git -C "$DASHBOARD_DIR" checkout -B "$BRANCH" FETCH_HEAD
 else
   log "Repository klonen nach $DASHBOARD_DIR (Branch: $BRANCH)"
   git clone --depth 1 --branch "$BRANCH" "$REPO_URL" "$DASHBOARD_DIR"
