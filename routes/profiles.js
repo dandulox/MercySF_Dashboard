@@ -11,6 +11,10 @@ const cli = require('../lib/cliExec');
 const nodeRegistry = require('../lib/nodeRegistry');
 const nodeClient = require('../lib/nodeClient');
 const { detectAndStoreCharacterClass } = require('../lib/characterClassDetector');
+const vpnTargets = require('../lib/vpnTargets');
+const vpnManager = require('../lib/vpnManager');
+const vpnProfiles = require('../lib/vpnProfiles');
+const vpnConfigStore = require('../lib/vpnConfigStore');
 
 const router = express.Router();
 
@@ -211,6 +215,38 @@ router.delete('/:id', async (req, res) => {
   res.json({ ok: true });
 });
 
+// Wird nur für lokal laufende Profile geprüft — Node-Profile werden vom jeweiligen Node-Agent
+// selbst gegated (siehe node-agent/server.js), damit ein Node auch ohne Dashboard-Roundtrip
+// autonom bleibt.
+async function enforceLocalVpnGate() {
+  const target = vpnTargets.get('local');
+  if (!target || target.gate === 'off') return;
+  if (!target.vpnProfileId) {
+    throw Object.assign(new Error('VPN-Gate ist aktiv, aber kein VPN-Profil für "Lokal" zugewiesen'), { status: 409 });
+  }
+  const status = await vpnManager.status();
+  if (status.connected) return;
+  if (target.gate === 'block') {
+    throw Object.assign(new Error('VPN nicht verbunden — Start blockiert (siehe System-Einstellungen)'), { status: 409 });
+  }
+  // gate === 'auto-connect'
+  const profile = vpnProfiles.list().find(p => p.id === target.vpnProfileId);
+  if (!profile) {
+    throw Object.assign(new Error('Zugewiesenes VPN-Profil existiert nicht mehr'), { status: 409 });
+  }
+  const configContent = vpnConfigStore.getConfig(profile.id);
+  await vpnManager.connect(profile.interfaceName, configContent);
+  for (let i = 0; i < 10; i++) {
+    const s = await vpnManager.status();
+    if (s.connected) {
+      vpnTargets.setLastStatus('local', s);
+      return;
+    }
+    await new Promise(r => setTimeout(r, 1000));
+  }
+  throw Object.assign(new Error('VPN-Auto-Verbindung fehlgeschlagen (kein Handshake nach 10s)'), { status: 502 });
+}
+
 router.post('/:id/start', async (req, res) => {
   const profile = registry.list().find(p => p.id === req.params.id);
   if (!profile) return res.status(404).json({ error: 'Profil nicht gefunden' });
@@ -221,6 +257,7 @@ router.post('/:id/start', async (req, res) => {
       registry.setAutoStart(profile.id, true);
       return res.json(status);
     }
+    await enforceLocalVpnGate();
     ptyManager.ensurePty(profile.id);
     registry.setAutoStart(profile.id, true);
     res.json(ptyManager.getStatus(profile.id));
