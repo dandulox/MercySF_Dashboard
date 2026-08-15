@@ -278,7 +278,12 @@
       <div class="feature-card">
         <span class="icon">🖧</span>
         <h3>Nodes (multi-server)</h3>
-        <p>Accounts don't have to run on the server the dashboard itself is installed on. Additional servers get a lightweight node agent, connected via IP + a time-limited pairing code — control, console, stats, and CLI/node-agent updates all run transparently through the respective node.</p>
+        <p>Accounts don't have to run on the server the dashboard itself is installed on. Additional servers get a lightweight node agent, connected via IP + a time-limited pairing code — control, console, stats, and CLI/node-agent updates all run transparently through the respective node. Ping with response time, a load indicator (CPU/RAM/uptime), and a quick control for stuck bots/servers (restart bots, restart the service, or a full reboot — with automatic restart afterward). The dashboard itself shows up as a node in the list too. Managed under System Settings → Node.</p>
+      </div>
+      <div class="feature-card">
+        <span class="icon">🔒</span>
+        <h3>VPN (ProtonVPN/WireGuard)</h3>
+        <p>Manage WireGuard profiles centrally via upload and assign them per target — local or an individual node. Per-target gate mode: off, block (bot start only with an active VPN connection), or auto-connect (connects automatically before the bot starts) — checked both in the dashboard and directly in the node agent. A "Check public IP" button and a VPN badge on node cards confirm the tunnel status at a glance.</p>
       </div>
       <div class="feature-card">
         <span class="icon">▦</span>
@@ -357,7 +362,7 @@
     <ul class="install-steps">
       <li>
         <h4>Dependencies & services</h4>
-        <p>The script installs Node.js, Rust/Cargo for the sf-api bridge, build tools for native modules, and the Mercy SF CLI, sets up a self-signed TLS certificate, and starts the dashboard and sf-api bridge as systemd services.</p>
+        <p>The script installs Node.js, Rust/Cargo for the sf-api bridge, build tools for native modules, <code>wireguard-tools</code>/<code>resolvconf</code> for VPN support, and the Mercy SF CLI, sets up a self-signed TLS certificate, and starts the dashboard and sf-api bridge as systemd services.</p>
       </li>
       <li>
         <h4>First visit</h4>
@@ -369,7 +374,7 @@
       </li>
       <li>
         <h4>Multiple servers (nodes)</h4>
-        <p>Each additional server only needs a lightweight node agent instead of the full dashboard — installable with the same script and the <code>--node</code> flag. At the end it shows the IP and a pairing code valid for 15&nbsp;minutes, which you enter in the dashboard under "Nodes".</p>
+        <p>Each additional server only needs a lightweight node agent instead of the full dashboard — installable with the same script and the <code>--node</code> flag. At the end it shows the IP and a pairing code valid for 15&nbsp;minutes, which you enter in the dashboard under "System Settings → Node".</p>
         <pre style="margin-top:8px;"><code>curl -fsSL https://raw.githubusercontent.com/dandulox/MercySF_Dashboard/main/install.sh | bash -s -- --node</code></pre>
       </li>
     </ul>
@@ -394,6 +399,9 @@
       <li><span class="dot"></span><span class="text">No rate limiting on login/password-reset attempts — mainly relevant if the dashboard is ever exposed beyond its own LAN.</span></li>
       <li><span class="dot"></span><span class="text">The activity log on the overview page stays empty for node accounts, since their PTY output doesn't flow through the dashboard's local log buffer — analytics, earnings, and node status do work for node accounts, though.</span></li>
       <li><span class="dot"></span><span class="text">A node agent only ever accepts exactly one paired dashboard at a time — re-pairing silently disconnects a previously connected dashboard.</span></li>
+      <li><span class="dot"></span><span class="text">"Reboot server" in the Node tab runs a real <code>systemctl reboot</code> (including for the dashboard server itself, selected as a local entry) — there's no safeguard beyond the confirmation dialog.</span></li>
+      <li><span class="dot"></span><span class="text">Connecting the VPN for the "local" target routes that server's entire traffic through the tunnel, not just the bot's — a misconfigured or unreachable VPN endpoint can cut off the dashboard itself.</span></li>
+      <li><span class="dot"></span><span class="text">A node agent only ever connects one VPN profile at a time — assigning a second profile to the same node's target just swaps which one is active.</span></li>
     </ul>
   </div>
 </section>
@@ -437,6 +445,7 @@
       <span class="stack-pill">Rust + axum + sf-api</span>
       <span class="stack-pill">AES-256-GCM</span>
       <span class="stack-pill">node-agent (multi-server)</span>
+      <span class="stack-pill">WireGuard (VPN)</span>
     </div>
   </div>
 </section>

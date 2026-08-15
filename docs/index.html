@@ -278,7 +278,12 @@
       <div class="feature-card">
         <span class="icon">🖧</span>
         <h3>Nodes (Multi-Server)</h3>
-        <p>Accounts müssen nicht auf dem Server laufen, auf dem das Dashboard selbst installiert ist. Weitere Server bekommen einen schlanken Node-Agent, per IP + zeitlich begrenztem Pairing-Code verbunden — Steuerung, Konsole, Statistiken sowie CLI-/Node-Agent-Updates laufen transparent über den jeweiligen Node. Dazu Ping mit Antwortzeit, eine Auslastungsanzeige (CPU/RAM/Uptime) und eine Schnellsteuerung für hängende Bots/Server (Bots neu starten, Dienst neu starten, oder kompletter Reboot — mit automatischem Wiederanlauf). Das Dashboard selbst erscheint dabei ebenfalls als Node in der Liste.</p>
+        <p>Accounts müssen nicht auf dem Server laufen, auf dem das Dashboard selbst installiert ist. Weitere Server bekommen einen schlanken Node-Agent, per IP + zeitlich begrenztem Pairing-Code verbunden — Steuerung, Konsole, Statistiken sowie CLI-/Node-Agent-Updates laufen transparent über den jeweiligen Node. Dazu Ping mit Antwortzeit, eine Auslastungsanzeige (CPU/RAM/Uptime) und eine Schnellsteuerung für hängende Bots/Server (Bots neu starten, Dienst neu starten, oder kompletter Reboot — mit automatischem Wiederanlauf). Das Dashboard selbst erscheint dabei ebenfalls als Node in der Liste. Verwaltet unter System-Einstellungen → Node.</p>
+      </div>
+      <div class="feature-card">
+        <span class="icon">🔒</span>
+        <h3>VPN (ProtonVPN/WireGuard)</h3>
+        <p>WireGuard-Profile per Upload zentral verwalten und pro Ziel (lokal oder ein Node) zuweisen. Gate-Modus pro Ziel: Aus, Blockieren (Bot-Start nur bei aktiver VPN-Verbindung) oder Auto-Connect (verbindet vor dem Bot-Start automatisch) — geprüft im Dashboard und direkt im Node-Agent. Ein „Öffentliche IP prüfen“-Button und ein VPN-Badge auf den Node-Karten bestätigen den Tunnel-Status auf einen Blick.</p>
       </div>
       <div class="feature-card">
         <span class="icon">▦</span>
@@ -357,7 +362,7 @@
     <ul class="install-steps">
       <li>
         <h4>Abhängigkeiten & Dienste</h4>
-        <p>Das Skript installiert Node.js, Rust/Cargo für die sf-api-Bridge, Build-Tools für native Module sowie die Mercy-SF-CLI, richtet ein selbstsigniertes TLS-Zertifikat ein und startet Dashboard sowie sf-api-Bridge als systemd-Dienste.</p>
+        <p>Das Skript installiert Node.js, Rust/Cargo für die sf-api-Bridge, Build-Tools für native Module, <code>wireguard-tools</code>/<code>resolvconf</code> für VPN-Unterstützung sowie die Mercy-SF-CLI, richtet ein selbstsigniertes TLS-Zertifikat ein und startet Dashboard sowie sf-api-Bridge als systemd-Dienste.</p>
       </li>
       <li>
         <h4>Erster Aufruf</h4>
@@ -369,7 +374,7 @@
       </li>
       <li>
         <h4>Mehrere Server (Nodes)</h4>
-        <p>Auf jedem weiteren Server reicht ein schlanker Node-Agent statt des vollen Dashboards — installierbar mit demselben Skript und dem Flag <code>--node</code>. Am Ende zeigt es IP und einen 15&nbsp;Minuten gültigen Pairing-Code an, den man im Dashboard unter „Nodes“ eingibt.</p>
+        <p>Auf jedem weiteren Server reicht ein schlanker Node-Agent statt des vollen Dashboards — installierbar mit demselben Skript und dem Flag <code>--node</code>. Am Ende zeigt es IP und einen 15&nbsp;Minuten gültigen Pairing-Code an, den man im Dashboard unter „System-Einstellungen → Node“ eingibt.</p>
         <pre style="margin-top:8px;"><code>curl -fsSL https://raw.githubusercontent.com/dandulox/MercySF_Dashboard/main/install.sh | bash -s -- --node</code></pre>
       </li>
     </ul>
@@ -394,7 +399,9 @@
       <li><span class="dot"></span><span class="text">Kein Rate-Limiting auf Login-/Passwort-Reset-Versuche — relevant vor allem, falls das Dashboard über das eigene LAN hinaus erreichbar gemacht wird.</span></li>
       <li><span class="dot"></span><span class="text">Das Activity-Log auf der Übersichtsseite bleibt für Node-Accounts leer, da deren PTY-Output nicht durch den lokalen Log-Puffer des Dashboards läuft — Analysen, Erträge und der Node-Status funktionieren dagegen auch für Node-Accounts.</span></li>
       <li><span class="dot"></span><span class="text">Ein Node-Agent akzeptiert immer nur genau ein gepairtes Dashboard gleichzeitig — erneutes Pairen trennt ein zuvor verbundenes Dashboard kommentarlos.</span></li>
-      <li><span class="dot"></span><span class="text">"Server neu starten" auf der Nodes-Seite führt einen echten <code>systemctl reboot</code> aus (auch für den Dashboard-Server selbst als lokaler Eintrag) — außer dem Bestätigungsdialog gibt es keine weitere Sicherung.</span></li>
+      <li><span class="dot"></span><span class="text">"Server neu starten" im Node-Tab führt einen echten <code>systemctl reboot</code> aus (auch für den Dashboard-Server selbst als lokaler Eintrag) — außer dem Bestätigungsdialog gibt es keine weitere Sicherung.</span></li>
+      <li><span class="dot"></span><span class="text">Das Verbinden der VPN für das Ziel "lokal" leitet den kompletten Traffic dieses Servers durch den Tunnel, nicht nur den des Bots — ein falsch konfigurierter oder nicht erreichbarer VPN-Endpunkt kann das Dashboard selbst kappen.</span></li>
+      <li><span class="dot"></span><span class="text">Ein Node-Agent verbindet immer nur ein VPN-Profil gleichzeitig — wird demselben Node-Ziel ein zweites Profil zugewiesen, wechselt nur, welches davon aktiv ist.</span></li>
     </ul>
   </div>
 </section>
@@ -438,6 +445,7 @@
       <span class="stack-pill">Rust + axum + sf-api</span>
       <span class="stack-pill">AES-256-GCM</span>
       <span class="stack-pill">node-agent (Multi-Server)</span>
+      <span class="stack-pill">WireGuard (VPN)</span>
     </div>
   </div>
 </section>
