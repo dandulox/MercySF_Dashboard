@@ -1,10 +1,10 @@
 const express = require('express');
-const { isEnabled, setEnabled } = require('../lib/telemetry');
+const { isEnabled, setEnabled, getLastPing } = require('../lib/telemetry');
 
 const router = express.Router();
 
 router.get('/', (req, res) => {
-  res.json({ enabled: isEnabled() });
+  res.json({ enabled: isEnabled(), lastPing: getLastPing() });
 });
 
 router.post('/', express.json(), (req, res) => {

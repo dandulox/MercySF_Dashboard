@@ -5,3 +5,5 @@ node-agent/data/*
 !node-agent/data/.gitkeep
 public/vendor/
 *.log
+
+docs/superpowers/

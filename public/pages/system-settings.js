@@ -113,6 +113,10 @@ export default {
             <span id="telemetry-status"></span>
           </div>
         </div>
+        <div class="panel-settings-card">
+          <h3>${t('systemSettings.statsLastPingTitle')}</h3>
+          <div id="telemetry-last-ping">${t('common.loading')}</div>
+        </div>
       </div>
     `;
     container.appendChild(wrap);
@@ -162,16 +166,52 @@ export default {
     });
 
     // --- Statistik ---
+    function formatUptime(sec) {
+      if (sec < 60) return `${sec}s`;
+      const h = Math.floor(sec / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      return h ? `${h}h ${m}m` : `${m}m`;
+    }
+
+    function renderLastPing(lastPing) {
+      const el = wrap.querySelector('#telemetry-last-ping');
+      if (!lastPing) {
+        el.textContent = t('systemSettings.statsLastPingNone');
+        return;
+      }
+      const p = lastPing.payload;
+      const rows = [
+        [t('systemSettings.statsLastPingSentAt'), new Date(lastPing.sentAt).toLocaleString()],
+        [t('common.status'), lastPing.ok
+          ? t('systemSettings.statsLastPingStatusOk')
+          : t('systemSettings.statsLastPingStatusError', { message: lastPing.error || '?' })],
+        [t('systemSettings.statsLastPingInstanceId'), p.instanceId],
+        [t('systemSettings.statsLastPingUptime'), formatUptime(p.uptimeSec)],
+        [t('systemSettings.statsLastPingConnectedNodes'), String(p.connectedNodes)],
+        [t('systemSettings.statsLastPingDashboardVersion'), p.dashboardVersion || t('systemSettings.statsLastPingVersionsOmitted')],
+        [t('systemSettings.statsLastPingNodeVersions'), p.nodeVersions ? (p.nodeVersions.join(', ') || '—') : t('systemSettings.statsLastPingVersionsOmitted')],
+      ];
+      el.innerHTML = rows.map(([label, value]) => `
+        <div class="panel-settings-row" style="justify-content:space-between;">
+          <span style="color:var(--muted);">${escapeHtml(label)}</span>
+          <span>${escapeHtml(value)}</span>
+        </div>
+      `).join('');
+    }
+
     async function loadTelemetrySettings() {
       const checkbox = wrap.querySelector('#telemetry-enabled-checkbox');
       const status = wrap.querySelector('#telemetry-status');
       try {
         const data = await ctx.fetchJSON('/api/telemetry-settings');
         checkbox.checked = data.enabled;
+        renderLastPing(data.lastPing);
       } catch (err) {
         status.textContent = t('analytics.loadError', { message: err.message });
       }
     }
+
+    const telemetryRefreshTimer = setInterval(loadTelemetrySettings, 30000);
 
     wrap.querySelector('#telemetry-enabled-checkbox').addEventListener('change', async (e) => {
       const status = wrap.querySelector('#telemetry-status');
@@ -386,6 +426,7 @@ export default {
     loadTelemetrySettings();
 
     return () => {
+      clearInterval(telemetryRefreshTimer);
       if (typeof nodeUnmount === 'function') nodeUnmount();
     };
   },
