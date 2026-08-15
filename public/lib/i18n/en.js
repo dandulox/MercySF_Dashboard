@@ -92,6 +92,8 @@ export default {
   'router.botRunning': 'RUNNING',
   'router.botStopped': 'STOPPED',
   'router.botActiveStatus': 'Bot process active',
+  'router.randomizerActive': 'Randomizer active {{enabled}}/{{total}}',
+  'router.randomizerQueue': 'Randomizer queue {{remaining}}/{{total}}',
   'router.botInactiveStatus': 'No bot process detected',
   'router.noDataDir': 'No account data directory found — not logged in yet',
   'router.installing': 'Installing…',

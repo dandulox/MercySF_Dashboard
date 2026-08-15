@@ -12,6 +12,10 @@ router.get('/settings', (req, res) => {
   res.json(randomizer.getSettings());
 });
 
+router.get('/status', (req, res) => {
+  res.json(randomizer.getStatusSummary());
+});
+
 router.post('/settings', express.json(), (req, res) => {
   const {
     minHours, maxHours, dayStart, dayEnd, minBlockMinutes, blockGapMinutes,

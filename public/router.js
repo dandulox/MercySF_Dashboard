@@ -146,6 +146,27 @@ async function loadStatus() {
   renderStatus();
 }
 
+async function loadRandomizerStatus() {
+  const activeChip = document.getElementById('randomizer-active-chip');
+  const queueChip = document.getElementById('randomizer-queue-chip');
+  if (!activeChip || !queueChip) return;
+  try {
+    const s = await fetchJSON('/api/randomizer/status');
+    if (s.enabledCount > 0) {
+      activeChip.textContent = t('router.randomizerActive', { enabled: s.enabledCount, total: s.totalAccounts });
+      activeChip.hidden = false;
+      queueChip.textContent = t('router.randomizerQueue', { remaining: s.remainingToday, total: s.scheduledToday });
+      queueChip.hidden = false;
+    } else {
+      activeChip.hidden = true;
+      queueChip.hidden = true;
+    }
+  } catch (e) {
+    activeChip.hidden = true;
+    queueChip.hidden = true;
+  }
+}
+
 let lastCliStatus = null;
 
 function renderCliUpdateStatus() {
@@ -643,11 +664,13 @@ initAccessMenu();
 initMobileNav();
 renderNav();
 loadStatus();
+loadRandomizerStatus();
 loadCliUpdateStatus();
 loadDashboardUpdateStatus();
 loadAccounts().then(renderRoute);
 setInterval(() => {
   loadStatus();
+  loadRandomizerStatus();
   loadCliUpdateStatus();
   loadDashboardUpdateStatus();
   loadAccounts();

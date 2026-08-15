@@ -5,6 +5,17 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.6.0] - 2026-08-16
+
+### Added
+- Topbar: two new status chips next to "Bot process active", shown only
+  when at least one account has the randomizer enabled — "Randomizer
+  active X/Y" (X = accounts with the randomizer on, Y = total accounts)
+  and "Randomizer queue X/Y" (X = accounts in today's plan that haven't
+  finished their last scheduled block/city-guard pulse yet, Y = total
+  accounts scheduled today). New `GET /api/randomizer/status` endpoint
+  backs both.
+
 ## [2.5.3] - 2026-08-16
 
 ### Fixed
