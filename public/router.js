@@ -46,6 +46,7 @@ const PAGES = [
   { id: 'overview', icon: '▦', labelKey: 'nav.overview' },
   { id: 'accounts', icon: '🗂', labelKey: 'nav.accounts' },
   { id: 'analytics-compare', icon: '🧬', labelKey: 'nav.analyticsCompare' },
+  { id: 'randomizer', icon: '🎲', labelKey: 'nav.randomizer' },
   { id: 'marketplace', icon: '🌐', labelKey: 'nav.marketplace' },
 ];
 

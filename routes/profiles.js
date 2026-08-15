@@ -247,38 +247,48 @@ async function enforceLocalVpnGate() {
   throw Object.assign(new Error('VPN-Auto-Verbindung fehlgeschlagen (kein Handshake nach 10s)'), { status: 502 });
 }
 
-router.post('/:id/start', async (req, res) => {
-  const profile = registry.list().find(p => p.id === req.params.id);
-  if (!profile) return res.status(404).json({ error: 'Profil nicht gefunden' });
-  try {
-    const node = remoteNodeFor(profile);
-    if (node) {
-      const status = await nodeClient.call(node, `/profiles/${encodeURIComponent(profile.id)}/start`, { method: 'POST' });
-      registry.setAutoStart(profile.id, true);
-      return res.json(status);
-    }
-    await enforceLocalVpnGate();
-    ptyManager.ensurePty(profile.id);
+// Exportiert für lib/randomizer.js (Tick-Engine) — gleiche Node-Delegation/VPN-Gate/
+// autoStart-Logik wie die HTTP-Routen unten, nur ohne den req/res-Umweg.
+async function startProfileById(id) {
+  const profile = registry.list().find(p => p.id === id);
+  if (!profile) throw Object.assign(new Error('Profil nicht gefunden'), { status: 404 });
+  const node = remoteNodeFor(profile);
+  if (node) {
+    const status = await nodeClient.call(node, `/profiles/${encodeURIComponent(profile.id)}/start`, { method: 'POST' });
     registry.setAutoStart(profile.id, true);
-    res.json(ptyManager.getStatus(profile.id));
+    return status;
+  }
+  await enforceLocalVpnGate();
+  ptyManager.ensurePty(profile.id);
+  registry.setAutoStart(profile.id, true);
+  return ptyManager.getStatus(profile.id);
+}
+
+async function stopProfileById(id) {
+  const profile = registry.list().find(p => p.id === id);
+  if (!profile) throw Object.assign(new Error('Profil nicht gefunden'), { status: 404 });
+  const node = remoteNodeFor(profile);
+  if (node) {
+    const status = await nodeClient.call(node, `/profiles/${encodeURIComponent(profile.id)}/stop`, { method: 'POST' });
+    registry.setAutoStart(profile.id, false);
+    return status;
+  }
+  ptyManager.killPty(profile.id);
+  registry.setAutoStart(profile.id, false);
+  return ptyManager.getStatus(profile.id);
+}
+
+router.post('/:id/start', async (req, res) => {
+  try {
+    res.json(await startProfileById(req.params.id));
   } catch (err) {
     res.status(err.status || 502).json({ error: err.message });
   }
 });
 
 router.post('/:id/stop', async (req, res) => {
-  const profile = registry.list().find(p => p.id === req.params.id);
-  if (!profile) return res.status(404).json({ error: 'Profil nicht gefunden' });
   try {
-    const node = remoteNodeFor(profile);
-    if (node) {
-      const status = await nodeClient.call(node, `/profiles/${encodeURIComponent(profile.id)}/stop`, { method: 'POST' });
-      registry.setAutoStart(profile.id, false);
-      return res.json(status);
-    }
-    ptyManager.killPty(profile.id);
-    registry.setAutoStart(profile.id, false);
-    res.json(ptyManager.getStatus(profile.id));
+    res.json(await stopProfileById(req.params.id));
   } catch (err) {
     res.status(err.status || 502).json({ error: err.message });
   }
@@ -391,3 +401,5 @@ router.post('/:id/resume', async (req, res) => {
 });
 
 module.exports = router;
+module.exports.startProfileById = startProfileById;
+module.exports.stopProfileById = stopProfileById;

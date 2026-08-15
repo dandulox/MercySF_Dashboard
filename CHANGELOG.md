@@ -5,6 +5,24 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.4.0] - 2026-08-16
+
+### Added
+- Account-Randomizer: new "Randomizer" nav page that automatically starts/
+  stops each account's bot on a daily-generated schedule instead of
+  requiring manual start/stop. Per account: enable/disable, **Manual**
+  mode (set total hours/day, block count 1-4, city-guard pulse count 1-5 —
+  only the timing is randomized daily) or **Willkür** mode (everything,
+  including hours/blocks/pulses, is re-rolled every day). Accounts never
+  start at the exact same time — a minimum stagger is enforced across all
+  enabled accounts, shifting later start times forward (capped so nothing
+  spills past midnight). City-guard pulses are short login/logout cycles
+  placed in the gaps between bot blocks. Global limits (day window,
+  min/max hours, stagger, block/pulse durations) are editable from the
+  same page. Deterministic per-day scheduling via a seeded PRNG keyed on
+  `profileId + date`, so a dashboard restart mid-day reproduces the same
+  plan instead of re-rolling it.
+
 ## [2.3.0] - 2026-08-16
 
 ### Changed

@@ -1,0 +1,234 @@
+import { t } from '/lib/i18n.js';
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+}
+
+function fmtMinutes(mins) {
+  const m = Math.round(mins);
+  const h = Math.floor(m / 60) % 24;
+  const mm = m % 60;
+  return `${String(h).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+}
+
+export default {
+  id: 'randomizer',
+  label: 'Randomizer',
+  icon: '🎲',
+  mount(container, ctx) {
+    const wrap = document.createElement('div');
+    wrap.className = 'randomizer-page';
+    wrap.innerHTML = `
+      <h1 class="page-title">${t('randomizer.title')}</h1>
+      <p class="page-hint">${t('randomizer.hint')}</p>
+
+      <section class="card" id="randomizer-settings-card">
+        <div class="card-header"><span>${t('randomizer.globalSettingsTitle')}</span></div>
+        <div class="randomizer-settings-grid" id="randomizer-settings-grid"></div>
+        <div class="randomizer-settings-footer">
+          <button type="button" class="btn btn-primary" id="randomizer-settings-save-btn">${t('randomizer.saveSettingsBtn')}</button>
+          <span id="randomizer-settings-status" class="muted"></span>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-header"><span>${t('randomizer.accountsTitle')}</span></div>
+        <div id="randomizer-accounts-list"></div>
+      </section>
+    `;
+    container.appendChild(wrap);
+
+    ctx.injectStyleOnce('randomizer-page', `
+      .randomizer-page .page-hint { color: var(--muted); font-size: 12.5px; margin: -6px 0 14px; }
+      .randomizer-settings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+      .randomizer-settings-grid label { display: flex; flex-direction: column; gap: 4px; font-size: 10.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+      .randomizer-settings-grid input {
+        background: var(--input-bg); border: 1px solid var(--border); color: var(--text);
+        border-radius: 8px; padding: 7px 10px; font-size: 13px; font-weight: 400; text-transform: none; letter-spacing: normal;
+      }
+      .randomizer-settings-footer { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+      .randomizer-settings-footer .btn { width: auto; padding: 8px 18px; }
+      .randomizer-row {
+        display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 0; border-bottom: 1px solid var(--border);
+      }
+      .randomizer-row:last-child { border-bottom: none; }
+      .randomizer-row-info { flex: 1; min-width: 180px; }
+      .randomizer-row-name { font-weight: 600; font-size: 13.5px; }
+      .randomizer-row-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+      .randomizer-row-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+      .randomizer-row-controls select {
+        background: var(--input-bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 6px 10px; font-size: 12.5px;
+      }
+      .randomizer-manual-fields { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+      .randomizer-manual-fields label { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); }
+      .randomizer-manual-fields input {
+        width: 56px; background: var(--input-bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 5px 6px; font-size: 12.5px;
+      }
+      .randomizer-plan-btn { background: none; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); cursor: pointer; padding: 6px 10px; font-size: 12px; }
+      .randomizer-plan-btn:hover { color: var(--text); }
+      .randomizer-plan-body { flex-basis: 100%; font-size: 12px; color: var(--text); background: var(--panel-2); border-radius: 8px; padding: 10px 12px; margin-top: 4px; }
+      .randomizer-plan-body .muted { color: var(--muted); }
+      .randomizer-plan-list { list-style: none; margin: 4px 0 0; padding: 0; }
+      .randomizer-plan-list li { padding: 2px 0; }
+      .empty-hint { color: var(--muted); font-size: 13px; padding: 20px 0; text-align: center; }
+    `);
+
+    const SETTINGS_FIELDS = [
+      ['minHours', 'randomizer.minHours', 'number'],
+      ['maxHours', 'randomizer.maxHours', 'number'],
+      ['dayStart', 'randomizer.dayStart', 'text'],
+      ['dayEnd', 'randomizer.dayEnd', 'text'],
+      ['minStaggerMinutes', 'randomizer.minStagger', 'number'],
+      ['minBlockMinutes', 'randomizer.minBlock', 'number'],
+      ['stadtwacheDurationMin', 'randomizer.stadtwacheDuration', 'number'],
+      ['stadtwacheCutoff', 'randomizer.stadtwacheCutoff', 'text'],
+    ];
+
+    let settings = null;
+
+    async function loadSettings() {
+      settings = await ctx.fetchJSON('/api/randomizer/settings');
+      const grid = wrap.querySelector('#randomizer-settings-grid');
+      grid.innerHTML = SETTINGS_FIELDS.map(([key, labelKey, type]) => `
+        <label>${t(labelKey)}
+          <input type="${type}" data-key="${key}" value="${escapeHtml(String(settings[key]))}" />
+        </label>
+      `).join('');
+    }
+
+    wrap.querySelector('#randomizer-settings-save-btn').addEventListener('click', async () => {
+      const status = wrap.querySelector('#randomizer-settings-status');
+      const patch = {};
+      wrap.querySelectorAll('#randomizer-settings-grid input').forEach(input => {
+        const key = input.dataset.key;
+        patch[key] = input.type === 'number' ? Number(input.value) : input.value;
+      });
+      status.textContent = t('randomizer.saving');
+      try {
+        settings = await ctx.fetchJSON('/api/randomizer/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(patch),
+        });
+        status.textContent = t('randomizer.settingsSaved');
+      } catch (err) {
+        status.textContent = t('analytics.loadError', { message: err.message });
+      }
+    });
+
+    function modeOptionsHtml(current) {
+      return `
+        <option value="manual" ${current === 'manual' ? 'selected' : ''}>${t('randomizer.modeManual')}</option>
+        <option value="willkuer" ${current === 'willkuer' ? 'selected' : ''}>${t('randomizer.modeWillkur')}</option>
+      `;
+    }
+
+    function rowHtml(profile, config) {
+      const meta = profile.server && profile.characterName
+        ? `${escapeHtml(profile.characterName)} @ ${escapeHtml(profile.server)}`
+        : escapeHtml(profile.username);
+      return `
+        <div class="randomizer-row" data-id="${profile.id}">
+          <div class="randomizer-row-info">
+            <div class="randomizer-row-name char-name">${escapeHtml(profile.nickname)}</div>
+            <div class="randomizer-row-meta char-name">${meta}</div>
+          </div>
+          <div class="randomizer-row-controls">
+            <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);">
+              <input type="checkbox" data-role="enabled" ${config.enabled ? 'checked' : ''} /> ${t('randomizer.enabledLabel')}
+            </label>
+            <select data-role="mode">${modeOptionsHtml(config.mode)}</select>
+            <div class="randomizer-manual-fields" data-role="manual-fields" ${config.mode === 'willkuer' ? 'hidden' : ''}>
+              <label>${t('randomizer.hoursLabel')} <input type="number" min="1" max="24" step="0.5" data-role="hoursPerDay" value="${config.hoursPerDay}" /></label>
+              <label>${t('randomizer.blocksLabel')} <input type="number" min="1" max="4" data-role="blockCount" value="${config.blockCount}" /></label>
+              <label>${t('randomizer.stadtwacheLabel')} <input type="number" min="1" max="5" data-role="stadtwacheCount" value="${config.stadtwacheCount}" /></label>
+            </div>
+            <button type="button" class="randomizer-plan-btn" data-role="plan-toggle">${t('randomizer.planBtn')}</button>
+          </div>
+          <div class="randomizer-plan-body" data-role="plan-body" hidden></div>
+        </div>
+      `;
+    }
+
+    function planBodyHtml(plan) {
+      if (!plan) return `<span class="muted">${t('randomizer.planEmpty')}</span>`;
+      const blockItems = plan.blocks.map(b => `<li>▶ ${fmtMinutes(b.start)} – ${fmtMinutes(b.end)}</li>`).join('');
+      const stadtwacheItems = plan.stadtwache.map(s => `<li>🛡 ${fmtMinutes(s.at)}</li>`).join('');
+      return `
+        <div><strong>${t('randomizer.planBlock')}</strong></div>
+        <ul class="randomizer-plan-list">${blockItems || `<li class="muted">—</li>`}</ul>
+        <div style="margin-top:8px;"><strong>${t('randomizer.planStadtwache')}</strong></div>
+        <ul class="randomizer-plan-list">${stadtwacheItems || `<li class="muted">—</li>`}</ul>
+      `;
+    }
+
+    async function loadAccounts() {
+      const list = wrap.querySelector('#randomizer-accounts-list');
+      let profiles, configs;
+      try {
+        [profiles, configs] = await Promise.all([
+          ctx.fetchJSON('/api/profiles'),
+          ctx.fetchJSON('/api/randomizer/configs'),
+        ]);
+      } catch (err) {
+        list.innerHTML = `<p class="empty-hint">${t('analytics.loadError', { message: err.message })}</p>`;
+        return;
+      }
+      if (!profiles.length) {
+        list.innerHTML = `<p class="empty-hint">${t('randomizer.noAccountsHint')}</p>`;
+        return;
+      }
+
+      const defaultConfig = { enabled: false, mode: 'manual', hoursPerDay: 6, blockCount: 2, stadtwacheCount: 2 };
+      list.innerHTML = profiles.map(p => rowHtml(p, { ...defaultConfig, ...(configs[p.id] || {}) })).join('');
+
+      list.querySelectorAll('.randomizer-row').forEach(row => {
+        const id = row.dataset.id;
+        const modeSelect = row.querySelector('[data-role="mode"]');
+        const manualFields = row.querySelector('[data-role="manual-fields"]');
+        const enabledCheckbox = row.querySelector('[data-role="enabled"]');
+        const planToggleBtn = row.querySelector('[data-role="plan-toggle"]');
+        const planBody = row.querySelector('[data-role="plan-body"]');
+
+        async function saveConfig(patch) {
+          try {
+            await ctx.fetchJSON(`/api/randomizer/configs/${encodeURIComponent(id)}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(patch),
+            });
+          } catch (err) {
+            alert(t('randomizer.saveFailed', { message: err.message }));
+          }
+        }
+
+        enabledCheckbox.addEventListener('change', () => saveConfig({ enabled: enabledCheckbox.checked }));
+
+        modeSelect.addEventListener('change', () => {
+          manualFields.hidden = modeSelect.value === 'willkuer';
+          saveConfig({ mode: modeSelect.value });
+        });
+
+        ['hoursPerDay', 'blockCount', 'stadtwacheCount'].forEach(role => {
+          const input = row.querySelector(`[data-role="${role}"]`);
+          input.addEventListener('change', () => saveConfig({ [role]: Number(input.value) }));
+        });
+
+        planToggleBtn.addEventListener('click', async () => {
+          if (!planBody.hidden) { planBody.hidden = true; return; }
+          planBody.hidden = false;
+          planBody.innerHTML = t('overview.loadingEllipsis');
+          try {
+            const { plan } = await ctx.fetchJSON(`/api/randomizer/plan/${encodeURIComponent(id)}`);
+            planBody.innerHTML = planBodyHtml(plan);
+          } catch (err) {
+            planBody.innerHTML = t('analytics.loadError', { message: err.message });
+          }
+        });
+      });
+    }
+
+    loadSettings();
+    loadAccounts();
+  },
+};

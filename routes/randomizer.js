@@ -1,0 +1,75 @@
+const express = require('express');
+const randomizer = require('../lib/randomizer');
+
+const router = express.Router();
+
+router.get('/settings', (req, res) => {
+  res.json(randomizer.getSettings());
+});
+
+function isValidHHMM(s) {
+  return typeof s === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(s);
+}
+
+router.post('/settings', express.json(), (req, res) => {
+  const { minHours, maxHours, dayStart, dayEnd, minStaggerMinutes, minBlockMinutes, blockGapMinutes, stadtwacheDurationMin, stadtwacheCutoff } = req.body || {};
+  const patch = {};
+  if (minHours !== undefined) patch.minHours = Number(minHours);
+  if (maxHours !== undefined) patch.maxHours = Number(maxHours);
+  if (dayStart !== undefined) {
+    if (!isValidHHMM(dayStart)) return res.status(400).json({ error: 'dayStart muss HH:MM sein' });
+    patch.dayStart = dayStart;
+  }
+  if (dayEnd !== undefined) {
+    if (!isValidHHMM(dayEnd)) return res.status(400).json({ error: 'dayEnd muss HH:MM sein' });
+    patch.dayEnd = dayEnd;
+  }
+  if (minStaggerMinutes !== undefined) patch.minStaggerMinutes = Number(minStaggerMinutes);
+  if (minBlockMinutes !== undefined) patch.minBlockMinutes = Number(minBlockMinutes);
+  if (Array.isArray(blockGapMinutes) && blockGapMinutes.length === 2) patch.blockGapMinutes = blockGapMinutes.map(Number);
+  if (stadtwacheDurationMin !== undefined) patch.stadtwacheDurationMin = Number(stadtwacheDurationMin);
+  if (stadtwacheCutoff !== undefined) {
+    if (!isValidHHMM(stadtwacheCutoff)) return res.status(400).json({ error: 'stadtwacheCutoff muss HH:MM sein' });
+    patch.stadtwacheCutoff = stadtwacheCutoff;
+  }
+  res.json(randomizer.setSettings(patch));
+});
+
+router.get('/configs', (req, res) => {
+  res.json(randomizer.getAllConfigs());
+});
+
+router.post('/configs/:id', express.json(), (req, res) => {
+  const settings = randomizer.getSettings();
+  const { enabled, mode, hoursPerDay, blockCount, stadtwacheCount } = req.body || {};
+  const patch = {};
+  if (enabled !== undefined) patch.enabled = !!enabled;
+  if (mode !== undefined) {
+    if (mode !== 'manual' && mode !== 'willkuer') return res.status(400).json({ error: 'Ungültiger Modus' });
+    patch.mode = mode;
+  }
+  if (hoursPerDay !== undefined) {
+    const h = Number(hoursPerDay);
+    if (!Number.isFinite(h) || h < settings.minHours || h > settings.maxHours) {
+      return res.status(400).json({ error: `Stunden müssen zwischen ${settings.minHours} und ${settings.maxHours} liegen` });
+    }
+    patch.hoursPerDay = h;
+  }
+  if (blockCount !== undefined) {
+    const b = Number(blockCount);
+    if (!Number.isInteger(b) || b < 1 || b > 4) return res.status(400).json({ error: 'Blockanzahl muss 1-4 sein' });
+    patch.blockCount = b;
+  }
+  if (stadtwacheCount !== undefined) {
+    const s = Number(stadtwacheCount);
+    if (!Number.isInteger(s) || s < 1 || s > 5) return res.status(400).json({ error: 'Stadtwache-Anzahl muss 1-5 sein' });
+    patch.stadtwacheCount = s;
+  }
+  res.json(randomizer.setConfig(req.params.id, patch));
+});
+
+router.get('/plan/:id', (req, res) => {
+  res.json({ plan: randomizer.getTodayPlan(req.params.id) });
+});
+
+module.exports = router;

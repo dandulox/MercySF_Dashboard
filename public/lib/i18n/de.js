@@ -16,6 +16,7 @@ export default {
   'nav.marketplace': 'Marktplatz',
   'nav.systemSettings': 'System-Einstellungen',
   'nav.bugreport': 'Bug melden',
+  'nav.randomizer': 'Randomizer',
 
   // topbar — index.html static parts + router.js dynamic parts
   'topbar.menuTitle': 'Menü',
@@ -361,6 +362,35 @@ export default {
   'bugreport.submitting': 'Sende…',
   'bugreport.submitSuccess': 'Ticket #{{id}} erstellt. Danke für die Meldung!',
   'bugreport.submitError': 'Melden fehlgeschlagen: {{message}}',
+
+  // randomizer.js (public/pages/randomizer.js)
+  'randomizer.title': 'Randomizer',
+  'randomizer.hint': 'Steuert automatisch, wann welcher Account bottet — mit zufälligem Timing und Versatz zwischen Accounts, damit nicht alle gleichzeitig starten.',
+  'randomizer.globalSettingsTitle': 'Globale Grenzwerte',
+  'randomizer.accountsTitle': 'Accounts',
+  'randomizer.minHours': 'Min. Stunden (Willkür)',
+  'randomizer.maxHours': 'Max. Stunden (Willkür)',
+  'randomizer.dayStart': 'Tagesbeginn',
+  'randomizer.dayEnd': 'Tagesende',
+  'randomizer.minStagger': 'Mindestversatz (Min)',
+  'randomizer.minBlock': 'Min. Blocklänge (Min)',
+  'randomizer.stadtwacheDuration': 'Stadtwache-Puls-Dauer (Min)',
+  'randomizer.stadtwacheCutoff': 'Stadtwache-Cutoff',
+  'randomizer.saveSettingsBtn': 'Speichern',
+  'randomizer.saving': 'Speichere…',
+  'randomizer.settingsSaved': 'Gespeichert.',
+  'randomizer.enabledLabel': 'Aktiv',
+  'randomizer.modeManual': 'Manuell',
+  'randomizer.modeWillkur': 'Willkür',
+  'randomizer.hoursLabel': 'Std.',
+  'randomizer.blocksLabel': 'Blöcke',
+  'randomizer.stadtwacheLabel': 'Stadtwache',
+  'randomizer.planBtn': 'Heutiger Plan',
+  'randomizer.planBlock': 'Bot-Blöcke',
+  'randomizer.planStadtwache': 'Stadtwache-Pulse',
+  'randomizer.planEmpty': 'Kein Plan (Account nicht aktiviert oder noch kein Tagesplan berechnet).',
+  'randomizer.saveFailed': 'Speichern fehlgeschlagen: {{message}}',
+  'randomizer.noAccountsHint': 'Noch keine Accounts angelegt.',
 
   // overview.js (public/pages/overview.js)
   'overview.zeroMin': '0 Min',

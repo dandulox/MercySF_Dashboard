@@ -12,6 +12,7 @@ const ptyManager = require('./lib/ptyManager');
 require('./lib/statsCollector');
 require('./lib/telemetry');
 require('./lib/marketplaceLinkSync');
+require('./lib/randomizer');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
