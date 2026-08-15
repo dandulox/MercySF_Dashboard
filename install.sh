@@ -62,7 +62,7 @@ fi
 
 log "Pakete aktualisieren und Build-Abhängigkeiten installieren"
 apt-get update -qq
-apt-get install -y -qq curl git build-essential python3 openssl ca-certificates wireguard-tools >/dev/null
+apt-get install -y -qq curl git build-essential python3 openssl ca-certificates wireguard-tools resolvconf >/dev/null
 
 if ! command -v node >/dev/null 2>&1 || [[ "$(node -v | sed 's/v//' | cut -d. -f1)" -lt 18 ]]; then
   log "Node.js 20.x (NodeSource) installieren"
