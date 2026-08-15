@@ -11,17 +11,24 @@ export default {
       .marketplace-page .marketplace-filters input[type="text"], .marketplace-page .marketplace-filters select { background: var(--panel-2); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 6px 10px; font-size: 12.5px; width: auto; }
       .marketplace-page #marketplace-status { font-size: 11.5px; color: var(--muted); margin-bottom: 8px; }
       .marketplace-page .marketplace-empty { color: var(--muted); font-size: 12.5px; }
-      .marketplace-page .marketplace-item { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; background: var(--panel); }
-      .marketplace-page .marketplace-item:last-child { margin-bottom: 0; }
-      .marketplace-page .marketplace-item-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; }
-      .marketplace-page .marketplace-item-title { font-weight: 600; font-size: 13px; }
-      .marketplace-page .marketplace-item-desc { font-size: 11.5px; color: var(--muted); margin: 4px 0; }
-      .marketplace-page .marketplace-item-meta { font-size: 11px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+      .marketplace-page .marketplace-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+      .marketplace-page .marketplace-tile { border: 1px solid var(--border); border-radius: 8px; padding: 12px; background: var(--panel); cursor: pointer; text-align: left; }
+      .marketplace-page .marketplace-tile:hover { border-color: var(--accent); }
+      .marketplace-page .marketplace-tile-title { font-weight: 600; font-size: 13px; margin-bottom: 6px; }
+      .marketplace-page .marketplace-tile-meta { font-size: 11px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 8px; }
       .marketplace-page .marketplace-tag { display: inline-block; background: var(--panel-2); border-radius: 10px; padding: 1px 8px; font-size: 10.5px; margin-right: 4px; }
       .marketplace-page .marketplace-rating-stars { cursor: pointer; }
       .marketplace-page .marketplace-rating-stars .star { opacity: 0.35; }
       .marketplace-page .marketplace-rating-stars .star.filled { opacity: 1; }
       .marketplace-page .marketplace-item-stats { font-size: 11px; color: var(--green); margin-top: 4px; }
+      .marketplace-page .marketplace-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+      .marketplace-page .marketplace-modal { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; max-width: 480px; width: 100%; max-height: 80vh; overflow-y: auto; position: relative; }
+      .marketplace-page .marketplace-modal-close { position: absolute; top: 12px; right: 14px; background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; line-height: 1; padding: 0; }
+      .marketplace-page .marketplace-modal-close:hover { color: var(--text); }
+      .marketplace-page .marketplace-modal-title { font-weight: 600; font-size: 15px; margin: 0 0 10px; padding-right: 24px; }
+      .marketplace-page .marketplace-modal-desc { font-size: 12.5px; color: var(--text); white-space: pre-wrap; margin-bottom: 12px; line-height: 1.4; }
+      .marketplace-page .marketplace-modal-meta { font-size: 11.5px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+      .marketplace-page .marketplace-modal-actions { display: flex; align-items: center; gap: 10px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
     `;
     ctx.injectStyleOnce('marketplace', css);
 
@@ -41,7 +48,7 @@ export default {
         </select>
       </div>
       <div id="marketplace-status"></div>
-      <div id="marketplace-list">${t('common.loading')}</div>
+      <div id="marketplace-list" class="marketplace-grid">${t('common.loading')}</div>
     `;
     container.appendChild(wrap);
 
@@ -100,72 +107,102 @@ export default {
 
       listEl.innerHTML = items.length
         ? items.map(item => `
-          <div class="marketplace-item" data-id="${item.id}">
-            <div class="marketplace-item-head">
-              <span class="marketplace-item-title">${escapeHtml(item.title)}</span>
-              <button class="btn-secondary" data-action="import" style="width:auto;padding:5px 12px;font-size:11.5px;">${t('settings.marketplaceImportBtn')}</button>
-            </div>
-            ${item.description ? `<div class="marketplace-item-desc">${escapeHtml(item.description)}</div>` : ''}
-            <div class="marketplace-item-meta">
+          <button type="button" class="marketplace-tile" data-id="${item.id}">
+            <div class="marketplace-tile-title">${escapeHtml(item.title)}</div>
+            <div class="marketplace-tile-meta">
               ${item.characterClass ? `<span>${escapeHtml(item.characterClass)}</span>` : ''}
-              ${item.tags.map(tg => `<span class="marketplace-tag">${escapeHtml(tg)}</span>`).join('')}
+              <span>${item.ratingCount ? `⭐ ${item.ratingAvg} (${item.ratingCount})` : '⭐ —'}</span>
               <span>${t('settings.marketplaceDownloadsLabel', { count: item.downloads })}</span>
-              ${item.displayName ? `<span>${escapeHtml(item.displayName)}</span>` : ''}
             </div>
-            <div class="marketplace-item-meta">
-              <span>${t('settings.marketplaceRatingLabel')}</span>
-              ${starsHtml(item.id, item.ratingAvg)}
-              ${item.ratingCount ? `<span>(${item.ratingAvg} · ${item.ratingCount})</span>` : ''}
-            </div>
-            ${item.avgStats ? `
-              <div class="marketplace-item-stats">
-                ${item.avgStats.arenaWinRate != null
-                  ? t('settings.marketplaceStatsBlock', { level: item.avgStats.level, silver: item.avgStats.silver, arenaWinRate: item.avgStats.arenaWinRate, count: item.linkedCount })
-                  : t('settings.marketplaceStatsBlockNoArena', { level: item.avgStats.level, silver: item.avgStats.silver, count: item.linkedCount })}
-              </div>
-            ` : ''}
-          </div>
+          </button>
         `).join('')
         : `<div class="marketplace-empty">${t('settings.marketplaceEmpty')}</div>`;
 
-      listEl.querySelectorAll('.marketplace-item').forEach(itemEl => {
-        const id = itemEl.dataset.id;
-        itemEl.querySelector('[data-action="import"]').addEventListener('click', async () => {
-          status.textContent = t('settings.marketplaceImporting');
-          try {
-            const res = await fetch(`${MARKETPLACE_URL}/templates/${encodeURIComponent(id)}/download`);
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
-            await ctx.fetchJSON('/api/settings-templates/import', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ name: data.title, settings: data.settings }),
-            });
-            status.textContent = t('settings.marketplaceImported', { name: data.title });
-            await loadMarketplace();
-          } catch (err) {
-            status.textContent = t('settings.marketplaceLoadError', { message: err.message });
-          }
-        });
-
-        itemEl.querySelectorAll('.marketplace-rating-stars .star').forEach(starEl => {
-          starEl.addEventListener('click', async () => {
-            const stars = Number(starEl.dataset.stars);
-            try {
-              const res = await fetch(`${MARKETPLACE_URL}/templates/${encodeURIComponent(id)}/rating`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ instanceId: marketplaceInstanceId, stars }),
-              });
-              if (!res.ok) throw new Error(`HTTP ${res.status}`);
-              status.textContent = t('settings.marketplaceRatingSaved');
-              await loadMarketplace();
-            } catch (err) {
-              status.textContent = t('settings.marketplaceLoadError', { message: err.message });
-            }
-          });
+      listEl.querySelectorAll('.marketplace-tile').forEach(tileEl => {
+        tileEl.addEventListener('click', () => {
+          const item = items.find(i => i.id === tileEl.dataset.id);
+          if (item) openDetailModal(item);
         });
       });
+    }
+
+    function openDetailModal(item) {
+      const backdrop = document.createElement('div');
+      backdrop.className = 'marketplace-modal-backdrop';
+      backdrop.innerHTML = `
+        <div class="marketplace-modal">
+          <button class="marketplace-modal-close" aria-label="${t('settings.marketplaceCloseBtn')}">×</button>
+          <div class="marketplace-modal-title">${escapeHtml(item.title)}</div>
+          <div class="marketplace-modal-meta">
+            ${item.characterClass ? `<span>${escapeHtml(item.characterClass)}</span>` : ''}
+            ${item.tags.map(tg => `<span class="marketplace-tag">${escapeHtml(tg)}</span>`).join('')}
+            <span>${t('settings.marketplaceDownloadsLabel', { count: item.downloads })}</span>
+            ${item.displayName ? `<span>${escapeHtml(item.displayName)}</span>` : ''}
+          </div>
+          <div class="marketplace-modal-desc">${item.description ? escapeHtml(item.description) : t('settings.marketplaceNoDescription')}</div>
+          ${item.avgStats ? `
+            <div class="marketplace-item-stats">
+              ${item.avgStats.arenaWinRate != null
+                ? t('settings.marketplaceStatsBlock', { level: item.avgStats.level, silver: item.avgStats.silver, arenaWinRate: item.avgStats.arenaWinRate, count: item.linkedCount })
+                : t('settings.marketplaceStatsBlockNoArena', { level: item.avgStats.level, silver: item.avgStats.silver, count: item.linkedCount })}
+            </div>
+          ` : ''}
+          <div class="marketplace-modal-actions">
+            <span>${t('settings.marketplaceRatingLabel')}</span>
+            ${starsHtml(item.id, item.ratingAvg)}
+            <button class="btn-secondary" data-action="import" style="width:auto;padding:6px 14px;font-size:12px;margin-left:auto;">${t('settings.marketplaceImportBtn')}</button>
+          </div>
+        </div>
+      `;
+
+      function close() { backdrop.remove(); document.removeEventListener('keydown', onKeydown); }
+      function onKeydown(e) { if (e.key === 'Escape') close(); }
+
+      backdrop.addEventListener('click', (e) => { if (e.target === backdrop) close(); });
+      backdrop.querySelector('.marketplace-modal-close').addEventListener('click', close);
+      document.addEventListener('keydown', onKeydown);
+
+      backdrop.querySelector('[data-action="import"]').addEventListener('click', async () => {
+        const statusEl = wrap.querySelector('#marketplace-status');
+        statusEl.textContent = t('settings.marketplaceImporting');
+        try {
+          const res = await fetch(`${MARKETPLACE_URL}/templates/${encodeURIComponent(item.id)}/download`);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          await ctx.fetchJSON('/api/settings-templates/import', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: data.title, settings: data.settings }),
+          });
+          statusEl.textContent = t('settings.marketplaceImported', { name: data.title });
+          close();
+          await loadMarketplace();
+        } catch (err) {
+          statusEl.textContent = t('settings.marketplaceLoadError', { message: err.message });
+        }
+      });
+
+      backdrop.querySelectorAll('.marketplace-rating-stars .star').forEach(starEl => {
+        starEl.addEventListener('click', async () => {
+          const statusEl = wrap.querySelector('#marketplace-status');
+          const stars = Number(starEl.dataset.stars);
+          try {
+            const res = await fetch(`${MARKETPLACE_URL}/templates/${encodeURIComponent(item.id)}/rating`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ instanceId: marketplaceInstanceId, stars }),
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            statusEl.textContent = t('settings.marketplaceRatingSaved');
+            close();
+            await loadMarketplace();
+          } catch (err) {
+            statusEl.textContent = t('settings.marketplaceLoadError', { message: err.message });
+          }
+        });
+      });
+
+      document.body.appendChild(backdrop);
     }
 
     ['marketplace-search', 'marketplace-class-filter', 'marketplace-tag-filter', 'marketplace-sort'].forEach(id => {

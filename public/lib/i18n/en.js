@@ -236,6 +236,8 @@ export default {
   'settings.marketplaceImporting': 'Importing...',
   'settings.marketplaceImported': 'Imported template "{{name}}" from the marketplace.',
   'settings.marketplaceRatingLabel': 'Rate:',
+  'settings.marketplaceCloseBtn': 'Close',
+  'settings.marketplaceNoDescription': 'No description.',
   'settings.marketplaceRatingSaved': 'Rating saved.',
   'settings.marketplaceDownloadsLabel': '{{count}}× imported',
   'settings.marketplaceStatsBlock': 'Avg. level {{level}} · Avg. silver {{silver}} · Avg. arena win rate {{arenaWinRate}}% ({{count}} linked characters)',

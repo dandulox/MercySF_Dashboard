@@ -247,6 +247,8 @@ export default {
   'settings.marketplaceImporting': 'Importiere...',
   'settings.marketplaceImported': 'Vorlage "{{name}}" aus dem Marktplatz importiert.',
   'settings.marketplaceRatingLabel': 'Bewerten:',
+  'settings.marketplaceCloseBtn': 'Schließen',
+  'settings.marketplaceNoDescription': 'Keine Beschreibung.',
   'settings.marketplaceRatingSaved': 'Bewertung gespeichert.',
   'settings.marketplaceDownloadsLabel': '{{count}}× importiert',
   'settings.marketplaceStatsBlock': 'Ø Level {{level}} · Ø Silber {{silver}} · Ø Arena-Gewinnrate {{arenaWinRate}}% ({{count}} verknüpfte Charaktere)',
