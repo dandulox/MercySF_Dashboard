@@ -463,6 +463,27 @@ export default {
       .settings-page .templates-empty { color: var(--muted); font-size: 12.5px; }
       .settings-page .btn-secondary { background: var(--panel-2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; cursor: pointer; }
       .settings-page .btn-danger { background: transparent; border: 1px solid var(--red); color: var(--red); border-radius: 8px; cursor: pointer; }
+
+      .settings-page .marketplace-card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px 14px; margin-bottom: 10px; }
+      .settings-page .marketplace-card h3 { margin: 0 0 4px; font-size: 13px; }
+      .settings-page .marketplace-desc { font-size: 11.5px; color: var(--muted); margin-bottom: 10px; line-height: 1.4; }
+      .settings-page .marketplace-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+      .settings-page .marketplace-filters input[type="text"], .settings-page .marketplace-filters select { background: var(--panel-2); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 6px 10px; font-size: 12.5px; width: auto; }
+      .settings-page #marketplace-status { font-size: 11.5px; color: var(--muted); margin-bottom: 8px; }
+      .settings-page .marketplace-empty { color: var(--muted); font-size: 12.5px; }
+      .settings-page .marketplace-item { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
+      .settings-page .marketplace-item:last-child { margin-bottom: 0; }
+      .settings-page .marketplace-item-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; }
+      .settings-page .marketplace-item-title { font-weight: 600; font-size: 13px; }
+      .settings-page .marketplace-item-desc { font-size: 11.5px; color: var(--muted); margin: 4px 0; }
+      .settings-page .marketplace-item-meta { font-size: 11px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+      .settings-page .marketplace-tag { display: inline-block; background: var(--panel-2); border-radius: 10px; padding: 1px 8px; font-size: 10.5px; margin-right: 4px; }
+      .settings-page .marketplace-rating-stars { cursor: pointer; }
+      .settings-page .marketplace-rating-stars .star { opacity: 0.35; }
+      .settings-page .marketplace-rating-stars .star.filled { opacity: 1; }
+      .settings-page .publish-form { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+      .settings-page .publish-form.open { display: block; }
+      .settings-page .publish-form input[type="text"] { width: 100%; margin-bottom: 6px; background: var(--panel-2); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 6px 10px; font-size: 12.5px; }
     `;
     ctx.injectStyleOnce('settings', css);
 
@@ -482,6 +503,22 @@ export default {
         <div id="templates-status"></div>
         <div id="templates-list">${t('common.loading')}</div>
       </div>
+      <div class="marketplace-card">
+        <h3>${t('settings.marketplaceTitle')}</h3>
+        <div class="marketplace-desc">${t('settings.marketplaceDesc')}</div>
+        <div class="marketplace-filters">
+          <input type="text" id="marketplace-search" placeholder="${t('settings.marketplaceSearchPlaceholder')}" />
+          <select id="marketplace-class-filter"><option value="">${t('settings.marketplaceClassAll')}</option></select>
+          <input type="text" id="marketplace-tag-filter" placeholder="${t('settings.marketplaceTagPlaceholder')}" />
+          <select id="marketplace-sort">
+            <option value="new">${t('settings.marketplaceSortNew')}</option>
+            <option value="rating">${t('settings.marketplaceSortRating')}</option>
+            <option value="downloads">${t('settings.marketplaceSortDownloads')}</option>
+          </select>
+        </div>
+        <div id="marketplace-status"></div>
+        <div id="marketplace-list">${t('common.loading')}</div>
+      </div>
       <div id="settings-body"><div id="settings-groups">${t('common.loading')}</div></div>`;
     container.appendChild(wrap);
 
@@ -491,6 +528,8 @@ export default {
 
     let allAccounts = [];
     let hasCurrentSettings = false;
+    let marketplaceInstanceId = null;
+    ctx.fetchJSON('/api/marketplace-identity').then(data => { marketplaceInstanceId = data.instanceId; });
 
     function fmtDate(iso) {
       return new Date(iso).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -518,6 +557,7 @@ export default {
             <span><span class="template-name char-name">${escapeHtml(tpl.name)}</span><span class="muted template-meta">${t('settings.templateMeta', { count: tpl.fieldCount, date: fmtDate(tpl.createdAt) })}</span></span>
             <div class="template-actions">
               <button class="btn-secondary" data-action="toggle-apply">${t('settings.applyTemplateBtn')}</button>
+              <button class="btn-secondary" data-action="toggle-publish">${t('settings.marketplacePublishBtn')}</button>
               <button class="btn-danger" data-action="delete">${t('settings.deleteBtn')}</button>
             </div>
           </div>
@@ -530,12 +570,48 @@ export default {
             <button class="btn btn-primary" data-action="confirm-apply" style="width:auto;padding:6px 14px;font-size:12px;">${t('settings.applySelectedBtn')}</button>
             <span data-role="apply-status" class="muted" style="margin-left:8px;font-size:11.5px;"></span>
           </div>
+          <div class="publish-form" data-role="publish-form">
+            <input type="text" data-field="title" placeholder="${t('settings.marketplacePublishTitleLabel')}" value="${escapeHtml(tpl.name)}" />
+            <input type="text" data-field="description" placeholder="${t('settings.marketplacePublishDescLabel')}" />
+            <input type="text" data-field="tags" placeholder="${t('settings.marketplacePublishTagsLabel')}" />
+            <input type="text" data-field="displayName" placeholder="${t('settings.marketplacePublishNameLabel')}" />
+            <button class="btn btn-primary" data-action="confirm-publish" style="width:auto;padding:6px 14px;font-size:12px;">${t('settings.marketplacePublishSubmitBtn')}</button>
+            <button class="btn-secondary" data-action="cancel-publish" style="width:auto;padding:6px 14px;font-size:12px;">${t('settings.marketplacePublishCancelBtn')}</button>
+            <span data-role="publish-status" class="muted" style="margin-left:8px;font-size:11.5px;"></span>
+          </div>
         </div>`).join('');
 
       listEl.querySelectorAll('.template-row').forEach(row => {
         const id = row.dataset.id;
         row.querySelector('[data-action="toggle-apply"]').addEventListener('click', () => {
           row.querySelector('[data-role="apply-panel"]').classList.toggle('open');
+        });
+        row.querySelector('[data-action="toggle-publish"]').addEventListener('click', () => {
+          row.querySelector('[data-role="publish-form"]').classList.toggle('open');
+        });
+        row.querySelector('[data-action="cancel-publish"]').addEventListener('click', () => {
+          row.querySelector('[data-role="publish-form"]').classList.remove('open');
+        });
+        row.querySelector('[data-action="confirm-publish"]').addEventListener('click', async () => {
+          const form = row.querySelector('[data-role="publish-form"]');
+          const statusEl = form.querySelector('[data-role="publish-status"]');
+          const title = form.querySelector('[data-field="title"]').value.trim();
+          const description = form.querySelector('[data-field="description"]').value.trim();
+          const tags = form.querySelector('[data-field="tags"]').value.split(',').map(s => s.trim()).filter(Boolean);
+          const displayName = form.querySelector('[data-field="displayName"]').value.trim();
+          if (!title) { statusEl.textContent = t('settings.marketplaceTitleRequired'); return; }
+          statusEl.textContent = t('settings.marketplacePublishing');
+          try {
+            await ctx.fetchJSON(`/api/marketplace-publish/${encodeURIComponent(id)}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ title, description, tags, displayName }),
+            });
+            statusEl.textContent = t('settings.marketplacePublished');
+            await loadMarketplace();
+          } catch (err) {
+            statusEl.textContent = t('settings.marketplacePublishFailed', { message: err.message });
+          }
         });
         row.querySelector('[data-action="delete"]').addEventListener('click', async () => {
           if (!confirm(t('settings.confirmDeleteTemplate'))) return;
@@ -619,7 +695,124 @@ export default {
       }
     });
 
+    // --- Marktplatz ---
+    const MARKETPLACE_URL = 'https://data.poslab.cc/api/marketplace';
+    let marketplaceClassesLoaded = false;
+
+    function starsHtml(itemId, ratingAvg) {
+      const rounded = ratingAvg != null ? Math.round(ratingAvg) : 0;
+      let html = `<span class="marketplace-rating-stars" data-id="${itemId}">`;
+      for (let i = 1; i <= 5; i++) {
+        html += `<span class="star${i <= rounded ? ' filled' : ''}" data-stars="${i}">★</span>`;
+      }
+      html += '</span>';
+      return html;
+    }
+
+    async function loadMarketplace() {
+      const listEl = wrap.querySelector('#marketplace-list');
+      const status = wrap.querySelector('#marketplace-status');
+      const q = wrap.querySelector('#marketplace-search').value.trim();
+      const characterClass = wrap.querySelector('#marketplace-class-filter').value;
+      const tag = wrap.querySelector('#marketplace-tag-filter').value.trim();
+      const sort = wrap.querySelector('#marketplace-sort').value;
+
+      const params = new URLSearchParams();
+      if (q) params.set('q', q);
+      if (characterClass) params.set('characterClass', characterClass);
+      if (tag) params.set('tag', tag);
+      if (sort) params.set('sort', sort);
+
+      let items;
+      try {
+        const res = await fetch(`${MARKETPLACE_URL}/templates?${params.toString()}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        items = await res.json();
+      } catch (err) {
+        status.textContent = t('settings.marketplaceLoadError', { message: err.message });
+        return;
+      }
+      status.textContent = '';
+
+      if (!marketplaceClassesLoaded) {
+        const classSelect = wrap.querySelector('#marketplace-class-filter');
+        const classes = [...new Set(items.map(i => i.characterClass).filter(Boolean))].sort();
+        classSelect.innerHTML = `<option value="">${t('settings.marketplaceClassAll')}</option>` +
+          classes.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+        marketplaceClassesLoaded = true;
+      }
+
+      listEl.innerHTML = items.length
+        ? items.map(item => `
+          <div class="marketplace-item" data-id="${item.id}">
+            <div class="marketplace-item-head">
+              <span class="marketplace-item-title">${escapeHtml(item.title)}</span>
+              <button class="btn-secondary" data-action="import" style="width:auto;padding:5px 12px;font-size:11.5px;">${t('settings.marketplaceImportBtn')}</button>
+            </div>
+            ${item.description ? `<div class="marketplace-item-desc">${escapeHtml(item.description)}</div>` : ''}
+            <div class="marketplace-item-meta">
+              ${item.characterClass ? `<span>${escapeHtml(item.characterClass)}</span>` : ''}
+              ${item.tags.map(tg => `<span class="marketplace-tag">${escapeHtml(tg)}</span>`).join('')}
+              <span>${t('settings.marketplaceDownloadsLabel', { count: item.downloads })}</span>
+              ${item.displayName ? `<span>${escapeHtml(item.displayName)}</span>` : ''}
+            </div>
+            <div class="marketplace-item-meta">
+              <span>${t('settings.marketplaceRatingLabel')}</span>
+              ${starsHtml(item.id, item.ratingAvg)}
+              ${item.ratingCount ? `<span>(${item.ratingAvg} · ${item.ratingCount})</span>` : ''}
+            </div>
+          </div>
+        `).join('')
+        : `<div class="marketplace-empty">${t('settings.marketplaceEmpty')}</div>`;
+
+      listEl.querySelectorAll('.marketplace-item').forEach(itemEl => {
+        const id = itemEl.dataset.id;
+        itemEl.querySelector('[data-action="import"]').addEventListener('click', async () => {
+          status.textContent = t('settings.marketplaceImporting');
+          try {
+            const res = await fetch(`${MARKETPLACE_URL}/templates/${encodeURIComponent(id)}/download`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            await ctx.fetchJSON('/api/settings-templates/import', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ name: data.title, settings: data.settings }),
+            });
+            status.textContent = t('settings.marketplaceImported', { name: data.title });
+            await loadTemplates();
+            await loadMarketplace();
+          } catch (err) {
+            status.textContent = t('settings.marketplaceLoadError', { message: err.message });
+          }
+        });
+
+        itemEl.querySelectorAll('.marketplace-rating-stars .star').forEach(starEl => {
+          starEl.addEventListener('click', async () => {
+            const stars = Number(starEl.dataset.stars);
+            try {
+              const res = await fetch(`${MARKETPLACE_URL}/templates/${encodeURIComponent(id)}/rating`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ instanceId: marketplaceInstanceId, stars }),
+              });
+              if (!res.ok) throw new Error(`HTTP ${res.status}`);
+              status.textContent = t('settings.marketplaceRatingSaved');
+              await loadMarketplace();
+            } catch (err) {
+              status.textContent = t('settings.marketplaceLoadError', { message: err.message });
+            }
+          });
+        });
+      });
+    }
+
+    ['marketplace-search', 'marketplace-class-filter', 'marketplace-tag-filter', 'marketplace-sort'].forEach(id => {
+      const el = wrap.querySelector(`#${id}`);
+      el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', () => loadMarketplace());
+    });
+
     loadTemplates();
+    loadMarketplace();
 
     let pending = {};
 
