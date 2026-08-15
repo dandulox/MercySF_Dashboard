@@ -5,6 +5,19 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.6.1] - 2026-08-16
+
+### Fixed
+- Randomizer: a city-guard pulse could be scheduled at a time when the
+  same account was also running its own bot block on its main node —
+  same login active over two node connections at once. Pulses are now
+  checked against the account's own blocks and pushed past them if they
+  collide.
+- Randomizer: added a minimum gap (default 60 min, configurable) between
+  two city-guard pulses of the *same* account — guard duty has a real
+  in-game duration, so sending a character back too soon didn't make
+  sense.
+
 ## [2.6.0] - 2026-08-16
 
 ### Added

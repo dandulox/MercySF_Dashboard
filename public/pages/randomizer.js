@@ -127,6 +127,7 @@ export default {
       ['minBlockMinutes', 'randomizer.minBlock', 'number'],
       ['nodeHandoffMinutes', 'randomizer.nodeHandoff', 'number'],
       ['stadtwacheDurationMin', 'randomizer.stadtwacheDuration', 'number'],
+      ['stadtwacheMinGapMinutes', 'randomizer.stadtwacheMinGap', 'number'],
       ['stadtwacheCutoff', 'randomizer.stadtwacheCutoff', 'text'],
     ];
 

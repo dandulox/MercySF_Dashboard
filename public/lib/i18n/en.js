@@ -366,6 +366,7 @@ export default {
   'randomizer.minBlock': 'Min block length (min)',
   'randomizer.nodeHandoff': 'Node handoff buffer (min)',
   'randomizer.stadtwacheDuration': 'City guard pulse duration (min)',
+  'randomizer.stadtwacheMinGap': 'Min gap between own city guard pulses (min)',
   'randomizer.stadtwacheCutoff': 'City guard cutoff',
   'randomizer.reserveNode': 'Reserve node (city guard)',
   'randomizer.hardEnforceLabel': 'Hard enforce',

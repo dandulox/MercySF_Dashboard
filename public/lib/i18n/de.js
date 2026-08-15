@@ -378,6 +378,7 @@ export default {
   'randomizer.minBlock': 'Min. Blocklänge (Min)',
   'randomizer.nodeHandoff': 'Node-Übergabe-Puffer (Min)',
   'randomizer.stadtwacheDuration': 'Stadtwache-Puls-Dauer (Min)',
+  'randomizer.stadtwacheMinGap': 'Mindestabstand eigene Stadtwache (Min)',
   'randomizer.stadtwacheCutoff': 'Stadtwache-Cutoff',
   'randomizer.reserveNode': 'Reserve-Node (Stadtwache)',
   'randomizer.hardEnforceLabel': 'Hart durchsetzen',

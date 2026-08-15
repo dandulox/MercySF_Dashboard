@@ -19,7 +19,7 @@ router.get('/status', (req, res) => {
 router.post('/settings', express.json(), (req, res) => {
   const {
     minHours, maxHours, dayStart, dayEnd, minBlockMinutes, blockGapMinutes,
-    stadtwacheDurationMin, stadtwacheCutoff, reserveNodeId, nodeHandoffMinutes, dayHardEnd, hardEnforce,
+    stadtwacheDurationMin, stadtwacheMinGapMinutes, stadtwacheCutoff, reserveNodeId, nodeHandoffMinutes, dayHardEnd, hardEnforce,
   } = req.body || {};
   const patch = {};
   if (minHours !== undefined) patch.minHours = Number(minHours);
@@ -35,6 +35,7 @@ router.post('/settings', express.json(), (req, res) => {
   if (minBlockMinutes !== undefined) patch.minBlockMinutes = Number(minBlockMinutes);
   if (Array.isArray(blockGapMinutes) && blockGapMinutes.length === 2) patch.blockGapMinutes = blockGapMinutes.map(Number);
   if (stadtwacheDurationMin !== undefined) patch.stadtwacheDurationMin = Number(stadtwacheDurationMin);
+  if (stadtwacheMinGapMinutes !== undefined) patch.stadtwacheMinGapMinutes = Number(stadtwacheMinGapMinutes);
   if (stadtwacheCutoff !== undefined) {
     if (!isValidHHMM(stadtwacheCutoff)) return res.status(400).json({ error: 'stadtwacheCutoff muss HH:MM sein' });
     patch.stadtwacheCutoff = stadtwacheCutoff;
