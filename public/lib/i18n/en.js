@@ -12,6 +12,7 @@ export default {
   'nav.analytics': 'Analytics',
   'nav.analyticsCompare': 'Account Analysis',
   'nav.settings': 'Bot Settings',
+  'nav.marketplace': 'Marketplace',
   'nav.systemSettings': 'System Settings',
   'nav.console': 'Console',
 
@@ -235,6 +236,8 @@ export default {
   'settings.marketplaceRatingLabel': 'Rate:',
   'settings.marketplaceRatingSaved': 'Rating saved.',
   'settings.marketplaceDownloadsLabel': '{{count}}× imported',
+  'settings.marketplaceStatsBlock': 'Avg. level {{level}} · Avg. silver {{silver}} · Avg. arena win rate {{arenaWinRate}}% ({{count}} linked characters)',
+  'settings.marketplaceStatsBlockNoArena': 'Avg. level {{level}} · Avg. silver {{silver}} ({{count}} linked characters)',
   'settings.marketplacePublishBtn': '🌐 Publish',
   'settings.marketplacePublishTitleLabel': 'Title',
   'settings.marketplacePublishDescLabel': 'Description (optional)',

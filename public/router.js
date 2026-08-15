@@ -48,6 +48,7 @@ const PAGES = [
   { id: 'analytics', icon: '📈', labelKey: 'nav.analytics' },
   { id: 'analytics-compare', icon: '🧬', labelKey: 'nav.analyticsCompare' },
   { id: 'settings', icon: '⚙', labelKey: 'nav.settings' },
+  { id: 'marketplace', icon: '🌐', labelKey: 'nav.marketplace' },
   { id: 'system-settings', icon: '🖥', labelKey: 'nav.systemSettings' },
   { id: 'console', icon: '⌨', labelKey: 'nav.console' },
 ];

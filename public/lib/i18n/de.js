@@ -14,6 +14,7 @@ export default {
   'nav.analytics': 'Analysen',
   'nav.analyticsCompare': 'Account-Analyse',
   'nav.settings': 'Bot-Einstellungen',
+  'nav.marketplace': 'Marktplatz',
   'nav.systemSettings': 'System-Einstellungen',
   'nav.console': 'Konsole',
 
@@ -246,6 +247,8 @@ export default {
   'settings.marketplaceRatingLabel': 'Bewerten:',
   'settings.marketplaceRatingSaved': 'Bewertung gespeichert.',
   'settings.marketplaceDownloadsLabel': '{{count}}× importiert',
+  'settings.marketplaceStatsBlock': 'Ø Level {{level}} · Ø Silber {{silver}} · Ø Arena-Gewinnrate {{arenaWinRate}}% ({{count}} verknüpfte Charaktere)',
+  'settings.marketplaceStatsBlockNoArena': 'Ø Level {{level}} · Ø Silber {{silver}} ({{count}} verknüpfte Charaktere)',
   'settings.marketplacePublishBtn': '🌐 Veröffentlichen',
   'settings.marketplacePublishTitleLabel': 'Titel',
   'settings.marketplacePublishDescLabel': 'Beschreibung (optional)',
