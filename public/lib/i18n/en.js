@@ -366,6 +366,8 @@ export default {
   'randomizer.stadtwacheDuration': 'City guard pulse duration (min)',
   'randomizer.stadtwacheCutoff': 'City guard cutoff',
   'randomizer.reserveNode': 'Reserve node (city guard)',
+  'randomizer.hardEnforceLabel': 'Hard enforce',
+  'randomizer.hardEnforceHint': "Off (default): a bot already running outside the plan is left alone until the next scheduled transition. On: it's actively stopped every tick as soon as the plan says it shouldn't be running.",
   'randomizer.noneOption': 'None',
   'randomizer.noNode': '—',
   'randomizer.saveSettingsBtn': 'Save',

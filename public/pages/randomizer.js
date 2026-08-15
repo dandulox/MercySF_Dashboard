@@ -27,8 +27,10 @@ export default {
         <div class="randomizer-settings-grid" id="randomizer-settings-grid"></div>
         <div class="randomizer-settings-footer">
           <button type="button" class="btn btn-primary" id="randomizer-settings-save-btn">${t('randomizer.saveSettingsBtn')}</button>
+          <button type="button" class="randomizer-willkur-btn" id="randomizer-hard-enforce-btn"></button>
           <span id="randomizer-settings-status" class="muted"></span>
         </div>
+        <p class="randomizer-hard-enforce-hint muted">${t('randomizer.hardEnforceHint')}</p>
       </section>
 
       <section class="card">
@@ -57,6 +59,7 @@ export default {
       }
       .randomizer-settings-footer { display: flex; align-items: center; gap: 10px; margin-top: 16px; }
       .randomizer-settings-footer .btn { width: auto; padding: 8px 18px; }
+      .randomizer-hard-enforce-hint { font-size: 11px; margin: 8px 0 0; }
 
       #randomizer-accounts-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
       @media (max-width: 900px) {
@@ -127,6 +130,13 @@ export default {
       ['stadtwacheCutoff', 'randomizer.stadtwacheCutoff', 'text'],
     ];
 
+    function renderHardEnforceBtn() {
+      const btn = wrap.querySelector('#randomizer-hard-enforce-btn');
+      const isHard = !!settings.hardEnforce;
+      btn.classList.toggle('active', isHard);
+      btn.textContent = `${t('randomizer.hardEnforceLabel')}: ${isHard ? t('randomizer.willkurOn') : t('randomizer.willkurOff')}`;
+    }
+
     async function loadSettings() {
       settings = await ctx.fetchJSON('/api/randomizer/settings');
       const grid = wrap.querySelector('#randomizer-settings-grid');
@@ -141,7 +151,23 @@ export default {
         </label>
       `).join('');
       grid.innerHTML = reserveField + otherFields;
+      renderHardEnforceBtn();
     }
+
+    wrap.querySelector('#randomizer-hard-enforce-btn').addEventListener('click', async () => {
+      const status = wrap.querySelector('#randomizer-settings-status');
+      try {
+        settings = await ctx.fetchJSON('/api/randomizer/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ hardEnforce: !settings.hardEnforce }),
+        });
+        renderHardEnforceBtn();
+        status.textContent = t('randomizer.settingsSaved');
+      } catch (err) {
+        status.textContent = t('analytics.loadError', { message: err.message });
+      }
+    });
 
     wrap.querySelector('#randomizer-settings-save-btn').addEventListener('click', async () => {
       const status = wrap.querySelector('#randomizer-settings-status');

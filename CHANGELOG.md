@@ -5,6 +5,15 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.5.2] - 2026-08-16
+
+### Added
+- Randomizer: new "Hard enforce" toggle (default off). Off keeps the
+  existing behavior — a bot already running outside the plan (manually
+  started, or running before the randomizer was enabled) is left alone
+  until the next scheduled transition. On actively stops it every tick
+  as soon as the plan says it shouldn't be running, instead of waiting.
+
 ## [2.5.1] - 2026-08-16
 
 ### Fixed

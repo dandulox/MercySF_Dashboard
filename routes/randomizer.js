@@ -15,7 +15,7 @@ router.get('/settings', (req, res) => {
 router.post('/settings', express.json(), (req, res) => {
   const {
     minHours, maxHours, dayStart, dayEnd, minBlockMinutes, blockGapMinutes,
-    stadtwacheDurationMin, stadtwacheCutoff, reserveNodeId, nodeHandoffMinutes, dayHardEnd,
+    stadtwacheDurationMin, stadtwacheCutoff, reserveNodeId, nodeHandoffMinutes, dayHardEnd, hardEnforce,
   } = req.body || {};
   const patch = {};
   if (minHours !== undefined) patch.minHours = Number(minHours);
@@ -41,6 +41,7 @@ router.post('/settings', express.json(), (req, res) => {
     if (!isValidHHMM(dayHardEnd)) return res.status(400).json({ error: 'dayHardEnd muss HH:MM sein' });
     patch.dayHardEnd = dayHardEnd;
   }
+  if (hardEnforce !== undefined) patch.hardEnforce = !!hardEnforce;
   res.json(randomizer.setSettings(patch));
 });
 

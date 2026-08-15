@@ -378,6 +378,8 @@ export default {
   'randomizer.stadtwacheDuration': 'Stadtwache-Puls-Dauer (Min)',
   'randomizer.stadtwacheCutoff': 'Stadtwache-Cutoff',
   'randomizer.reserveNode': 'Reserve-Node (Stadtwache)',
+  'randomizer.hardEnforceLabel': 'Hart durchsetzen',
+  'randomizer.hardEnforceHint': 'Aus (Standard): ein bereits laufender Bot außerhalb des Plans wird nicht angerührt, bis der nächste geplante Übergang kommt. An: wird bei jedem Tick aktiv gestoppt, sobald er laut Plan nicht laufen sollte.',
   'randomizer.noneOption': 'Keiner',
   'randomizer.noNode': '—',
   'randomizer.saveSettingsBtn': 'Speichern',
