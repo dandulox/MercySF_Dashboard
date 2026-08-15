@@ -100,24 +100,12 @@ export default {
       .accounts-page .status-dot.connecting { background: var(--yellow); }
       .accounts-page .status-dot.offline { background: var(--muted); }
       .accounts-page .status-text { font-size: 11px; color: var(--muted); white-space: nowrap; }
-      .accounts-page .profile-term { display: none; border-top: 1px solid var(--border); padding: 10px; background: var(--surface-sunken); height: 420px; }
-      .accounts-page .profile-term.open { display: block; }
-      .accounts-page .profile-details { display: none; gap: 18px; flex-wrap: wrap; padding: 10px 14px 14px; border-top: 1px solid var(--border); font-size: 11.5px; }
-      .accounts-page .profile-card.expanded .profile-details { display: flex; }
+      .accounts-page .profile-details { display: flex; gap: 18px; flex-wrap: wrap; padding-top: 8px; margin-top: 6px; border-top: 1px solid var(--border); font-size: 11.5px; }
       .accounts-page .detail-block { min-width: 160px; flex: 1; }
       .accounts-page .detail-block h4 { margin: 0 0 6px; font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; font-weight: 600; }
       .accounts-page .stat-line { color: var(--text); line-height: 1.7; }
       .accounts-page .stat-line b { color: var(--muted); font-weight: 500; }
       .accounts-page .empty-hint { color: var(--muted); font-size: 13px; padding: 20px 0; text-align: center; }
-      .accounts-page .login-helper { display: none; padding: 12px 16px; border-top: 1px solid var(--border); background: var(--panel-2); }
-      .accounts-page .login-helper.visible { display: block; }
-      .accounts-page .login-helper-label { font-size: 11.5px; color: var(--muted); margin-bottom: 8px; }
-      .accounts-page .login-helper-row { display: flex; gap: 8px; align-items: center; }
-      .accounts-page .login-helper input[type="password"], .accounts-page .login-helper input[type="text"] { flex: 1; background: var(--panel); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 7px 10px; font-size: 13px; }
-      .accounts-page .char-btn { display: block; width: 100%; text-align: left; background: var(--panel); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 9px 12px; cursor: pointer; margin-bottom: 6px; font-size: 13px; }
-      .accounts-page .char-btn:last-child { margin-bottom: 0; }
-      .accounts-page .char-btn:hover { background: var(--panel-hover); border-color: var(--accent); }
-      .accounts-page .char-btn .char-url { color: var(--muted); font-size: 11px; margin-left: 6px; }
       .accounts-page .login-group { margin-bottom: 20px; }
       .accounts-page .login-group-header { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px 10px 0 0; flex-wrap: wrap; }
       .accounts-page .login-group-title { font-weight: 600; font-size: 13px; flex: 1; }
@@ -138,6 +126,31 @@ export default {
       .accounts-page .profile-actions-extra > * { width: 100%; margin: 0; }
       .accounts-page .profile-toggle-more { background: none; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); cursor: pointer; padding: 6px 10px; font-size: 12px; margin-left: auto; }
       .accounts-page .profile-toggle-more:hover { color: var(--text); }
+      .profile-term-modal-backdrop {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 300;
+        display: flex; align-items: center; justify-content: center; padding: 20px;
+      }
+      .profile-term-modal {
+        background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-lg);
+        width: 100%; max-width: 760px; max-height: 90vh; overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.5); display: flex; flex-direction: column;
+      }
+      .profile-term-modal-header {
+        display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+      }
+      .profile-term-modal-title { font-weight: 600; font-size: 14px; flex: 1; }
+      .profile-term-modal-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 20px; line-height: 1; padding: 2px 4px; }
+      .profile-term-modal-close:hover { color: var(--text); }
+      .login-helper { display: none; padding: 12px 16px; border-top: 1px solid var(--border); background: var(--panel-2); }
+      .login-helper.visible { display: block; }
+      .login-helper-label { font-size: 11.5px; color: var(--muted); margin-bottom: 8px; }
+      .login-helper-row { display: flex; gap: 8px; align-items: center; }
+      .login-helper input[type="password"], .login-helper input[type="text"] { flex: 1; background: var(--panel); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 7px 10px; font-size: 13px; }
+      .char-btn { display: block; width: 100%; text-align: left; background: var(--panel); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 9px 12px; cursor: pointer; margin-bottom: 6px; font-size: 13px; }
+      .char-btn:last-child { margin-bottom: 0; }
+      .char-btn:hover { background: var(--panel-hover); border-color: var(--accent); }
+      .char-btn .char-url { color: var(--muted); font-size: 11px; margin-left: 6px; }
+      .profile-term { border-top: 1px solid var(--border); padding: 10px; background: var(--surface-sunken); height: 460px; }
       .accounts-page .filter-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
       .accounts-page .filter-bar input[type="text"] { background: var(--input-bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 7px 10px; font-size: 12.5px; min-width: 180px; }
       .accounts-page .filter-bar select { background: var(--input-bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 7px 10px; font-size: 12.5px; }
@@ -147,10 +160,14 @@ export default {
       }
       .accounts-page .filter-chip.active { color: var(--text); border-color: var(--accent); }
       @media (max-width: 480px) {
-        .accounts-page .profile-term { height: 320px; }
         .accounts-page .field input { min-width: 0; width: 100%; }
         .accounts-page .add-form { flex-direction: column; align-items: stretch; }
         .accounts-page .add-btn { width: 100%; }
+      }
+      @media (max-width: 480px) {
+        .profile-term { height: 320px; }
+        .profile-term-modal-backdrop { padding: 0; }
+        .profile-term-modal { max-width: 100%; max-height: 100%; height: 100%; border-radius: 0; }
       }
     `;
     ctx.injectStyleOnce('accounts', css);
@@ -243,6 +260,20 @@ export default {
       if (t) { t.handle.dispose(); openTerminals.delete(id); }
     }
 
+    // Konsole öffnet sich als eigenständiges Popup (an document.body angehängt, nicht als Teil
+    // der Kachel) statt inline in der Kachel aufzuklappen — nur eine Konsole gleichzeitig offen,
+    // ein zweites Öffnen schließt die erste zuerst.
+    let activeTerminalModal = null;
+
+    function closeTerminalModal() {
+      if (!activeTerminalModal) return;
+      const { profileId, backdropEl, onKeydown } = activeTerminalModal;
+      closeTerminal(profileId);
+      backdropEl.remove();
+      document.removeEventListener('keydown', onKeydown);
+      activeTerminalModal = null;
+    }
+
     function metaLine(p) {
       const nodeBadge = p.nodeId ? `<span class="node-badge">🖧 ${escapeHtml(nodesById.get(p.nodeId)?.name || '?')}</span>` : '';
       const classBadge = p.characterClass ? `<span class="node-badge">${escapeHtml(p.characterClass)}</span>` : '';
@@ -265,10 +296,7 @@ export default {
     // Kachel-Grid-Fluss zu verschieben — Position wird bei jedem Öffnen relativ zum Button neu
     // berechnet, damit es auch bei Scroll-Position und Fenstergröße korrekt andockt.
     function closeAllOverflowMenus() {
-      wrap.querySelectorAll('.profile-card.expanded').forEach(card => {
-        card.classList.remove('expanded');
-        card.querySelector('.profile-actions-extra')?.classList.remove('open');
-      });
+      wrap.querySelectorAll('.profile-actions-extra.open').forEach(el => el.classList.remove('open'));
     }
 
     function openOverflowMenu(menuEl, btnEl) {
@@ -415,11 +443,9 @@ export default {
               <button class="btn-secondary" data-action="toggle-term">${t('accounts.consoleBtn')}</button>
               <select class="node-select" data-action="move-node" title="${t('accounts.moveNodeTitle')}">${nodeOptionsHtml(p.nodeId)}</select>
               <button class="btn-danger" data-action="delete">${t('settings.deleteBtn')}</button>
+              ${detailsHtml(p)}
             </div>
           </div>
-          ${detailsHtml(p)}
-          <div class="login-helper" data-role="login-helper"></div>
-          <div class="profile-term" data-role="term-container"></div>
         </div>
       `;
       }
@@ -474,12 +500,9 @@ export default {
         const extraMenu = card.querySelector('.profile-actions-extra');
         moreBtn.addEventListener('click', (ev) => {
           ev.stopPropagation();
-          const wasOpen = card.classList.contains('expanded');
+          const wasOpen = extraMenu.classList.contains('open');
           closeAllOverflowMenus();
-          if (!wasOpen) {
-            card.classList.add('expanded');
-            openOverflowMenu(extraMenu, moreBtn);
-          }
+          if (!wasOpen) openOverflowMenu(extraMenu, moreBtn);
         });
 
         card.querySelector('[data-action="start"]').addEventListener('click', async () => {
@@ -571,19 +594,36 @@ export default {
           await loadProfiles();
         });
 
-        // Konsole ist eine reine Anzeige, unabhängig von Start/Stop — das CLI-Fenster wird
-        // nur sichtbar, wenn man das hier explizit anklickt.
+        // Konsole ist eine reine Anzeige, unabhängig von Start/Stop — das CLI-Fenster öffnet
+        // sich als Popup, nur sichtbar, wenn man das hier explizit anklickt.
         card.querySelector('[data-action="toggle-term"]').addEventListener('click', () => {
-          const termEl = card.querySelector('[data-role="term-container"]');
-          const helperEl = card.querySelector('[data-role="login-helper"]');
-          if (termEl.classList.contains('open')) {
-            termEl.classList.remove('open');
-            helperEl.classList.remove('visible');
-            helperEl.innerHTML = '';
-            closeTerminal(id);
+          if (activeTerminalModal && activeTerminalModal.profileId === id) {
+            closeTerminalModal();
             return;
           }
-          termEl.classList.add('open');
+          closeTerminalModal();
+
+          const backdropEl = document.createElement('div');
+          backdropEl.className = 'profile-term-modal-backdrop';
+          backdropEl.innerHTML = `
+            <div class="profile-term-modal">
+              <div class="profile-term-modal-header">
+                <span class="profile-term-modal-title char-name">${escapeHtml(profile.nickname)}</span>
+                <button type="button" class="profile-term-modal-close" data-role="term-modal-close">×</button>
+              </div>
+              <div class="login-helper" data-role="login-helper"></div>
+              <div class="profile-term" data-role="term-container"></div>
+            </div>
+          `;
+          document.body.appendChild(backdropEl);
+          const termEl = backdropEl.querySelector('[data-role="term-container"]');
+          const helperEl = backdropEl.querySelector('[data-role="login-helper"]');
+          const onKeydown = (ev) => { if (ev.key === 'Escape') closeTerminalModal(); };
+          document.addEventListener('keydown', onKeydown);
+          backdropEl.addEventListener('click', (ev) => { if (ev.target === backdropEl) closeTerminalModal(); });
+          backdropEl.querySelector('[data-role="term-modal-close"]').addEventListener('click', closeTerminalModal);
+          activeTerminalModal = { profileId: id, backdropEl, onKeydown };
+
           const dot = card.querySelector('[data-role="dot"]');
           const statusTextEl = card.querySelector('[data-role="status-text"]');
 
@@ -765,6 +805,7 @@ export default {
 
     return () => {
       clearInterval(interval);
+      closeTerminalModal();
       openTerminals.forEach(t => t.handle.dispose());
       document.removeEventListener('click', closeMenusOnOutsideClick);
       document.removeEventListener('keydown', closeMenusOnEscape);
