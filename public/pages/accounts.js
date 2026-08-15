@@ -129,8 +129,13 @@ export default {
       .accounts-page .profile-card { margin-bottom: 0; }
       .accounts-page .profile-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; width: 100%; padding: 0 14px 12px; }
       .accounts-page .profile-actions-primary { display: flex; gap: 6px; }
-      .accounts-page .profile-actions-extra { display: none; gap: 6px; flex-wrap: wrap; width: 100%; margin-top: 6px; padding-top: 8px; border-top: 1px solid var(--border); }
-      .accounts-page .profile-card.expanded .profile-actions-extra { display: flex; }
+      .accounts-page .profile-actions-extra {
+        display: none; flex-direction: column; gap: 6px; position: fixed; z-index: 250; min-width: 200px;
+        background: var(--panel-2); border: 1px solid var(--border); border-radius: var(--radius-lg);
+        padding: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+      }
+      .accounts-page .profile-actions-extra.open { display: flex; }
+      .accounts-page .profile-actions-extra > * { width: 100%; margin: 0; }
       .accounts-page .profile-toggle-more { background: none; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); cursor: pointer; padding: 6px 10px; font-size: 12px; margin-left: auto; }
       .accounts-page .profile-toggle-more:hover { color: var(--text); }
       .accounts-page .filter-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
@@ -256,6 +261,41 @@ export default {
       }
     }
 
+    // Overflow-Menü ("⋯") schwebt als position:fixed-Overlay über dem Inhalt statt den
+    // Kachel-Grid-Fluss zu verschieben — Position wird bei jedem Öffnen relativ zum Button neu
+    // berechnet, damit es auch bei Scroll-Position und Fenstergröße korrekt andockt.
+    function closeAllOverflowMenus() {
+      wrap.querySelectorAll('.profile-card.expanded').forEach(card => {
+        card.classList.remove('expanded');
+        card.querySelector('.profile-actions-extra')?.classList.remove('open');
+      });
+    }
+
+    function openOverflowMenu(menuEl, btnEl) {
+      menuEl.classList.add('open');
+      const btnRect = btnEl.getBoundingClientRect();
+      const menuRect = menuEl.getBoundingClientRect();
+      let left = btnRect.right - menuRect.width;
+      left = Math.max(8, Math.min(left, window.innerWidth - menuRect.width - 8));
+      let top = btnRect.bottom + 6;
+      if (top + menuRect.height > window.innerHeight - 8) {
+        top = btnRect.top - menuRect.height - 6;
+      }
+      menuEl.style.left = `${left}px`;
+      menuEl.style.top = `${top}px`;
+    }
+
+    function closeMenusOnOutsideClick(ev) {
+      if (ev.target.closest('.profile-actions-extra') || ev.target.closest('.profile-toggle-more')) return;
+      closeAllOverflowMenus();
+    }
+    function closeMenusOnEscape(ev) {
+      if (ev.key === 'Escape') closeAllOverflowMenus();
+    }
+    document.addEventListener('click', closeMenusOnOutsideClick);
+    document.addEventListener('keydown', closeMenusOnEscape);
+    window.addEventListener('scroll', closeAllOverflowMenus, true);
+
     // Klassen-Sichtbarkeit: neue Klassen werden beim ersten Erscheinen sichtbar
     // hinzugefügt, ein späteres Abwählen bleibt aber über Neuladungen hinweg bestehen.
     const visibleClasses = new Set();
@@ -277,6 +317,7 @@ export default {
     }
 
     function applyFilters() {
+      closeAllOverflowMenus();
       const searchVal = (wrap.querySelector('#acc-filter-search')?.value || '').trim().toLowerCase();
       const statusVal = wrap.querySelector('#acc-filter-status')?.value || '';
       wrap.querySelectorAll('.login-group').forEach(group => {
@@ -429,8 +470,16 @@ export default {
           if (next !== null) renameProfile(next);
         });
 
-        card.querySelector('[data-action="toggle-more"]').addEventListener('click', () => {
-          card.classList.toggle('expanded');
+        const moreBtn = card.querySelector('[data-action="toggle-more"]');
+        const extraMenu = card.querySelector('.profile-actions-extra');
+        moreBtn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          const wasOpen = card.classList.contains('expanded');
+          closeAllOverflowMenus();
+          if (!wasOpen) {
+            card.classList.add('expanded');
+            openOverflowMenu(extraMenu, moreBtn);
+          }
         });
 
         card.querySelector('[data-action="start"]').addEventListener('click', async () => {
@@ -717,6 +766,9 @@ export default {
     return () => {
       clearInterval(interval);
       openTerminals.forEach(t => t.handle.dispose());
+      document.removeEventListener('click', closeMenusOnOutsideClick);
+      document.removeEventListener('keydown', closeMenusOnEscape);
+      window.removeEventListener('scroll', closeAllOverflowMenus, true);
     };
   }
 };
