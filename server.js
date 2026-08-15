@@ -11,6 +11,7 @@ const accountsRegistry = require('./lib/accountsRegistry');
 const ptyManager = require('./lib/ptyManager');
 require('./lib/statsCollector');
 require('./lib/telemetry');
+require('./lib/marketplaceLinkSync');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
