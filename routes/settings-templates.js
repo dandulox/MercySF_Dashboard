@@ -1,11 +1,18 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
-const { findDataDir } = require('../lib/data');
+const { findDataDir, accountIdFor } = require('../lib/data');
 const templates = require('../lib/settingsTemplates');
 const settingsDefaults = require('../lib/settingsDefaults');
+const accountsRegistry = require('../lib/accountsRegistry');
 
 const router = express.Router();
+
+function characterClassFor(accountId) {
+  const profile = accountsRegistry.list().find(p =>
+    p.server && p.characterName && accountIdFor(p.server, p.characterName) === accountId);
+  return profile ? (profile.characterClass || null) : null;
+}
 
 router.get('/', (req, res) => {
   res.json(templates.list());
@@ -30,7 +37,7 @@ router.post('/', express.json(), (req, res) => {
     return res.status(500).json({ error: 'Einstellungen konnten nicht gelesen werden' });
   }
 
-  const template = templates.create(name.trim(), settings);
+  const template = templates.create(name.trim(), settings, characterClassFor(accountId));
   res.json(template);
 });
 
