@@ -15,6 +15,7 @@ export default {
   'nav.settings': 'Bot-Einstellungen',
   'nav.marketplace': 'Marktplatz',
   'nav.systemSettings': 'System-Einstellungen',
+  'nav.bugreport': 'Bug melden',
 
   // topbar — index.html static parts + router.js dynamic parts
   'topbar.menuTitle': 'Menü',
@@ -346,6 +347,20 @@ export default {
   'accounts.filterStatusAll': 'Alle Status',
   'accounts.filterStatusRunning': 'Läuft',
   'accounts.filterStatusStopped': 'Gestoppt',
+
+  // bugreport.js (public/pages/bugreport.js)
+  'bugreport.title': 'Bug melden',
+  'bugreport.hint': 'Beschreibe das Problem — ein Diagnose-Snapshot (Instanz, Version, Nodes) wird automatisch mitgeschickt.',
+  'bugreport.fieldTitle': 'Titel',
+  'bugreport.fieldDescription': 'Beschreibung',
+  'bugreport.fieldSeverity': 'Schweregrad',
+  'bugreport.severityLow': 'Gering',
+  'bugreport.severityMedium': 'Mittel',
+  'bugreport.severityHigh': 'Hoch',
+  'bugreport.submitBtn': 'Bug melden',
+  'bugreport.submitting': 'Sende…',
+  'bugreport.submitSuccess': 'Ticket #{{id}} erstellt. Danke für die Meldung!',
+  'bugreport.submitError': 'Melden fehlgeschlagen: {{message}}',
 
   // overview.js (public/pages/overview.js)
   'overview.zeroMin': '0 Min',

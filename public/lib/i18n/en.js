@@ -13,6 +13,7 @@ export default {
   'nav.settings': 'Bot Settings',
   'nav.marketplace': 'Marketplace',
   'nav.systemSettings': 'System Settings',
+  'nav.bugreport': 'Report Bug',
 
   'topbar.menuTitle': 'Menu',
   'topbar.menuAria': 'Open menu',
@@ -334,6 +335,20 @@ export default {
   'accounts.filterStatusAll': 'All statuses',
   'accounts.filterStatusRunning': 'Running',
   'accounts.filterStatusStopped': 'Stopped',
+
+  // bugreport.js (public/pages/bugreport.js)
+  'bugreport.title': 'Report a bug',
+  'bugreport.hint': 'Describe the problem — a diagnostic snapshot (instance, version, nodes) is attached automatically.',
+  'bugreport.fieldTitle': 'Title',
+  'bugreport.fieldDescription': 'Description',
+  'bugreport.fieldSeverity': 'Severity',
+  'bugreport.severityLow': 'Low',
+  'bugreport.severityMedium': 'Medium',
+  'bugreport.severityHigh': 'High',
+  'bugreport.submitBtn': 'Report bug',
+  'bugreport.submitting': 'Sending…',
+  'bugreport.submitSuccess': 'Ticket #{{id}} created. Thanks for the report!',
+  'bugreport.submitError': 'Report failed: {{message}}',
 
   'overview.zeroMin': '0 min',
   'overview.durationHM': '{{h}}h {{m}}m',
