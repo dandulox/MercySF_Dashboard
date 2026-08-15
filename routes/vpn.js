@@ -134,4 +134,16 @@ router.get('/targets/:targetId/status', async (req, res) => {
   }
 });
 
+router.get('/targets/:targetId/public-ip', async (req, res) => {
+  try {
+    const node = remoteNodeFor(req.params.targetId);
+    const result = node
+      ? await nodeClient.call(node, '/vpn/public-ip', { timeoutMs: 10000 })
+      : { ip: await vpnManager.publicIp() };
+    res.json(result);
+  } catch (err) {
+    res.status(err.status || 502).json({ error: err.message });
+  }
+});
+
 module.exports = router;

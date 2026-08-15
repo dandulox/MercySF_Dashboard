@@ -157,6 +157,9 @@ export default {
   'nodes.pairBtn': 'Pairen',
   'nodes.pairHint': 'Der Pairing-Code wird beim Installieren des Node-Agents auf dem Server angezeigt (<code>journalctl -u mercy-node-agent</code>) und ist 15 Minuten gültig.',
   'nodes.emptyHint': 'Noch keine Nodes gepairt. Alle Accounts laufen aktuell lokal auf diesem Server.',
+  'nodes.vpnActive': '🟢 VPN Aktiv',
+  'nodes.vpnInactive': '🔴 VPN Inaktiv',
+  'nodes.vpnStatusTitle': 'VPN-Status dieses Ziels neu prüfen (siehe System-Einstellungen → VPN für Details)',
   'nodes.renameTitle': 'Umbenennen',
   'nodes.metaLine': '{{host}}:{{port}} · {{count}} {{accountWord}} · zuletzt gesehen {{lastSeen}}',
   'nodes.removeBtn': 'Entfernen',
@@ -399,4 +402,7 @@ export default {
   'systemSettings.vpnStatusConnected': '🟢 Verbunden ({{interface}}) – {{ip}}',
   'systemSettings.vpnStatusDisconnected': '🔴 Getrennt',
   'systemSettings.vpnDuplicateWarning': '⚠ Dieses Profil ist mehreren Zielen zugewiesen — gleichzeitig verbinden funktioniert bei ProtonVPN in der Regel nicht.',
+  'systemSettings.vpnCheckPublicIpBtn': '🌐 IP prüfen',
+  'systemSettings.vpnCheckPublicIpTitle': 'Prüft die tatsächlich nach außen sichtbare IP dieses Ziels — sollte bei aktivem VPN mit der Endpoint-IP übereinstimmen, da der gesamte Server-Traffic durch den Tunnel läuft.',
+  'systemSettings.vpnPublicIpResult': 'Öffentliche IP: {{ip}}',
 };

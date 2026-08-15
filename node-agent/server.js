@@ -481,6 +481,14 @@ app.get('/vpn/status', async (req, res) => {
   }
 });
 
+app.get('/vpn/public-ip', async (req, res) => {
+  try {
+    res.json({ ip: await vpnManager.publicIp() });
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
 app.use((err, req, res, next) => {
   console.error('[server] unerwarteter Fehler:', err);
   res.status(500).json({ error: 'Interner Fehler' });

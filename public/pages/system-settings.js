@@ -56,6 +56,7 @@ export default {
       .system-settings-page .status-dot.connected { background: var(--green); box-shadow: 0 0 6px var(--green); }
       .system-settings-page .vpn-target-actions { display: flex; gap: 6px; flex-wrap: wrap; }
       .system-settings-page .vpn-target-actions button { width: auto; padding: 5px 10px; font-size: 11px; }
+      .system-settings-page .vpn-public-ip-result { font-size: 11.5px; color: var(--muted); }
       .system-settings-page .vpn-warning { font-size: 11px; color: var(--yellow); }
       @media (max-width: 480px) {
         .system-settings-page #vpn-targets-list { grid-template-columns: 1fr; }
@@ -266,7 +267,9 @@ export default {
             <button class="btn btn-primary" data-role="connect">${t('systemSettings.vpnConnectBtn')}</button>
             <button class="btn-secondary" data-role="disconnect">${t('systemSettings.vpnDisconnectBtn')}</button>
             <button class="btn-secondary" data-role="refresh">${t('systemSettings.vpnRefreshBtn')}</button>
+            <button class="btn-secondary" data-role="check-ip" title="${t('systemSettings.vpnCheckPublicIpTitle')}">${t('systemSettings.vpnCheckPublicIpBtn')}</button>
           </div>
+          <div class="vpn-public-ip-result" data-role="public-ip-result"></div>
         </div>
       `).join('');
 
@@ -323,6 +326,17 @@ export default {
         }
         wireAction('disconnect', '/disconnect', 'POST');
         wireAction('refresh', '/status', 'GET');
+
+        card.querySelector('[data-role="check-ip"]').addEventListener('click', async () => {
+          const resultEl = card.querySelector('[data-role="public-ip-result"]');
+          resultEl.textContent = t('common.loading');
+          try {
+            const { ip } = await ctx.fetchJSON(`/api/vpn/targets/${encodeURIComponent(id)}/public-ip`);
+            resultEl.textContent = t('systemSettings.vpnPublicIpResult', { ip });
+          } catch (err) {
+            resultEl.textContent = t('analytics.loadError', { message: err.message });
+          }
+        });
       });
     }
 

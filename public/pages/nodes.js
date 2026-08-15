@@ -61,6 +61,8 @@ export default {
       .nodes-page .node-meta { font-size: 11px; color: var(--muted); margin-top: 2px; overflow-wrap: anywhere; }
       .nodes-page .node-ping-row { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
       .nodes-page .node-ping-row button { width: auto; padding: 4px 10px; font-size: 11px; }
+      .nodes-page .vpn-status-badge { color: var(--red); border-color: var(--red); }
+      .nodes-page .vpn-status-badge.vpn-active { color: var(--green); border-color: var(--green); }
       .nodes-page .ping-result { font-size: 10.5px; color: var(--muted); white-space: nowrap; }
       .nodes-page .node-stats {
         display: flex; gap: 10px; flex-wrap: wrap; padding-top: 10px; border-top: 1px solid var(--border);
@@ -147,7 +149,15 @@ export default {
         list.innerHTML = `<p class="empty-hint">${t('nodes.emptyHint')}</p>`;
         return;
       }
-      list.innerHTML = nodes.map(n => `
+      // Best-effort: die Node-Ansicht darf auch funktionieren, wenn die VPN-API mal nicht
+      // erreichbar ist — dann bleibt der VPN-Badge einfach im "unbekannt"-Zustand.
+      const vpnTargets = await ctx.fetchJSON('/api/vpn/targets').catch(() => []);
+      const vpnByTarget = new Map(vpnTargets.map(vt => [vt.targetId, vt]));
+
+      list.innerHTML = nodes.map(n => {
+        const vpn = vpnByTarget.get(n.id);
+        const vpnConnected = !!vpn?.lastStatus?.connected;
+        return `
         <div class="node-card" data-id="${n.id}">
           <div class="node-head">
             <div class="status-wrap">
@@ -163,6 +173,7 @@ export default {
                 : t('nodes.metaLine', { host: escapeHtml(n.host), port: n.port, count: n.accountCount, accountWord: n.accountCount === 1 ? 'Account' : 'Accounts', lastSeen: fmtRelTime(n.lastSeen) })}</div>
             </div>
             <div class="node-ping-row">
+              <button class="btn-secondary vpn-status-badge${vpnConnected ? ' vpn-active' : ''}" data-action="vpn-status" title="${t('nodes.vpnStatusTitle')}">${vpnConnected ? t('nodes.vpnActive') : t('nodes.vpnInactive')}</button>
               <button class="btn-secondary" data-action="ping">Ping</button>
             </div>
           </div>
@@ -193,7 +204,8 @@ export default {
           </div>
           ${n.isLocal ? '' : `<div class="node-footer"><button class="btn-danger" data-action="remove">${t('nodes.removeBtn')}</button></div>`}
         </div>
-      `).join('');
+      `;
+      }).join('');
 
       list.querySelectorAll('.node-card').forEach(card => {
         const id = card.dataset.id;
@@ -227,6 +239,20 @@ export default {
           } catch (err) {
             dot.className = 'status-dot offline';
             resultEl.textContent = t('nodes.pingOfflineWithReason', { message: err.message });
+          }
+        });
+
+        card.querySelector('[data-action="vpn-status"]').addEventListener('click', async () => {
+          const badge = card.querySelector('[data-action="vpn-status"]');
+          const original = badge.textContent;
+          badge.textContent = t('common.loading');
+          try {
+            const status = await ctx.fetchJSON(`/api/vpn/targets/${encodeURIComponent(id)}/status`);
+            badge.classList.toggle('vpn-active', !!status.connected);
+            badge.textContent = status.connected ? t('nodes.vpnActive') : t('nodes.vpnInactive');
+          } catch (err) {
+            badge.textContent = original;
+            alert(t('analytics.loadError', { message: err.message }));
           }
         });
 

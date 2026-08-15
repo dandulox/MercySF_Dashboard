@@ -147,6 +147,9 @@ export default {
   'nodes.pairBtn': 'Pair',
   'nodes.pairHint': 'The pairing code is shown when installing the node agent on the server (<code>journalctl -u mercy-node-agent</code>) and is valid for 15 minutes.',
   'nodes.emptyHint': 'No nodes paired yet. All accounts are currently running locally on this server.',
+  'nodes.vpnActive': '🟢 VPN Active',
+  'nodes.vpnInactive': '🔴 VPN Inactive',
+  'nodes.vpnStatusTitle': 'Recheck this target\'s VPN status (see System Settings → VPN for details)',
   'nodes.renameTitle': 'Rename',
   'nodes.metaLine': '{{host}}:{{port}} · {{count}} {{accountWord}} · last seen {{lastSeen}}',
   'nodes.removeBtn': 'Remove',
@@ -385,4 +388,7 @@ export default {
   'systemSettings.vpnStatusConnected': '🟢 Connected ({{interface}}) – {{ip}}',
   'systemSettings.vpnStatusDisconnected': '🔴 Disconnected',
   'systemSettings.vpnDuplicateWarning': '⚠ This profile is assigned to more than one target — connecting both at once usually doesn\'t work with ProtonVPN.',
+  'systemSettings.vpnCheckPublicIpBtn': '🌐 Check IP',
+  'systemSettings.vpnCheckPublicIpTitle': 'Checks this target\'s actual outbound public IP — should match the endpoint IP while connected, since all traffic on the server goes through the tunnel.',
+  'systemSettings.vpnPublicIpResult': 'Public IP: {{ip}}',
 };
