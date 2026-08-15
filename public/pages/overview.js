@@ -112,14 +112,14 @@ export default {
           </div>
           <div class="stat-grid" id="stat-grid"></div>
           <div id="daily-earnings-body" class="daily-earnings"></div>
+          <div class="tavern-section">
+            <div class="tavern-section-title">${t('overview.tavernTitle')}</div>
+            <div id="tavern-body" class="muted">${t('overview.selectAccountTavern')}</div>
+          </div>
         </section>
         <section class="card collapsible-card" id="equipment-card">
           <div class="card-header"><span>${t('overview.equipmentTitle')}</span></div>
           <div id="equipment-body" class="muted">${t('overview.selectAccountEquip')}</div>
-        </section>
-        <section class="card collapsible-card span-2" id="tavern-card">
-          <div class="card-header"><span>${t('overview.tavernTitle')}</span></div>
-          <div id="tavern-body" class="muted">${t('overview.selectAccountTavern')}</div>
         </section>
         <section class="card collapsible-card" id="guild-card">
           <div class="card-header"><span>${t('overview.guildTitle')}</span></div>
@@ -130,35 +130,46 @@ export default {
           <div id="mail-body" class="muted">${t('overview.selectAccountMail')}</div>
         </section>
       </div>
-      <section class="card collapsible-card" id="battle-history-card">
+      <section class="card collapsible-card compact-card" id="battle-history-card">
         <div class="card-header">
           <span>${t('overview.battleHistoryTitle')}</span>
           <button class="icon-btn" id="battle-history-refresh-btn" title="${t('overview.refreshBattleHistoryTitle')}">⟳</button>
         </div>
         <div id="battle-history-body" class="muted">${t('overview.selectAccountBattleHistory')}</div>
       </section>
-      <section class="card collapsible-card" id="recent-actions-card">
-        <div class="card-header"><span>${t('accounts.lastActionsTitle')}</span></div>
-        <div id="recent-actions-body" class="muted">${t('overview.selectAccountLog')}</div>
-      </section>
-      <section class="card collapsible-card" id="scouted-players-card">
-        <div class="card-header"><span>${t('accounts.lastScoutedTitle')}</span></div>
-        <div id="scouted-players-body" class="muted">${t('overview.selectAccountLog')}</div>
-      </section>
-      <section class="card collapsible-card" id="activity-log-card">
-        <div class="card-header"><span>📜 Activity Log</span></div>
-        <div id="activity-log" class="activity-log">${t('overview.selectAccountLog')}</div>
-      </section>
+      <div class="bottom-cards-grid">
+        <section class="card collapsible-card" id="recent-actions-card">
+          <div class="card-header"><span>${t('accounts.lastActionsTitle')}</span></div>
+          <div id="recent-actions-body" class="muted">${t('overview.selectAccountLog')}</div>
+        </section>
+        <section class="card collapsible-card" id="scouted-players-card">
+          <div class="card-header"><span>${t('accounts.lastScoutedTitle')}</span></div>
+          <div id="scouted-players-body" class="muted">${t('overview.selectAccountLog')}</div>
+        </section>
+        <section class="card collapsible-card" id="activity-log-card">
+          <div class="card-header"><span>📜 Activity Log</span></div>
+          <div id="activity-log" class="activity-log">${t('overview.selectAccountLog')}</div>
+        </section>
+      </div>
     `;
     container.appendChild(wrap);
 
     ctx.injectStyleOnce('overview-gamestate', `
-      .gamestate-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-      .gamestate-grid .span-2 { grid-column: 1 / -1; }
+      .gamestate-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; align-items: start; }
       .gamestate-grid .stat-grid { grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); margin-bottom: 0; }
       @media (max-width: 900px) {
         .gamestate-grid { grid-template-columns: 1fr; }
       }
+
+      .tavern-section { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+      .tavern-section-title { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px; }
+
+      .bottom-cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
+      @media (max-width: 900px) {
+        .bottom-cards-grid { grid-template-columns: 1fr; }
+      }
+
+      .compact-card .table-scroll { max-height: 260px; overflow-y: auto; }
 
       .accounts-pagination { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; font-size: 12px; }
       .pagination-pagesize { display: flex; align-items: center; gap: 6px; color: var(--muted); }
@@ -177,7 +188,7 @@ export default {
       .alu-bar-track { background: var(--panel-2); border: 1px solid var(--border); border-radius: 6px; height: 10px; overflow: hidden; }
       .alu-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent, #4f8cff), #7a5cff); border-radius: 6px; transition: width .3s; }
 
-      .equip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+      .equip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
       .equip-slot { background: var(--panel-2); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 8px 10px; min-width: 0; overflow-wrap: break-word; }
       .equip-slot-name { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
       .equip-slot-type { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
@@ -208,12 +219,12 @@ export default {
       }
       .daily-earnings-table td.de-label { text-align: left; color: var(--muted); font-weight: 400; }
       .daily-levelups { margin-top: 10px; font-size: 12.5px; color: var(--muted); }
-      .battle-history-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+      .battle-history-table { width: 100%; border-collapse: collapse; font-size: 12px; }
       .battle-history-table th {
-        text-align: left; color: var(--muted); font-weight: 600; font-size: 11px;
-        letter-spacing: 0.03em; padding: 6px 10px; border-bottom: 1px solid var(--border);
+        text-align: left; color: var(--muted); font-weight: 600; font-size: 10.5px;
+        letter-spacing: 0.03em; padding: 4px 8px; border-bottom: 1px solid var(--border);
       }
-      .battle-history-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+      .battle-history-table td { padding: 5px 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
       .battle-history-table tr:last-child td { border-bottom: none; }
       .battle-result { font-weight: 700; font-size: 11px; padding: 2px 8px; border-radius: 999px; }
       .battle-result.win { background: rgba(53,201,143,0.15); color: var(--green); }
@@ -380,7 +391,7 @@ export default {
       if (!accountId) { el.textContent = t('overview.selectAccountBattleHistory'); return; }
       el.textContent = t('overview.loadingEllipsis');
       try {
-        const data = await ctx.fetchJSON(`/api/history/${encodeURIComponent(accountId)}?limit=20`);
+        const data = await ctx.fetchJSON(`/api/history/${encodeURIComponent(accountId)}?limit=8`);
         if (!data.battles.length) { el.textContent = t('overview.noBattlesRecorded'); return; }
         const kindLabels = battleKindLabels();
         el.innerHTML = `
