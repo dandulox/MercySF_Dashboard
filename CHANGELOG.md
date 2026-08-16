@@ -5,6 +5,25 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.8.1] - 2026-08-16
+
+### Fixed
+- Randomizer: every failure in the tick (start/stop/VPN-switch/node-
+  assignment errors, an unresolvable reserve node) was silently
+  swallowed — nothing showed up anywhere, not even the server log. All
+  of these now log a `[randomizer] ...` line with the actual error, and
+  a missing reserve node no longer marks an account as "handled" (it
+  keeps retrying every tick instead of giving up for the day).
+- Randomizer: if the reserve node is the *only* node (typical
+  single-server setup with no paired nodes) and is reserved for city
+  guard, the main pool is empty and nothing gets a bot block at all —
+  now logs a clear warning naming this as the likely cause instead of
+  silently scheduling nothing.
+- Randomizer: a VPN profile referenced by an account's config that no
+  longer exists left the previous VPN gate assignment in place (e.g.
+  still "block") instead of falling back to no VPN, which could make
+  the subsequent start fail for an unrelated reason.
+
 ## [2.8.0] - 2026-08-16
 
 ### Added
