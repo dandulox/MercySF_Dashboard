@@ -27,10 +27,18 @@ router.post('/recalculate', (req, res) => {
 
 router.post('/settings', express.json(), (req, res) => {
   const {
-    minHours, maxHours, dayStart, dayEnd, minBlockMinutes, blockGapMinutes,
+    timezone, minHours, maxHours, dayStart, dayEnd, minBlockMinutes, blockGapMinutes,
     stadtwacheDurationMin, stadtwacheMinGapMinutes, stadtwacheCutoff, reserveNodeId, nodeHandoffMinutes, dayHardEnd, hardEnforce,
   } = req.body || {};
   const patch = {};
+  if (timezone !== undefined) {
+    try {
+      new Intl.DateTimeFormat('en-US', { timeZone: timezone });
+    } catch (e) {
+      return res.status(400).json({ error: 'Ungültige Zeitzone (IANA-Name erwartet, z. B. Europe/Berlin)' });
+    }
+    patch.timezone = timezone;
+  }
   if (minHours !== undefined) patch.minHours = Number(minHours);
   if (maxHours !== undefined) patch.maxHours = Number(maxHours);
   if (dayStart !== undefined) {

@@ -362,6 +362,8 @@ export default {
   'randomizer.refreshBtn': 'Refresh',
   'randomizer.timelineEmpty': "No plan for today yet — enable the randomizer for at least one account.",
   'randomizer.nowLabel': 'Now',
+  'randomizer.timezone': 'Timezone (IANA, e.g. Europe/Berlin)',
+  'randomizer.serverTimeLabel': 'Server time ({{tz}}): {{time}}',
   'randomizer.minHours': 'Min hours (Random mode)',
   'randomizer.maxHours': 'Max hours (Random mode)',
   'randomizer.dayStart': 'Day start',

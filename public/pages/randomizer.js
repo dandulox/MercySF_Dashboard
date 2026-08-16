@@ -38,6 +38,7 @@ export default {
       <section class="card">
         <div class="card-header">
           <span>${t('randomizer.timelineTitle')}</span>
+          <span id="randomizer-server-time" class="randomizer-server-time"></span>
           <button type="button" class="randomizer-plan-btn" id="randomizer-timeline-refresh-btn">${t('randomizer.refreshBtn')}</button>
         </div>
         <div id="randomizer-timeline" style="position:relative;"></div>
@@ -138,6 +139,7 @@ export default {
         border-radius: 6px; padding: 5px 9px; font-size: 12px; color: var(--text);
         box-shadow: 0 6px 18px rgba(0,0,0,0.35); pointer-events: none; white-space: nowrap;
       }
+      .randomizer-server-time { font-size: 11px; color: var(--muted); font-weight: 400; white-space: nowrap; }
     `);
 
     let settings = null;
@@ -158,6 +160,7 @@ export default {
     }
 
     const SETTINGS_FIELDS = [
+      ['timezone', 'randomizer.timezone', 'text'],
       ['minHours', 'randomizer.minHours', 'number'],
       ['maxHours', 'randomizer.maxHours', 'number'],
       ['dayStart', 'randomizer.dayStart', 'text'],
@@ -264,17 +267,21 @@ export default {
       `;
     }
 
-    function nowMarkerHtml() {
-      const now = new Date();
-      const nowMinutes = now.getHours() * 60 + now.getMinutes();
+    function nowMarkerHtml(nowMinutes) {
       return `<div class="randomizer-timeline-now" style="left:${(nowMinutes / 1440) * 100}%;" title="${t('randomizer.nowLabel')}"></div>`;
     }
 
     async function loadTimeline() {
       const el = wrap.querySelector('#randomizer-timeline');
+      const serverTimeEl = wrap.querySelector('#randomizer-server-time');
       try {
         const timeline = await ctx.fetchJSON('/api/randomizer/timeline');
         timelineColorByUsername.clear();
+
+        serverTimeEl.textContent = t('randomizer.serverTimeLabel', {
+          time: fmtMinutes(timeline.nowMinutes),
+          tz: timeline.timezone,
+        });
 
         const ruler = `
           <div class="randomizer-timeline-ruler">
@@ -294,7 +301,7 @@ export default {
               <div class="randomizer-timeline-block" style="left:${(b.start / 1440) * 100}%; width:${((b.end - b.start) / 1440) * 100}%; background:${color};" data-tip="${escapeHtml(acc.username)}: ${fmtMinutes(b.start)}–${fmtMinutes(b.end)}"></div>
             `).join('');
           }).join('');
-          return timelineRowHtml(node.name, `${node.utilizationPct}%`, blocksHtml + nowMarkerHtml());
+          return timelineRowHtml(node.name, `${node.utilizationPct}%`, blocksHtml + nowMarkerHtml(timeline.nowMinutes));
         }).join('');
 
         const reserveRow = timeline.reserveNode
@@ -303,7 +310,7 @@ export default {
               null,
               timeline.reserveNode.pulses.map(p => `
                 <div class="randomizer-timeline-pulse" style="left:${(p.at / 1440) * 100}%; width:${((p.end - p.at) / 1440) * 100}%;" data-tip="${escapeHtml(p.username)}: ${fmtMinutes(p.at)}"></div>
-              `).join('') + nowMarkerHtml()
+              `).join('') + nowMarkerHtml(timeline.nowMinutes)
             )
           : '';
 

@@ -5,6 +5,26 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.9.0] - 2026-08-16
+
+### Added
+- Randomizer: a `timezone` setting (IANA name, e.g. `Europe/Berlin`,
+  default `UTC`). Root-caused a live report of "bots don't start despite
+  the schedule": the whole scheduling engine ran on the server's OS
+  timezone (UTC on a typical VPS) with no way to say "dayStart 06:00
+  means 6am *here*, not 6am UTC" — on a server in a different timezone
+  than the operator, this made every block fire hours later (by the
+  operator's clock) than expected, with nothing actually broken. Falls
+  back to server time if the configured zone is invalid, so a bad value
+  can't crash the tick. DST is handled automatically via `Intl`, no
+  manual offset table.
+- Randomizer: the Timeline card now shows "Server time (<timezone>):
+  HH:MM" (computed the same way the tick itself computes it) so a
+  mismatch like this is visible at a glance instead of requiring a
+  server-side investigation. The timeline's "now" marker also switched
+  from the viewer's browser clock to this same server-computed time, so
+  it's consistent with what the scheduler is actually acting on.
+
 ## [2.8.1] - 2026-08-16
 
 ### Fixed
