@@ -5,6 +5,18 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.9.2] - 2026-08-16
+
+### Fixed
+- Randomizer: the global-limits grid still misaligned inputs whenever a
+  label wrapped to a different number of lines than its row neighbors —
+  the earlier `min-height` fix on the whole `<label>` didn't survive
+  adding more/longer fields (timezone, min gap). Reworked to a fixed
+  4-column grid (2 on tablet, 1 on mobile) with the label text in its
+  own bottom-aligned, fixed-height span, separate from the input —
+  every input in a row now sits at the same position regardless of how
+  many lines its label took.
+
 ## [2.9.1] - 2026-08-16
 
 ### Changed

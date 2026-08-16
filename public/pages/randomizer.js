@@ -55,11 +55,18 @@ export default {
     ctx.injectStyleOnce('randomizer-page', `
       .randomizer-page .page-hint { color: var(--muted); font-size: 12.5px; margin: -6px 0 14px; }
       .randomizer-settings-grid {
-        display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px 16px; align-items: start;
+        display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; align-items: start;
       }
-      .randomizer-settings-grid label {
-        display: flex; flex-direction: column; gap: 4px; font-size: 10.5px; font-weight: 700; color: var(--muted);
-        text-transform: uppercase; letter-spacing: 0.04em; min-height: 32px; justify-content: flex-end;
+      @media (max-width: 900px) {
+        .randomizer-settings-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+      @media (max-width: 520px) {
+        .randomizer-settings-grid { grid-template-columns: 1fr; }
+      }
+      .randomizer-settings-grid label { display: flex; flex-direction: column; gap: 4px; }
+      .randomizer-settings-grid label .label-text {
+        font-size: 10.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em;
+        min-height: 28px; display: flex; align-items: flex-end; line-height: 1.3;
       }
       .randomizer-settings-grid input, .randomizer-settings-grid select {
         background: var(--input-bg); border: 1px solid var(--border); color: var(--text);
@@ -199,17 +206,17 @@ export default {
       settings = await ctx.fetchJSON('/api/randomizer/settings');
       const grid = wrap.querySelector('#randomizer-settings-grid');
       const timezoneField = `
-        <label>${t('randomizer.timezone')}
+        <label><span class="label-text">${t('randomizer.timezone')}</span>
           <select data-key="timezone">${timezoneOptionsHtml(settings.timezone)}</select>
         </label>
       `;
       const reserveField = `
-        <label>${t('randomizer.reserveNode')}
+        <label><span class="label-text">${t('randomizer.reserveNode')}</span>
           <select data-key="reserveNodeId">${nodeOptionsHtml(settings.reserveNodeId, true)}</select>
         </label>
       `;
       const otherFields = SETTINGS_FIELDS.map(([key, labelKey, type]) => `
-        <label>${t(labelKey)}
+        <label><span class="label-text">${t(labelKey)}</span>
           <input type="${type}" data-key="${key}" value="${escapeHtml(String(settings[key]))}" />
         </label>
       `).join('');
