@@ -5,6 +5,17 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.7.0] - 2026-08-16
+
+### Added
+- Randomizer: a "Timeline" card showing today's whole-day schedule at a
+  glance — one row per node with today's bot blocks drawn as colored
+  segments on a 00:00–24:00 track (color-coded per account, hover for
+  exact times) plus a utilization percentage (occupied time vs. the
+  configured day window), a separate row for the reserve node's combined
+  city-guard pulse queue, and a "now" marker across all tracks. Backed by
+  a new `GET /api/randomizer/timeline` endpoint.
+
 ## [2.6.1] - 2026-08-16
 
 ### Fixed

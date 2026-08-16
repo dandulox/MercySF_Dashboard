@@ -34,6 +34,14 @@ export default {
       </section>
 
       <section class="card">
+        <div class="card-header">
+          <span>${t('randomizer.timelineTitle')}</span>
+          <button type="button" class="randomizer-plan-btn" id="randomizer-timeline-refresh-btn">${t('randomizer.refreshBtn')}</button>
+        </div>
+        <div id="randomizer-timeline"></div>
+      </section>
+
+      <section class="card">
         <div class="card-header"><span>${t('randomizer.accountsTitle')}</span></div>
         <div id="randomizer-accounts-list"></div>
       </section>
@@ -99,6 +107,29 @@ export default {
       .randomizer-plan-list { list-style: none; margin: 4px 0 0; padding: 0; }
       .randomizer-plan-list li { padding: 2px 0; }
       .randomizer-page .empty-hint { color: var(--muted); font-size: 13px; padding: 20px 0; text-align: center; grid-column: 1 / -1; }
+
+      .randomizer-timeline-ruler { display: flex; margin-left: 160px; font-size: 10px; color: var(--muted); padding-bottom: 4px; }
+      .randomizer-timeline-ruler span { flex: 1; text-align: left; }
+      .randomizer-timeline-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+      .randomizer-timeline-label { width: 150px; flex-shrink: 0; font-size: 12px; }
+      .randomizer-timeline-label .name { font-weight: 600; }
+      .randomizer-timeline-label .pct { color: var(--muted); font-size: 11px; }
+      .randomizer-timeline-track {
+        position: relative; flex: 1; height: 22px; background: var(--panel);
+        border: 1px solid var(--border); border-radius: 6px; overflow: hidden;
+      }
+      .randomizer-timeline-block {
+        position: absolute; top: 0; bottom: 0; border-radius: 3px; cursor: default;
+        opacity: 0.85; min-width: 2px;
+      }
+      .randomizer-timeline-block:hover { opacity: 1; }
+      .randomizer-timeline-pulse {
+        position: absolute; top: 3px; bottom: 3px; min-width: 3px; border-radius: 2px;
+        background: var(--accent); cursor: default;
+      }
+      .randomizer-timeline-now {
+        position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--red); z-index: 5;
+      }
     `);
 
     let settings = null;
@@ -189,6 +220,78 @@ export default {
         status.textContent = t('analytics.loadError', { message: err.message });
       }
     });
+
+    const TIMELINE_COLORS = ['#4f8cff', '#35c98f', '#f0b429', '#ff6b6b', '#a875ff', '#2dd4d4', '#ff9f43', '#e879f9'];
+    const timelineColorByUsername = new Map();
+    function colorFor(username) {
+      if (!timelineColorByUsername.has(username)) {
+        timelineColorByUsername.set(username, TIMELINE_COLORS[timelineColorByUsername.size % TIMELINE_COLORS.length]);
+      }
+      return timelineColorByUsername.get(username);
+    }
+
+    function timelineRowHtml(label, pctLabel, tracksHtml) {
+      return `
+        <div class="randomizer-timeline-row">
+          <div class="randomizer-timeline-label">
+            <div class="name">${escapeHtml(label)}</div>
+            ${pctLabel !== null ? `<div class="pct">${pctLabel}</div>` : ''}
+          </div>
+          <div class="randomizer-timeline-track">${tracksHtml}</div>
+        </div>
+      `;
+    }
+
+    function nowMarkerHtml() {
+      const now = new Date();
+      const nowMinutes = now.getHours() * 60 + now.getMinutes();
+      return `<div class="randomizer-timeline-now" style="left:${(nowMinutes / 1440) * 100}%;" title="${t('randomizer.nowLabel')}"></div>`;
+    }
+
+    async function loadTimeline() {
+      const el = wrap.querySelector('#randomizer-timeline');
+      try {
+        const timeline = await ctx.fetchJSON('/api/randomizer/timeline');
+        timelineColorByUsername.clear();
+
+        const ruler = `
+          <div class="randomizer-timeline-ruler">
+            ${['00', '04', '08', '12', '16', '20', '24'].map(h => `<span>${h}:00</span>`).join('')}
+          </div>
+        `;
+
+        if (!timeline.nodes.length && !timeline.reserveNode) {
+          el.innerHTML = `<p class="empty-hint">${t('randomizer.timelineEmpty')}</p>`;
+          return;
+        }
+
+        const nodeRows = timeline.nodes.map(node => {
+          const blocksHtml = node.accounts.map(acc => {
+            const color = colorFor(acc.username);
+            return acc.blocks.map(b => `
+              <div class="randomizer-timeline-block" style="left:${(b.start / 1440) * 100}%; width:${((b.end - b.start) / 1440) * 100}%; background:${color};" title="${escapeHtml(acc.username)}: ${fmtMinutes(b.start)}–${fmtMinutes(b.end)}"></div>
+            `).join('');
+          }).join('');
+          return timelineRowHtml(node.name, `${node.utilizationPct}%`, blocksHtml + nowMarkerHtml());
+        }).join('');
+
+        const reserveRow = timeline.reserveNode
+          ? timelineRowHtml(
+              `${timeline.reserveNode.name} (${t('randomizer.stadtwacheLabel')})`,
+              null,
+              timeline.reserveNode.pulses.map(p => `
+                <div class="randomizer-timeline-pulse" style="left:${(p.at / 1440) * 100}%; width:${((p.end - p.at) / 1440) * 100}%;" title="${escapeHtml(p.username)}: ${fmtMinutes(p.at)}"></div>
+              `).join('') + nowMarkerHtml()
+            )
+          : '';
+
+        el.innerHTML = ruler + nodeRows + reserveRow;
+      } catch (err) {
+        el.innerHTML = `<p class="empty-hint">${t('analytics.loadError', { message: err.message })}</p>`;
+      }
+    }
+
+    wrap.querySelector('#randomizer-timeline-refresh-btn').addEventListener('click', loadTimeline);
 
     function vpnOptionsHtml(config) {
       const noneSelected = config.vpnMode === 'none';
@@ -348,6 +451,7 @@ export default {
       }
       await loadSettings();
       await loadAccounts();
+      await loadTimeline();
     }
 
     init();

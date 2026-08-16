@@ -16,6 +16,10 @@ router.get('/status', (req, res) => {
   res.json(randomizer.getStatusSummary());
 });
 
+router.get('/timeline', (req, res) => {
+  res.json(randomizer.getTimeline());
+});
+
 router.post('/settings', express.json(), (req, res) => {
   const {
     minHours, maxHours, dayStart, dayEnd, minBlockMinutes, blockGapMinutes,
