@@ -23,8 +23,14 @@ export async function fetchJSON(url, opts) {
 
 export function getAccountId() { return state.accountId; }
 
+function expandGroupContaining(id) {
+  const acc = state.accounts.find(a => a.id === id);
+  if (acc) state.expandedGroups.add(groupKeyFor(acc));
+}
+
 export function setAccountId(id) {
   state.accountId = id;
+  expandGroupContaining(id);
   state.listeners.forEach(cb => cb(id));
 }
 
@@ -95,8 +101,6 @@ function renderSidebarAccounts() {
   groups.forEach(group => {
     const total = group.members.length;
     const active = group.members.filter(m => m.running).length;
-    const containsSelected = group.members.some(m => m.id === state.accountId);
-    if (containsSelected) state.expandedGroups.add(group.key);
     const expanded = state.expandedGroups.has(group.key);
 
     const header = document.createElement('div');
@@ -323,6 +327,7 @@ async function loadAccounts() {
   state.accounts = accounts;
   if (!state.accountId && accounts.length) {
     state.accountId = accounts[0].id;
+    expandGroupContaining(state.accountId);
   }
   renderSidebarAccounts();
   renderTopbarAccountSelect();

@@ -5,6 +5,16 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.10.1] - 2026-08-16
+
+### Fixed
+- Sidebar: the first account group could never be collapsed — every
+  re-render (the sidebar polls `/api/accounts` periodically) re-expanded
+  whichever group contained the currently selected character, which for
+  the first group is true from the moment the page loads. Auto-expand
+  now only fires when the selection actually changes, not on every
+  render.
+
 ## [2.10.0] - 2026-08-16
 
 ### Changed
