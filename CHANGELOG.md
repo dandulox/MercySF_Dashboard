@@ -5,6 +5,18 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.10.0] - 2026-08-16
+
+### Changed
+- Sidebar: the account list below the main nav now groups characters by
+  login instead of listing every character flat. Each login is a
+  collapsible row showing "X/Y" (X = characters currently botting, Y =
+  total characters on that login) with a chevron to expand/collapse its
+  character list; a login containing the currently selected character
+  auto-expands. `GET /api/accounts` now includes `username` and a
+  `running` flag per character (local via `ptyManager.getStatus`, remote
+  via the node-agent's own `/profiles` status) to back this.
+
 ## [2.9.2] - 2026-08-16
 
 ### Fixed

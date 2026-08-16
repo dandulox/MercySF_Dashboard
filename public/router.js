@@ -4,6 +4,7 @@ const state = {
   accountId: null,
   accounts: [],
   listeners: new Set(),
+  expandedGroups: new Set(),
 };
 
 export async function fetchJSON(url, opts) {
@@ -56,27 +57,67 @@ function fmtLevel(acc) {
   return acc.stats ? t('router.level', { level: acc.stats.level }) : t('router.noData');
 }
 
+function groupKeyFor(acc) {
+  return acc.username || `char:${acc.id}`;
+}
+
+function renderCharacterRow(acc) {
+  const div = document.createElement('div');
+  div.className = 'account-item' + (acc.id === state.accountId ? ' selected' : '');
+  const dotClass = acc.currentActivity ? 'account-item-dot active' : 'account-item-dot';
+  const sub = acc.currentActivity
+    ? `${fmtLevel(acc)} · ${acc.currentActivity}`
+    : fmtLevel(acc);
+  div.innerHTML = `
+    <div class="account-item-name-row">
+      <span class="${dotClass}"></span>
+      <span class="account-item-name char-name">${acc.charName}</span>
+    </div>
+    <div class="account-item-sub char-name">${sub}</div>`;
+  div.onclick = () => setAccountId(acc.id);
+  return div;
+}
+
 function renderSidebarAccounts() {
   const wrap = document.getElementById('accounts-list-items');
   const countEl = document.getElementById('accounts-count');
   if (!wrap) return;
   countEl.textContent = state.accounts.length ? `(${state.accounts.length})` : '';
   wrap.innerHTML = '';
+
+  const groups = new Map();
   state.accounts.forEach(acc => {
-    const div = document.createElement('div');
-    div.className = 'account-item' + (acc.id === state.accountId ? ' selected' : '');
-    const dotClass = acc.currentActivity ? 'account-item-dot active' : 'account-item-dot';
-    const sub = acc.currentActivity
-      ? `${fmtLevel(acc)} · ${acc.currentActivity}`
-      : fmtLevel(acc);
-    div.innerHTML = `
-      <div class="account-item-name-row">
-        <span class="${dotClass}"></span>
-        <span class="account-item-name char-name">${acc.charName}</span>
-      </div>
-      <div class="account-item-sub char-name">${sub}</div>`;
-    div.onclick = () => setAccountId(acc.id);
-    wrap.appendChild(div);
+    const key = groupKeyFor(acc);
+    if (!groups.has(key)) groups.set(key, { key, label: acc.username || acc.charName, members: [] });
+    groups.get(key).members.push(acc);
+  });
+
+  groups.forEach(group => {
+    const total = group.members.length;
+    const active = group.members.filter(m => m.running).length;
+    const containsSelected = group.members.some(m => m.id === state.accountId);
+    if (containsSelected) state.expandedGroups.add(group.key);
+    const expanded = state.expandedGroups.has(group.key);
+
+    const header = document.createElement('div');
+    header.className = 'account-group-header' + (expanded ? ' expanded' : '');
+    header.innerHTML = `
+      <span class="account-group-chevron">▸</span>
+      <span class="account-group-name char-name">${group.label}</span>
+      <span class="account-group-badge${active > 0 ? ' active' : ''}">${active}/${total}</span>`;
+    header.onclick = () => {
+      if (state.expandedGroups.has(group.key)) state.expandedGroups.delete(group.key);
+      else state.expandedGroups.add(group.key);
+      renderSidebarAccounts();
+    };
+    wrap.appendChild(header);
+
+    if (expanded) {
+      const body = document.createElement('div');
+      body.className = 'account-group-body';
+      group.members.forEach(acc => body.appendChild(renderCharacterRow(acc)));
+      wrap.appendChild(body);
+    }
   });
 }
 

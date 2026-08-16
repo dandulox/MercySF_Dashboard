@@ -219,6 +219,41 @@ body {
 .account-item-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
 .account-item-dot.active { background: var(--green); box-shadow: 0 0 5px var(--green); }
 
+.account-group-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 9px;
+  border-radius: var(--radius-md);
+  margin-bottom: 2px;
+  cursor: pointer;
+}
+.account-group-header:hover { background: var(--panel-2); }
+.account-group-chevron {
+  font-size: 10px;
+  color: var(--muted);
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+.account-group-header.expanded .account-group-chevron { transform: rotate(90deg); }
+.account-group-name { font-weight: 600; font-size: 13px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-group-badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--muted);
+  background: var(--panel-2);
+  border-radius: 999px;
+  padding: 1px 7px;
+  flex-shrink: 0;
+}
+.account-group-badge.active { color: var(--green); background: color-mix(in srgb, var(--green) 16%, transparent); }
+.account-group-body {
+  padding-left: 14px;
+  border-left: 1px solid var(--border);
+  margin: 0 0 4px 12px;
+}
+.account-group-body .account-item { padding: 6px 9px; }
+
 .content {
   flex: 1;
   padding: 16px 20px;
