@@ -28,9 +28,11 @@ export default {
         <div class="randomizer-settings-footer">
           <button type="button" class="btn btn-primary" id="randomizer-settings-save-btn">${t('randomizer.saveSettingsBtn')}</button>
           <button type="button" class="randomizer-willkur-btn" id="randomizer-hard-enforce-btn"></button>
+          <button type="button" class="randomizer-willkur-btn" id="randomizer-recalculate-btn">${t('randomizer.recalculateBtn')}</button>
           <span id="randomizer-settings-status" class="muted"></span>
         </div>
         <p class="randomizer-hard-enforce-hint muted">${t('randomizer.hardEnforceHint')}</p>
+        <p class="randomizer-hard-enforce-hint muted">${t('randomizer.recalculateHint')}</p>
       </section>
 
       <section class="card">
@@ -38,7 +40,8 @@ export default {
           <span>${t('randomizer.timelineTitle')}</span>
           <button type="button" class="randomizer-plan-btn" id="randomizer-timeline-refresh-btn">${t('randomizer.refreshBtn')}</button>
         </div>
-        <div id="randomizer-timeline"></div>
+        <div id="randomizer-timeline" style="position:relative;"></div>
+        <div class="randomizer-timeline-tooltip" id="randomizer-timeline-tooltip" hidden></div>
       </section>
 
       <section class="card">
@@ -130,6 +133,11 @@ export default {
       .randomizer-timeline-now {
         position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--red); z-index: 5;
       }
+      .randomizer-timeline-tooltip {
+        position: fixed; z-index: 300; background: var(--panel); border: 1px solid var(--border);
+        border-radius: 6px; padding: 5px 9px; font-size: 12px; color: var(--text);
+        box-shadow: 0 6px 18px rgba(0,0,0,0.35); pointer-events: none; white-space: nowrap;
+      }
     `);
 
     let settings = null;
@@ -196,6 +204,20 @@ export default {
         });
         renderHardEnforceBtn();
         status.textContent = t('randomizer.settingsSaved');
+      } catch (err) {
+        status.textContent = t('analytics.loadError', { message: err.message });
+      }
+    });
+
+    wrap.querySelector('#randomizer-recalculate-btn').addEventListener('click', async () => {
+      if (!confirm(t('randomizer.recalculateConfirm'))) return;
+      const status = wrap.querySelector('#randomizer-settings-status');
+      status.textContent = t('randomizer.recalculating');
+      try {
+        await ctx.fetchJSON('/api/randomizer/recalculate', { method: 'POST' });
+        await loadTimeline();
+        await loadAccounts();
+        status.textContent = t('randomizer.recalculateDone');
       } catch (err) {
         status.textContent = t('analytics.loadError', { message: err.message });
       }
@@ -269,7 +291,7 @@ export default {
           const blocksHtml = node.accounts.map(acc => {
             const color = colorFor(acc.username);
             return acc.blocks.map(b => `
-              <div class="randomizer-timeline-block" style="left:${(b.start / 1440) * 100}%; width:${((b.end - b.start) / 1440) * 100}%; background:${color};" title="${escapeHtml(acc.username)}: ${fmtMinutes(b.start)}–${fmtMinutes(b.end)}"></div>
+              <div class="randomizer-timeline-block" style="left:${(b.start / 1440) * 100}%; width:${((b.end - b.start) / 1440) * 100}%; background:${color};" data-tip="${escapeHtml(acc.username)}: ${fmtMinutes(b.start)}–${fmtMinutes(b.end)}"></div>
             `).join('');
           }).join('');
           return timelineRowHtml(node.name, `${node.utilizationPct}%`, blocksHtml + nowMarkerHtml());
@@ -280,7 +302,7 @@ export default {
               `${timeline.reserveNode.name} (${t('randomizer.stadtwacheLabel')})`,
               null,
               timeline.reserveNode.pulses.map(p => `
-                <div class="randomizer-timeline-pulse" style="left:${(p.at / 1440) * 100}%; width:${((p.end - p.at) / 1440) * 100}%;" title="${escapeHtml(p.username)}: ${fmtMinutes(p.at)}"></div>
+                <div class="randomizer-timeline-pulse" style="left:${(p.at / 1440) * 100}%; width:${((p.end - p.at) / 1440) * 100}%;" data-tip="${escapeHtml(p.username)}: ${fmtMinutes(p.at)}"></div>
               `).join('') + nowMarkerHtml()
             )
           : '';
@@ -292,6 +314,26 @@ export default {
     }
 
     wrap.querySelector('#randomizer-timeline-refresh-btn').addEventListener('click', loadTimeline);
+
+    // Custom Tooltip statt title-Attribut — bei den dicht gepackten, teils wenige Pixel breiten
+    // Timeline-Segmenten reagiert das native Browser-Tooltip zu träge/unzuverlässig.
+    const timelineEl = wrap.querySelector('#randomizer-timeline');
+    const tooltipEl = wrap.querySelector('#randomizer-timeline-tooltip');
+    timelineEl.addEventListener('mouseover', (ev) => {
+      const target = ev.target.closest('[data-tip]');
+      if (target) {
+        tooltipEl.textContent = target.dataset.tip;
+        tooltipEl.hidden = false;
+      } else {
+        tooltipEl.hidden = true;
+      }
+    });
+    timelineEl.addEventListener('mousemove', (ev) => {
+      if (tooltipEl.hidden) return;
+      tooltipEl.style.left = `${ev.clientX + 14}px`;
+      tooltipEl.style.top = `${ev.clientY + 14}px`;
+    });
+    timelineEl.addEventListener('mouseleave', () => { tooltipEl.hidden = true; });
 
     function vpnOptionsHtml(config) {
       const noneSelected = config.vpnMode === 'none';

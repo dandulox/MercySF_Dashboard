@@ -5,6 +5,24 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.8.0] - 2026-08-16
+
+### Added
+- Randomizer: a "Recalculate" button forces a brand-new assignment for
+  today instead of waiting for the next day's rollover — new timeslots,
+  new node distribution, and (for Random-mode accounts) newly rolled
+  hours/blocks/city-guard counts. A persisted per-day nonce gets mixed
+  into the scheduling seed so recalculating actually produces a
+  different plan instead of the same deterministic one; already-running
+  accounts pick up the new plan (including node/VPN reassignment) on the
+  next tick.
+
+### Fixed
+- Timeline: hover tooltips on the schedule bars now use a custom,
+  immediately-visible tooltip instead of the native browser `title`
+  attribute, which was unreliable on the densely packed, sometimes
+  few-pixels-wide segments.
+
 ## [2.7.0] - 2026-08-16
 
 ### Added

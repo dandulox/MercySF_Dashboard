@@ -20,6 +20,11 @@ router.get('/timeline', (req, res) => {
   res.json(randomizer.getTimeline());
 });
 
+router.post('/recalculate', (req, res) => {
+  randomizer.recalculate();
+  res.json({ ok: true, timeline: randomizer.getTimeline() });
+});
+
 router.post('/settings', express.json(), (req, res) => {
   const {
     minHours, maxHours, dayStart, dayEnd, minBlockMinutes, blockGapMinutes,
