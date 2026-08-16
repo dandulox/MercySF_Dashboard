@@ -159,8 +159,23 @@ export default {
       ).join('');
     }
 
+    const TIMEZONE_OPTIONS = [
+      'UTC',
+      'Europe/Berlin', 'Europe/London', 'Europe/Paris', 'Europe/Madrid', 'Europe/Rome',
+      'Europe/Amsterdam', 'Europe/Warsaw', 'Europe/Moscow', 'Europe/Istanbul',
+      'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles', 'America/Sao_Paulo',
+      'Asia/Tokyo', 'Asia/Shanghai', 'Asia/Kolkata', 'Asia/Dubai', 'Asia/Singapore',
+      'Australia/Sydney', 'Pacific/Auckland',
+    ];
+
+    function timezoneOptionsHtml(selected) {
+      const options = TIMEZONE_OPTIONS.includes(selected) ? TIMEZONE_OPTIONS : [selected, ...TIMEZONE_OPTIONS];
+      return options.map(tz =>
+        `<option value="${escapeHtml(tz)}" ${tz === selected ? 'selected' : ''}>${escapeHtml(tz)}</option>`
+      ).join('');
+    }
+
     const SETTINGS_FIELDS = [
-      ['timezone', 'randomizer.timezone', 'text'],
       ['minHours', 'randomizer.minHours', 'number'],
       ['maxHours', 'randomizer.maxHours', 'number'],
       ['dayStart', 'randomizer.dayStart', 'text'],
@@ -183,6 +198,11 @@ export default {
     async function loadSettings() {
       settings = await ctx.fetchJSON('/api/randomizer/settings');
       const grid = wrap.querySelector('#randomizer-settings-grid');
+      const timezoneField = `
+        <label>${t('randomizer.timezone')}
+          <select data-key="timezone">${timezoneOptionsHtml(settings.timezone)}</select>
+        </label>
+      `;
       const reserveField = `
         <label>${t('randomizer.reserveNode')}
           <select data-key="reserveNodeId">${nodeOptionsHtml(settings.reserveNodeId, true)}</select>
@@ -193,7 +213,7 @@ export default {
           <input type="${type}" data-key="${key}" value="${escapeHtml(String(settings[key]))}" />
         </label>
       `).join('');
-      grid.innerHTML = reserveField + otherFields;
+      grid.innerHTML = timezoneField + reserveField + otherFields;
       renderHardEnforceBtn();
     }
 

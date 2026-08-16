@@ -5,6 +5,13 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.9.1] - 2026-08-16
+
+### Changed
+- Randomizer: the timezone setting is now a dropdown of common IANA
+  zones instead of a free-text field — the currently configured value
+  is always included even if it's not in the preset list.
+
 ## [2.9.0] - 2026-08-16
 
 ### Added

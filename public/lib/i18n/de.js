@@ -374,7 +374,7 @@ export default {
   'randomizer.refreshBtn': 'Aktualisieren',
   'randomizer.timelineEmpty': 'Noch kein Tagesplan — aktiviere den Randomizer für mindestens einen Account.',
   'randomizer.nowLabel': 'Jetzt',
-  'randomizer.timezone': 'Zeitzone (IANA, z.B. Europe/Berlin)',
+  'randomizer.timezone': 'Zeitzone',
   'randomizer.serverTimeLabel': 'Serverzeit ({{tz}}): {{time}}',
   'randomizer.minHours': 'Min. Stunden (Willkür)',
   'randomizer.maxHours': 'Max. Stunden (Willkür)',
