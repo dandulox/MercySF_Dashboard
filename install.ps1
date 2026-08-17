@@ -35,7 +35,7 @@ function Write-Banner {
   Write-Host "                       |___/                  " -ForegroundColor Cyan
   Write-Host ""
   Write-Host "  Dashboard Installer - built on the official Mercy SF CLI and sf-api by the-marenga." -ForegroundColor DarkGray
-  Write-Host "  Thanks for using Mercy SF Dashboard!" -ForegroundColor DarkGray
+  Write-Host "  Thanks for using Mercy SF Dashboard! Special thanks to Sensei Issei." -ForegroundColor DarkGray
   Write-Host ""
 }
 

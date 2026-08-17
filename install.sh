@@ -109,7 +109,7 @@ banner() {
   echo '                       |___/                  '
   echo -e "${RESET}"
   echo -e "  ${DIM}Dashboard Installer — built on the official Mercy SF CLI and sf-api by the-marenga.${RESET}"
-  echo -e "  ${DIM}Thanks for using Mercy SF Dashboard!${RESET}"
+  echo -e "  ${DIM}Thanks for using Mercy SF Dashboard! Special thanks to Sensei Issei.${RESET}"
   echo
 }
 
