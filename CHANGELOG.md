@@ -5,6 +5,20 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.11.0] - 2026-08-17
+
+### Added
+- Docker-basierte Installation als Alternative zur nativen systemd-Installation: `install.sh`
+  (Linux/WSL) und das neue `install.ps1` (Windows, Docker Desktop) fragen jetzt interaktiv
+  "nativ oder Docker?" ab und richten bei Docker-Wahl Dashboard, sf-api-Bridge und optional
+  beliebig viele Node-Container automatisch ein — inklusive automatischem Pairing ohne manuelle
+  IP/Code-Eingabe. Node-Container können danach jederzeit über `add-node.sh`/`add-node.ps1`
+  hinzugefügt oder entfernt werden. Funktioniert auch unter Docker Desktop (Windows/Mac),
+  inklusive isoliertem WireGuard-VPN-Tunnel pro Node-Container (jeder Container bekommt einen
+  eigenen Netzwerk-Namespace, hebt damit die "eine VPN-Identität pro Node"-Grenze der
+  physischen Node-Installation auf). `install.sh` installiert Docker Engine + Compose-Plugin bei
+  Bedarf selbst über das offizielle apt-Repository (Debian/Ubuntu).
+
 ## [2.10.2] - 2026-08-17
 
 ### Added
