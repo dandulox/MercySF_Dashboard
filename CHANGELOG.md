@@ -5,6 +5,15 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.12.0] - 2026-08-18
+
+### Added
+- Accounts page: **Reload configs** button — re-pushes every node-assigned account's config to
+  its node (new `POST /api/profiles/resync-all`), fixing drift where the dashboard believes an
+  account runs on a node that never actually received its profile. Doesn't restart running bots.
+- Accounts page: **Start all accounts** / **Stop all accounts** buttons — global versions of the
+  existing per-login start-all/stop-all, acting across every account on the page.
+
 ## [2.11.10] - 2026-08-18
 
 ### Fixed
