@@ -22,7 +22,7 @@ export default {
   'topbar.menuTitle': 'Menü',
   'topbar.menuAria': 'Menü öffnen',
   'topbar.loading': 'Lade...',
-  'topbar.anonLabel': '🕶 Anonym',
+  'topbar.anonLabel': 'Anonym',
   'topbar.anonTitle': 'Charakternamen verpixeln (z. B. für Screenshots/Streaming)',
   'topbar.themeToggleTitle': 'Hell-/Dunkelmodus umschalten',
   'topbar.settingsPanelTitle': 'Einstellungen',

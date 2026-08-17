@@ -19,7 +19,7 @@ export default {
   'topbar.menuTitle': 'Menu',
   'topbar.menuAria': 'Open menu',
   'topbar.loading': 'Loading...',
-  'topbar.anonLabel': '🕶 Anonymous',
+  'topbar.anonLabel': 'Anonymous',
   'topbar.anonTitle': 'Pixelate character names (e.g. for screenshots/streaming)',
   'topbar.themeToggleTitle': 'Toggle light/dark mode',
   'topbar.settingsPanelTitle': 'Settings',
