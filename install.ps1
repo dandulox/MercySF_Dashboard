@@ -167,13 +167,31 @@ Push-Location $InstallDir
 if ($IsExistingInstall) {
   Write-Ok "Existing installation detected — updating instead of reinstalling."
   $Script:InstallStep = 0
-  $Script:InstallTotalSteps = 2
+  $Script:InstallTotalSteps = 3
 
   Write-ProgressStep "Rebuilding Docker images (dashboard + sf-api bridge)"
   Invoke-Quiet -Label "docker compose build — this can take a few minutes" -Exe "docker" -Arguments @('compose', 'build')
 
   Write-ProgressStep "Restarting dashboard + sf-api bridge containers"
   Invoke-Quiet -Label "docker compose up -d" -Exe "docker" -Arguments @('compose', 'up', '-d')
+
+  Write-ProgressStep "Updating node containers"
+  # Node containers keep their data volumes (incl. the node-agent's pairing token, see
+  # docker-link-node.js's "update" subcommand) — no re-pairing needed after this.
+  $nodeNames = docker ps -aq --filter "label=mercy.role=node" | ForEach-Object {
+    (docker inspect --format '{{.Name}}' $_) -replace '^/', ''
+  }
+  if ($nodeNames) {
+    Invoke-Quiet -Label "Building the node-agent image" -Exe "docker" -Arguments @('build', '-f', 'Dockerfile.node-agent', '-t', 'mercy-node-agent:latest', '.')
+    $ProjectName = (Split-Path $InstallDir -Leaf).ToLower()
+    $Network = "${ProjectName}_mercy-net"
+    foreach ($nodeName in $nodeNames) {
+      node scripts/docker-link-node.js update --name $nodeName --network $Network --image mercy-node-agent:latest --volume "mercy_node_${nodeName}_data" --cli-volume "mercy_node_${nodeName}_cli"
+    }
+    Write-Ok "Updated $($nodeNames.Count) node container(s)"
+  } else {
+    Write-Ok "No node containers to update"
+  }
 
   Write-Progress -Activity "Mercy SF Dashboard Installer" -Completed
   $LanIp = (Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
@@ -183,8 +201,6 @@ if ($IsExistingInstall) {
   Write-Host ""
   Write-Host "  Update complete" -ForegroundColor Green
   Write-Host "  Dashboard: https://${LanIp}:8080"
-  Write-Host "  Node containers keep running unchanged - rebuild one manually if node-agent code changed:"
-  Write-Host "  .\add-node.ps1 -Name <name> -Remove; .\add-node.ps1 -Name <name>"
   Pop-Location
   exit 0
 }

@@ -255,12 +255,14 @@ install_docker_mode() {
 }
 
 # Lighter re-run for an already-existing Docker install: no account/node-count prompts (the
-# account already exists — re-running the setup call would just 409 — and standalone node
-# containers are managed separately via add-node.sh, untouched by a compose rebuild). Just pulls
-# the latest code and rebuilds/restarts the dashboard + sf-api bridge containers.
+# account already exists — re-running the setup call would just 409). Pulls the latest code,
+# rebuilds/restarts the dashboard + sf-api bridge, and also replaces every existing node
+# container with one from a freshly built node-agent image — their data volumes (incl. the
+# node-agent's pairing token, see docker-link-node.js's "update" subcommand) are left untouched,
+# so no re-pairing is needed.
 update_docker_mode() {
   STEP=0
-  TOTAL_STEPS=2
+  TOTAL_STEPS=3
 
   progress "Pulling the latest code (branch: $BRANCH)"
   git -C "$DASHBOARD_DIR" fetch --depth 1 origin "$BRANCH"
@@ -271,11 +273,29 @@ update_docker_mode() {
   run_step "Building images — this can take a few minutes" docker compose build
   run_step "Starting containers" docker compose up -d
 
+  progress "Updating node containers"
+  NODE_NAMES="$(docker ps -aq --filter 'label=mercy.role=node' 2>/dev/null | while read -r cid; do
+    docker inspect --format '{{.Name}}' "$cid" 2>/dev/null | sed 's#^/##'
+  done)"
+  if [[ -n "$NODE_NAMES" ]]; then
+    run_step "Building the node-agent image" docker build -f Dockerfile.node-agent -t mercy-node-agent:latest .
+    NODE_NETWORK="${DASHBOARD_DIR##*/}_mercy-net"
+    NODE_COUNT_UPDATED=0
+    while IFS= read -r NODE_NAME; do
+      [[ -z "$NODE_NAME" ]] && continue
+      node scripts/docker-link-node.js update \
+        --name "$NODE_NAME" --network "$NODE_NETWORK" --image mercy-node-agent:latest \
+        --volume "mercy_node_${NODE_NAME}_data" --cli-volume "mercy_node_${NODE_NAME}_cli"
+      NODE_COUNT_UPDATED=$((NODE_COUNT_UPDATED + 1))
+    done <<< "$NODE_NAMES"
+    ok "Updated $NODE_COUNT_UPDATED node container(s)"
+  else
+    ok "No node containers to update"
+  fi
+
   IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
   echo -e "\n${GREEN}${BOLD}✓ Update complete${RESET}"
   echo -e "  Dashboard: ${BOLD}https://${IP:-<server-ip>}:8080${RESET}"
-  echo -e "  Node containers keep running unchanged — rebuild one manually if node-agent code changed:"
-  echo -e "  ${DIM}./add-node.sh --remove <name> && ./add-node.sh <name>${RESET}"
 }
 
 # Detect an existing installation so a second run updates it instead of re-prompting for

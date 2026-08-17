@@ -57,6 +57,18 @@ async function cmdCreate(flags) {
   console.log(`Node '${flags.name}' linked successfully.`);
 }
 
+// Replaces a node container with a fresh one from a (presumably just rebuilt) image, keeping
+// its volumes untouched — the node-agent's identity/pairing-token file lives in the data
+// volume, so the recreated container comes back already paired with the dashboard, no dashboard
+// login/API calls needed here at all.
+async function cmdUpdate(flags) {
+  requireFlags(flags, ['name', 'network', 'image', 'volume', 'cli-volume']);
+  console.log(`Updating node container '${flags.name}' ...`);
+  dockerExec(['rm', '-f', flags.name]);
+  dockerExec(buildNodeAgentRunArgs({ name: flags.name, network: flags.network, image: flags.image, volumeName: flags.volume, cliVolumeName: flags['cli-volume'] }));
+  console.log(`Node '${flags.name}' updated.`);
+}
+
 async function cmdRemove(flags) {
   requireFlags(flags, ['url', 'user', 'password', 'name']);
   const client = createClient(flags.url);
@@ -77,10 +89,10 @@ async function cmdRemove(flags) {
 
 async function main() {
   const { command, flags } = parseArgs(process.argv.slice(2));
-  const handlers = { setup: cmdSetup, create: cmdCreate, remove: cmdRemove };
+  const handlers = { setup: cmdSetup, create: cmdCreate, update: cmdUpdate, remove: cmdRemove };
   const handler = handlers[command];
   if (!handler) {
-    console.error(`Unknown command: ${command}. Expected: setup | create | remove`);
+    console.error(`Unknown command: ${command}. Expected: setup | create | update | remove`);
     process.exit(1);
   }
   try {
