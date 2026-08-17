@@ -5,6 +5,20 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.11.7] - 2026-08-18
+
+### Fixed
+- Randomizer: Accounts wurden per striktem Round-Robin an genau einen Pool-Node gebunden — war
+  ausgerechnet dieser Node zum Zeitpunkt des Accounts in der Warteschlange voll, wurde der
+  Account komplett übersprungen, auch wenn ein anderer Node noch reichlich Platz hatte (bei
+  Willkür-Accounts durch die zufällige Stunden-/Blockanzahl besonders sichtbar). Node-Wahl ist
+  jetzt Best-Fit (frühestmögliche freie Startzeit über alle Pool-Nodes) statt Round-Robin.
+
+### Added
+- Randomizer: Accounts, die trotzdem an keinem Node mehr Platz finden (echte Kapazitätsgrenze,
+  nicht mehr nur ein Zuordnungsfehler), werden jetzt sichtbar gemacht — Warn-Chip in der Topbar
+  und eine Warnbox mit den betroffenen Accounts oben in der Tagesplan-Zeitachse.
+
 ## [2.11.6] - 2026-08-17
 
 ### Changed

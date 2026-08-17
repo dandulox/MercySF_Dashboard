@@ -119,6 +119,10 @@ export default {
       .randomizer-plan-list li { padding: 2px 0; }
       .randomizer-page .empty-hint { color: var(--muted); font-size: 13px; padding: 20px 0; text-align: center; grid-column: 1 / -1; }
 
+      .randomizer-unscheduled-warning {
+        background: var(--panel-2); border: 1px solid var(--red); color: var(--red);
+        border-radius: 6px; padding: 8px 12px; font-size: 13px; margin-bottom: 10px;
+      }
       .randomizer-timeline-ruler { display: flex; margin-left: 160px; font-size: 10px; color: var(--muted); padding-bottom: 4px; }
       .randomizer-timeline-ruler span { flex: 1; text-align: left; }
       .randomizer-timeline-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
@@ -341,7 +345,11 @@ export default {
             )
           : '';
 
-        el.innerHTML = ruler + nodeRows + reserveRow;
+        const unscheduledHtml = timeline.unscheduled && timeline.unscheduled.length
+          ? `<div class="randomizer-unscheduled-warning">${t('randomizer.unscheduledWarning', { count: timeline.unscheduled.length, names: timeline.unscheduled.map(escapeHtml).join(', ') })}</div>`
+          : '';
+
+        el.innerHTML = unscheduledHtml + ruler + nodeRows + reserveRow;
       } catch (err) {
         el.innerHTML = `<p class="empty-hint">${t('analytics.loadError', { message: err.message })}</p>`;
       }

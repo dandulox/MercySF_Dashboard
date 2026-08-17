@@ -194,6 +194,7 @@ async function loadStatus() {
 async function loadRandomizerStatus() {
   const activeChip = document.getElementById('randomizer-active-chip');
   const queueChip = document.getElementById('randomizer-queue-chip');
+  const unscheduledChip = document.getElementById('randomizer-unscheduled-chip');
   if (!activeChip || !queueChip) return;
   try {
     const s = await fetchJSON('/api/randomizer/status');
@@ -206,9 +207,18 @@ async function loadRandomizerStatus() {
       activeChip.hidden = true;
       queueChip.hidden = true;
     }
+    if (unscheduledChip) {
+      if (s.unscheduledCount > 0) {
+        unscheduledChip.textContent = t('router.randomizerUnscheduled', { count: s.unscheduledCount });
+        unscheduledChip.hidden = false;
+      } else {
+        unscheduledChip.hidden = true;
+      }
+    }
   } catch (e) {
     activeChip.hidden = true;
     queueChip.hidden = true;
+    if (unscheduledChip) unscheduledChip.hidden = true;
   }
 }
 

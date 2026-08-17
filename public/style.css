@@ -315,6 +315,7 @@ body {
   font-size: 12px;
   color: var(--muted);
 }
+.status-chip-warning { border-color: var(--red); color: var(--red); }
 .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
 .icon-btn {
   background: var(--panel-2);
