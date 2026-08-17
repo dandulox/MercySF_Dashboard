@@ -5,6 +5,14 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.11.6] - 2026-08-17
+
+### Changed
+- Re-running `install.sh`/`install.ps1` against an existing Docker installation now also rebuilds
+  the node-agent image (if any node containers exist) and replaces each node container with a
+  fresh one from it — their data volumes (including the node-agent's pairing token) are left
+  untouched, so no re-pairing is needed. New `docker-link-node.js update` subcommand backs this.
+
 ## [2.11.5] - 2026-08-17
 
 ### Fixed
