@@ -29,11 +29,11 @@ test('parsePairingJson returns code + expiresAt for valid JSON', () => {
 });
 
 test('parsePairingJson throws on invalid JSON', () => {
-  assert.throws(() => parsePairingJson('not json'), /Ungültige Pairing-Datei/);
+  assert.throws(() => parsePairingJson('not json'), /Invalid pairing file/);
 });
 
 test('parsePairingJson throws when code is missing', () => {
-  assert.throws(() => parsePairingJson('{"expiresAt":"2026-08-17T12:00:00.000Z"}'), /Ungültige Pairing-Datei/);
+  assert.throws(() => parsePairingJson('{"expiresAt":"2026-08-17T12:00:00.000Z"}'), /Invalid pairing file/);
 });
 
 test('pollUntil resolves once fn returns a truthy value', async () => {

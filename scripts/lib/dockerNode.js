@@ -15,10 +15,10 @@ function parsePairingJson(raw) {
   try {
     parsed = JSON.parse(raw);
   } catch (e) {
-    throw new Error('Ungültige Pairing-Datei: kein valides JSON');
+    throw new Error('Invalid pairing file: not valid JSON');
   }
   if (!parsed || typeof parsed.code !== 'string' || !parsed.code) {
-    throw new Error('Ungültige Pairing-Datei: kein code-Feld');
+    throw new Error('Invalid pairing file: missing code field');
   }
   return { code: parsed.code, expiresAt: parsed.expiresAt || null };
 }
@@ -32,7 +32,7 @@ async function pollUntil(fn, { intervalMs = 1000, timeoutMs = 30000 } = {}) {
   for (;;) {
     const result = await fn();
     if (result) return result;
-    if (Date.now() >= deadline) throw new Error('Timeout beim Warten auf Bereitschaft');
+    if (Date.now() >= deadline) throw new Error('Timeout waiting for readiness');
     await sleep(intervalMs);
   }
 }

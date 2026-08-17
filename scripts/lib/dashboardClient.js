@@ -20,16 +20,16 @@ function request(baseUrl, { method = 'GET', path, body, cookie }) {
       res.on('data', d => { data += d; });
       res.on('end', () => {
         let parsed = null;
-        try { parsed = data ? JSON.parse(data) : null; } catch (e) { /* keine JSON-Antwort */ }
+        try { parsed = data ? JSON.parse(data) : null; } catch (e) { /* no JSON body */ }
         const setCookie = res.headers['set-cookie'];
         if (res.statusCode >= 200 && res.statusCode < 300) {
           resolve({ body: parsed, setCookie });
         } else {
-          reject(new Error((parsed && parsed.error) || `Dashboard antwortete mit Status ${res.statusCode}`));
+          reject(new Error((parsed && parsed.error) || `Dashboard responded with status ${res.statusCode}`));
         }
       });
     });
-    req.on('timeout', () => req.destroy(new Error('Zeitüberschreitung bei der Verbindung zum Dashboard')));
+    req.on('timeout', () => req.destroy(new Error('Timed out connecting to the dashboard')));
     req.on('error', reject);
     if (payload) req.write(payload);
     req.end();

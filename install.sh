@@ -1,27 +1,26 @@
 #!/usr/bin/env bash
 #
-# Mercy SF Dashboard — One-Shot-Installer
+# Mercy SF Dashboard — One-Shot Installer
 #
-# Vollständiges Dashboard (inkl. lokaler CLI, sf-api-Bridge) auf einem frischen Debian/Ubuntu-
-# Server (als root):
+# Full dashboard (incl. local CLI, sf-api bridge) on a fresh Debian/Ubuntu server (as root):
 #   curl -fsSL https://raw.githubusercontent.com/dandulox/MercySF_Dashboard/main/install.sh | bash
 #
-# Nur den schlanken Node-Agent installieren (steuert Accounts auf diesem Server fern über ein
-# zentrales Dashboard, siehe "Nodes"-Seite dort — kein eigenes Web-UI, kein sf-api-Build):
+# Slim node-agent only (remote-controls accounts on this server from a central dashboard, see the
+# "Nodes" page there — no web UI of its own, no sf-api build):
 #   curl -fsSL https://raw.githubusercontent.com/dandulox/MercySF_Dashboard/main/install.sh | bash -s -- --node
 #
-# Von einem bestimmten Branch installieren/testen (z. B. einem Feature-Branch vor dem Merge nach
-# main) — MERCY_BRANCH steuert, welcher Branch geklont/ausgecheckt wird, das install.sh selbst
-# muss trotzdem von genau diesem Branch geladen werden:
+# Install/test from a specific branch (e.g. a feature branch before merging to main) —
+# MERCY_BRANCH controls which branch is cloned/checked out; install.sh itself must still be
+# fetched from that exact branch:
 #   curl -fsSL https://raw.githubusercontent.com/dandulox/MercySF_Dashboard/nodetest/install.sh | MERCY_BRANCH=nodetest bash -s -- --node
 #
-# Deinstallation (entfernt ALLES, inkl. gespeicherter Zugangsdaten und Statistik-Historie):
+# Uninstall (removes EVERYTHING, incl. saved credentials and stats history):
 #   curl -fsSL https://raw.githubusercontent.com/dandulox/MercySF_Dashboard/main/install.sh | bash -s -- --uninstall
 #
-# Idempotent: mehrfaches Ausführen aktualisiert nur Code + Dependencies, bestehende
-# Account-Daten (/opt/mercy/dashboard/data bzw. /opt/mercy/dashboard/node-agent/data),
-# Zertifikate (/opt/mercy/certs) und die installierte CLI (/opt/mercy/mercy-cli-linux-x64)
-# werden nicht angetastet, sofern schon vorhanden.
+# Idempotent: running it again only updates code + dependencies — existing account data
+# (/opt/mercy/dashboard/data resp. /opt/mercy/dashboard/node-agent/data), certificates
+# (/opt/mercy/certs), and the installed CLI (/opt/mercy/mercy-cli-linux-x64) are left untouched
+# if already present.
 
 set -euo pipefail
 
@@ -41,16 +40,35 @@ for arg in "$@"; do
   esac
 done
 
-log() { echo -e "\n\033[1;32m==>\033[0m $*"; }
-warn() { echo -e "\033[1;33m!!\033[0m $*"; }
+BOLD='\033[1m'
+CYAN='\033[1;36m'
+GREEN='\033[1;32m'
+YELLOW='\033[1;33m'
+RED='\033[1;31m'
+DIM='\033[2m'
+RESET='\033[0m'
+
+log()  { echo -e "\n${CYAN}==>${RESET} ${BOLD}$*${RESET}"; }
+step() { echo -e "  ${DIM}-${RESET} $*"; }
+warn() { echo -e "${YELLOW}!!${RESET} $*"; }
+ok()   { echo -e "${GREEN}✓${RESET} $*"; }
+die()  { echo -e "${RED}✗${RESET} $*" >&2; exit 1; }
+
+banner() {
+  echo -e "${BOLD}${CYAN}"
+  echo "  Mercy SF Dashboard — Installer"
+  echo "  ─────────────────────────────"
+  echo -e "${RESET}"
+}
 
 if [[ "$(id -u)" -ne 0 ]]; then
-  echo "Bitte als root ausführen (z. B. via sudo)." >&2
-  exit 1
+  die "Please run as root (e.g. via sudo)."
 fi
 
+banner
+
 if [[ "${1:-}" == "--uninstall" ]]; then
-  log "Mercy SF entfernen (Dashboard und/oder Node-Agent — entfernt ALLES: Code, Dienste, Zertifikate, CLI, gespeicherte Zugangsdaten, Statistik-Historie)"
+  log "Removing Mercy SF (dashboard and/or node agent — removes EVERYTHING: code, services, certificates, CLI, saved credentials, stats history)"
   systemctl stop mercy-dashboard mercy-sfapi-bridge mercy-node-agent 2>/dev/null || true
   systemctl disable mercy-dashboard mercy-sfapi-bridge mercy-node-agent 2>/dev/null || true
   rm -f /etc/systemd/system/mercy-dashboard.service /etc/systemd/system/mercy-sfapi-bridge.service /etc/systemd/system/mercy-node-agent.service
@@ -59,28 +77,28 @@ if [[ "${1:-}" == "--uninstall" ]]; then
     (cd "$DASHBOARD_DIR" && docker compose down -v 2>/dev/null || true)
   fi
   rm -rf "$INSTALL_DIR"
-  log "Fertig — $INSTALL_DIR, alle systemd-Dienste und ein evtl. laufender Docker-Stack vollständig entfernt."
+  ok "Done — $INSTALL_DIR, all systemd services, and any running Docker stack have been fully removed."
   exit 0
 fi
 
-# --- Docker-Installationszweig ------------------------------------------------------------
-# Alternative zur nativen systemd-Installation unten: Dashboard, sf-api-Bridge (im selben
-# Network-Namespace, siehe docker-compose.yml — lib/characterClassDetector.js ruft die Bridge
-# hart codiert über 127.0.0.1:4001 auf) und optional zusätzliche Node-Container laufen als
-# Docker-Container statt als systemd-Dienste. Nodes werden über scripts/docker-link-node.js
-# automatisch erzeugt und gepairt (kein manuelles IP/Code-Eintippen im Dashboard nötig).
+# --- Docker install path -------------------------------------------------------------------
+# Alternative to the native systemd install below: dashboard, sf-api bridge (sharing the same
+# network namespace, see docker-compose.yml — lib/characterClassDetector.js hard-codes calling
+# the bridge over 127.0.0.1:4001), and optionally extra node containers all run as Docker
+# containers instead of systemd services. Nodes get created and paired automatically through
+# scripts/docker-link-node.js (no manual IP/code entry in the dashboard needed).
 install_docker_mode() {
   if ! command -v docker >/dev/null 2>&1 || ! docker compose version >/dev/null 2>&1; then
-    # Offizielles Docker-apt-Repo statt des generischen get.docker.com-Installers — passt zum
-    # Rest des Skripts, das ohnehin gezielt Debian/Ubuntu per apt bedient (siehe Header-Kommentar),
-    # und installiert docker-compose-plugin gleich mit (Compose v2, kein Legacy-"docker-compose").
-    log "Docker Engine + Compose Plugin über das offizielle apt-Repository installieren"
+    # Official Docker apt repo instead of the generic get.docker.com installer — matches the
+    # rest of the script, which already targets Debian/Ubuntu specifically via apt (see header
+    # comment), and installs docker-compose-plugin along with it (Compose v2, no legacy
+    # "docker-compose").
+    log "Installing Docker Engine + Compose plugin from the official apt repository"
     . /etc/os-release
     case "$ID" in
       debian|ubuntu) DOCKER_APT_DISTRO="$ID" ;;
       *)
-        echo "Nicht unterstützte Distribution für die automatische Docker-Installation: $ID (nur Debian/Ubuntu). Bitte Docker manuell installieren und erneut versuchen." >&2
-        exit 1
+        die "Unsupported distribution for automatic Docker installation: $ID (Debian/Ubuntu only). Please install Docker manually and try again."
         ;;
     esac
     apt-get install -y -qq ca-certificates gnupg >/dev/null
@@ -92,23 +110,25 @@ install_docker_mode() {
     apt-get update -qq
     apt-get install -y -qq docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin >/dev/null
     systemctl enable --now docker >/dev/null 2>&1
+    ok "Docker Engine + Compose plugin installed"
   fi
   if ! docker compose version >/dev/null 2>&1; then
-    echo "Docker Compose Plugin fehlt trotz Installation — bitte manuell prüfen ('docker compose version')." >&2
-    exit 1
+    die "Compose plugin missing despite installation — please check manually ('docker compose version')."
   fi
   if ! command -v node >/dev/null 2>&1 || [[ "$(node -v | sed 's/v//' | cut -d. -f1)" -lt 18 ]]; then
-    # scripts/docker-link-node.js läuft auf dem Host, nicht im Container — braucht daher eine
-    # eigene Node-Runtime unabhängig vom Dashboard-Image.
-    log "Node.js 20.x (NodeSource) installieren (für scripts/docker-link-node.js auf dem Host)"
+    # scripts/docker-link-node.js runs on the host, not in a container — needs its own Node
+    # runtime independent of the dashboard image.
+    log "Installing Node.js 20.x (NodeSource, for scripts/docker-link-node.js on the host)"
     curl -fsSL https://deb.nodesource.com/setup_20.x | bash - >/dev/null
     apt-get install -y -qq nodejs >/dev/null
+    ok "Node.js $(node -v) installed"
   fi
 
-  read -rp "Anzahl zusätzlicher Node-Container [0]: " NODE_COUNT < /dev/tty
+  echo
+  read -rp "  How many extra node containers? [0]: " NODE_COUNT < /dev/tty
   NODE_COUNT="${NODE_COUNT:-0}"
-  read -rp "Admin-Benutzername für das Dashboard: " DASH_USER < /dev/tty
-  read -rsp "Admin-Passwort für das Dashboard: " DASH_PASSWORD < /dev/tty
+  read -rp "  Dashboard admin username: " DASH_USER < /dev/tty
+  read -rsp "  Dashboard admin password: " DASH_PASSWORD < /dev/tty
   echo
 
   mkdir -p "$INSTALL_DIR"
@@ -120,28 +140,29 @@ install_docker_mode() {
   fi
 
   cd "$DASHBOARD_DIR"
-  log "Docker-Images bauen und Dashboard + sf-api-Bridge starten"
+  log "Building Docker images and starting dashboard + sf-api bridge"
   docker compose build
   docker compose up -d
 
-  log "Warte auf Dashboard-Erreichbarkeit"
+  log "Waiting for the dashboard to become reachable"
   for i in $(seq 1 30); do
     if curl -sk https://localhost:8080/api/status >/dev/null 2>&1; then break; fi
     sleep 1
   done
+  ok "Dashboard reachable"
 
-  log "Dashboard-Konto einrichten"
+  log "Setting up the dashboard account"
   node scripts/docker-link-node.js setup --url https://localhost:8080 --user "$DASH_USER" --password "$DASH_PASSWORD"
 
   if [[ "$NODE_COUNT" -gt 0 ]]; then
     docker build -f Dockerfile.node-agent -t mercy-node-agent:latest .
-    # Compose leitet den Netzwerknamen standardmäßig aus dem (lowercased) Verzeichnisnamen des
-    # Compose-Projekts ab — "${DASHBOARD_DIR##*/}" ist hier immer "dashboard" (siehe
-    # DASHBOARD_DIR-Definition oben), ergibt also "dashboard_mercy-net".
+    # Compose derives the network name from the (lowercased) compose project directory name by
+    # default — "${DASHBOARD_DIR##*/}" is always "dashboard" here (see the DASHBOARD_DIR
+    # definition above), so this resolves to "dashboard_mercy-net".
     NODE_NETWORK="${DASHBOARD_DIR##*/}_mercy-net"
     for i in $(seq 1 "$NODE_COUNT"); do
       NODE_NAME="node-$i"
-      log "Node-Container '$NODE_NAME' erzeugen und verlinken"
+      log "Creating and linking node container '$NODE_NAME'"
       node scripts/docker-link-node.js create \
         --url https://localhost:8080 --user "$DASH_USER" --password "$DASH_PASSWORD" \
         --name "$NODE_NAME" --network "$NODE_NETWORK" \
@@ -149,15 +170,18 @@ install_docker_mode() {
     done
   fi
 
-  log "Fertig! Dashboard läuft: https://localhost:8080 ($NODE_COUNT Node-Container verlinkt)"
+  echo -e "\n${GREEN}${BOLD}✓ Installation complete${RESET}"
+  echo -e "  Dashboard: ${BOLD}https://localhost:8080${RESET}"
+  echo "  Node containers linked: $NODE_COUNT"
+  echo -e "  Add more later:  ${DIM}./add-node.sh <name>${RESET}"
 }
 
 INSTALL_MODE="native"
-# --node ist ausschließlich für die native, schlanke Node-Agent-Installation gedacht (siehe
-# NODE_ONLY-Block unten) — für den Docker-Weg gibt es stattdessen add-node.sh, daher hier keine
-# Docker-Abfrage, wenn --node explizit angegeben wurde.
+# --node is exclusively for the slim, native node-agent install (see the NODE_ONLY block below)
+# — the Docker path has add-node.sh for that instead, so skip the Docker prompt when --node was
+# explicitly given.
 if [[ "$NODE_ONLY" == "false" ]] && { [[ -t 0 ]] || [[ -e /dev/tty ]]; }; then
-  read -rp "Installationsart wählen — [n]ativ (systemd) oder [d]ocker? [n/d]: " ANSWER < /dev/tty
+  read -rp "  Installation type — [n]ative (systemd) or [d]ocker? [n/d]: " ANSWER < /dev/tty
   if [[ "${ANSWER,,}" == "d" || "${ANSWER,,}" == "docker" ]]; then
     INSTALL_MODE="docker"
   fi
@@ -168,62 +192,62 @@ if [[ "$INSTALL_MODE" == "docker" ]]; then
   exit 0
 fi
 
-log "Pakete aktualisieren und Build-Abhängigkeiten installieren"
+log "Updating packages and installing build dependencies"
 apt-get update -qq
 apt-get install -y -qq curl git build-essential python3 openssl ca-certificates wireguard-tools resolvconf >/dev/null
 
 if ! command -v node >/dev/null 2>&1 || [[ "$(node -v | sed 's/v//' | cut -d. -f1)" -lt 18 ]]; then
-  log "Node.js 20.x (NodeSource) installieren"
+  log "Installing Node.js 20.x (NodeSource)"
   curl -fsSL https://deb.nodesource.com/setup_20.x | bash - >/dev/null
   apt-get install -y -qq nodejs >/dev/null
 else
-  log "Node.js bereits vorhanden ($(node -v)) — überspringe Installation"
+  ok "Node.js already present ($(node -v)) — skipping install"
 fi
 
 mkdir -p "$INSTALL_DIR"
 
 if [[ -d "$DASHBOARD_DIR/.git" ]]; then
-  log "Bestehende Installation gefunden — aktualisiere Code (Branch: $BRANCH)"
-  # --depth 1 clones sind implizit --single-branch: der ursprüngliche Fetch-Refspec kennt nur den
-  # Branch, mit dem installiert wurde. "fetch origin $BRANCH" holt die Commits zwar in FETCH_HEAD,
-  # legt aber keinen origin/$BRANCH-Tracking-Branch an — ein reines "checkout $BRANCH" bzw.
-  # "reset --hard origin/$BRANCH" schlägt daher beim Wechsel auf einen anderen Branch fehl.
-  # "checkout -B $BRANCH FETCH_HEAD" erstellt/setzt den lokalen Branch direkt aus FETCH_HEAD,
-  # unabhängig davon, ob ein Remote-Tracking-Branch existiert.
+  log "Existing installation found — updating code (branch: $BRANCH)"
+  # --depth 1 clones are implicitly --single-branch: the original fetch refspec only knows the
+  # branch it was installed with. "fetch origin $BRANCH" does pull the commits into FETCH_HEAD,
+  # but doesn't create an origin/$BRANCH tracking branch — a plain "checkout $BRANCH" or
+  # "reset --hard origin/$BRANCH" therefore fails when switching to a different branch.
+  # "checkout -B $BRANCH FETCH_HEAD" creates/sets the local branch directly from FETCH_HEAD,
+  # regardless of whether a remote-tracking branch exists.
   git -C "$DASHBOARD_DIR" fetch --depth 1 origin "$BRANCH"
   git -C "$DASHBOARD_DIR" checkout -B "$BRANCH" FETCH_HEAD
 else
-  log "Repository klonen nach $DASHBOARD_DIR (Branch: $BRANCH)"
+  log "Cloning repository into $DASHBOARD_DIR (branch: $BRANCH)"
   git clone --depth 1 --branch "$BRANCH" "$REPO_URL" "$DASHBOARD_DIR"
 fi
 
 if [[ ! -f "$CLI_PATH" ]]; then
-  log "Mercy-SF-CLI herunterladen"
+  log "Downloading the Mercy SF CLI"
   curl -fsSL -o "$CLI_PATH" "$CLI_DOWNLOAD_URL"
   chmod +x "$CLI_PATH"
 else
-  log "CLI bereits vorhanden ($CLI_PATH) — überspringe Download (Updates laufen über das Dashboard/den Node-Agent selbst)"
+  ok "CLI already present ($CLI_PATH) — skipping download (updates run through the dashboard/node agent itself)"
 fi
 
 if [[ ! -f "$CERTS_DIR/cert.pem" || ! -f "$CERTS_DIR/key.pem" ]]; then
-  log "Selbstsigniertes TLS-Zertifikat erzeugen"
+  log "Generating a self-signed TLS certificate"
   mkdir -p "$CERTS_DIR"
   openssl req -x509 -newkey rsa:2048 -nodes -days 825 \
     -keyout "$CERTS_DIR/key.pem" -out "$CERTS_DIR/cert.pem" \
     -subj "/CN=mercy" >/dev/null 2>&1
 else
-  log "TLS-Zertifikat bereits vorhanden — überspringe Erzeugung"
+  ok "TLS certificate already present — skipping generation"
 fi
 
 if [[ "$NODE_ONLY" == "true" ]]; then
-  # --- Nur der schlanke Node-Agent: keine sf-api-Bridge, kein Rust, keine Vendor-Assets, kein
-  # eigenes Web-UI. Steuerung läuft komplett vom zentralen Dashboard über die "Nodes"-Seite.
-  log "npm-Abhängigkeiten für den Node-Agent installieren (kompiliert node-pty nativ — kann etwas dauern)"
+  # --- Slim node agent only: no sf-api bridge, no Rust, no vendor assets, no web UI of its own.
+  # Control runs entirely from the central dashboard's "Nodes" page.
+  log "Installing npm dependencies for the node agent (compiles node-pty natively — may take a while)"
   cd "$NODE_AGENT_DIR"
   npm install --omit=dev --no-audit --no-fund
   mkdir -p "$NODE_AGENT_DIR/data"
 
-  log "systemd-Service für den Node-Agent einrichten"
+  log "Setting up the node-agent systemd service"
   cp "$DASHBOARD_DIR/systemd/mercy-node-agent.service" /etc/systemd/system/mercy-node-agent.service
   systemctl daemon-reload
   systemctl enable mercy-node-agent >/dev/null 2>&1
@@ -241,37 +265,37 @@ if [[ "$NODE_ONLY" == "true" ]]; then
       fi
       sleep 1
     done
-    log "Fertig! Node-Agent läuft auf ${IP:-<server-ip>}:8090"
+    echo -e "\n${GREEN}${BOLD}✓ Done — node agent running on ${IP:-<server-ip>}:8090${RESET}"
     if [[ -n "$CODE" ]]; then
       echo -e "\n    IP:     ${IP:-<server-ip>}"
       echo -e "    Port:   8090"
-      echo -e "    Code:   $CODE   (15 Minuten gültig, danach automatisch erneuert)\n"
-      echo "Im Dashboard unter 'Nodes' → 'Node pairen' eingeben. Ein neuer Code lässt sich jederzeit"
-      echo "über 'journalctl -u mercy-node-agent -n 20 --no-pager' einsehen."
+      echo -e "    Code:   $CODE   (valid for 15 minutes, then auto-renewed)\n"
+      echo "  Enter these in the dashboard under 'Nodes' → 'Pair a node'. A new code can be"
+      echo "  retrieved anytime via 'journalctl -u mercy-node-agent -n 20 --no-pager'."
     else
-      warn "Pairing-Code konnte nicht ausgelesen werden — prüfen mit: journalctl -u mercy-node-agent -n 30 --no-pager"
+      warn "Could not read the pairing code — check with: journalctl -u mercy-node-agent -n 30 --no-pager"
     fi
   else
-    warn "Der Dienst ist nicht aktiv — Logs prüfen mit: journalctl -u mercy-node-agent -n 50 --no-pager"
+    warn "The service is not active — check the logs with: journalctl -u mercy-node-agent -n 50 --no-pager"
     exit 1
   fi
   exit 0
 fi
 
 if ! command -v cargo >/dev/null 2>&1; then
-  log "Rust/Cargo installieren (für die sf-api-Bridge)"
+  log "Installing Rust/Cargo (for the sf-api bridge)"
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y >/dev/null 2>&1
 else
-  log "Rust/Cargo bereits vorhanden ($(cargo --version)) — überspringe Installation"
+  ok "Rust/Cargo already present ($(cargo --version)) — skipping install"
 fi
 # shellcheck disable=SC1090
 source "$HOME/.cargo/env"
 
-log "npm-Abhängigkeiten installieren (kompiliert node-pty nativ — kann etwas dauern)"
+log "Installing npm dependencies (compiles node-pty natively — may take a while)"
 cd "$DASHBOARD_DIR"
 npm install --omit=dev --no-audit --no-fund
 
-log "Vendor-Assets bereitstellen (Chart.js, xterm.js)"
+log "Deploying vendor assets (Chart.js, xterm.js)"
 mkdir -p "$DASHBOARD_DIR/public/vendor"
 cp "$DASHBOARD_DIR/node_modules/chart.js/dist/chart.umd.js" "$DASHBOARD_DIR/public/vendor/chart.js"
 cp "$DASHBOARD_DIR/node_modules/@xterm/xterm/lib/xterm.js" "$DASHBOARD_DIR/public/vendor/xterm.js"
@@ -279,13 +303,13 @@ cp "$DASHBOARD_DIR/node_modules/@xterm/xterm/css/xterm.css" "$DASHBOARD_DIR/publ
 
 mkdir -p "$DASHBOARD_DIR/data"
 
-log "systemd-Service einrichten"
+log "Setting up the dashboard systemd service"
 cp "$DASHBOARD_DIR/systemd/mercy-dashboard.service" /etc/systemd/system/mercy-dashboard.service
 systemctl daemon-reload
 systemctl enable mercy-dashboard >/dev/null 2>&1
 systemctl restart mercy-dashboard
 
-log "sf-api-Bridge bauen und als systemd-Dienst einrichten (Ausrüstungs-Abfragen, nur localhost)"
+log "Building the sf-api bridge and setting it up as a systemd service (equipment lookups, localhost only)"
 cd "$DASHBOARD_DIR/sfapi-bridge"
 cargo build --release
 cp "$DASHBOARD_DIR/systemd/mercy-sfapi-bridge.service" /etc/systemd/system/mercy-sfapi-bridge.service
@@ -297,10 +321,10 @@ cd "$DASHBOARD_DIR"
 sleep 2
 if systemctl is-active --quiet mercy-dashboard && systemctl is-active --quiet mercy-sfapi-bridge; then
   IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
-  log "Fertig! Dashboard läuft: https://${IP:-<server-ip>}:8080"
-  echo "Weitere Server als Nodes anbinden: dort 'curl ... | bash -s -- --node' ausführen und den"
-  echo "angezeigten Pairing-Code unter 'Nodes' in diesem Dashboard eingeben."
+  echo -e "\n${GREEN}${BOLD}✓ Done — dashboard running at https://${IP:-<server-ip>}:8080${RESET}"
+  echo "  Connect more servers as nodes: run 'curl ... | bash -s -- --node' there and enter the"
+  echo "  displayed pairing code under 'Nodes' in this dashboard."
 else
-  warn "Ein Dienst ist nicht aktiv — Logs prüfen mit: journalctl -u mercy-dashboard -n 50 --no-pager / journalctl -u mercy-sfapi-bridge -n 50 --no-pager"
+  warn "A service is not active — check the logs with: journalctl -u mercy-dashboard -n 50 --no-pager / journalctl -u mercy-sfapi-bridge -n 50 --no-pager"
   exit 1
 fi
