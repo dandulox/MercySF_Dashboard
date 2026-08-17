@@ -321,6 +321,8 @@ export default {
   'accounts.renameNicknamePrompt': 'Neuer Spitzname:',
   'accounts.pauseFailed': 'Pausieren fehlgeschlagen: {{message}}',
   'accounts.resumeFailed': 'Fortsetzen fehlgeschlagen: {{message}}',
+  'accounts.startFailed': 'Start fehlgeschlagen: {{message}}',
+  'accounts.stopFailed': 'Stopp fehlgeschlagen: {{message}}',
   'accounts.claimingBtn': 'Löse ein…',
   'accounts.claimedBtn': 'Eingelöst ✓',
   'accounts.claimFailed': 'Einlösen fehlgeschlagen: {{message}}',

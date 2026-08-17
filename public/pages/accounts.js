@@ -381,9 +381,13 @@ export default {
       if (!profiles.length) return;
       if (!confirm(t('accounts.confirmStartAllGlobal', { count: profiles.length }))) return;
       globalStatusEl.textContent = t('accounts.startingAll');
-      await Promise.all(profiles.map(p =>
-        ctx.fetchJSON(`/api/profiles/${encodeURIComponent(p.id)}/start`, { method: 'POST' }).catch(() => {})));
-      globalStatusEl.textContent = '';
+      const results = await Promise.all(profiles.map(p =>
+        ctx.fetchJSON(`/api/profiles/${encodeURIComponent(p.id)}/start`, { method: 'POST' })
+          .then(() => null).catch(err => ({ nickname: p.nickname, message: err.message }))));
+      const failed = results.filter(Boolean);
+      globalStatusEl.textContent = failed.length
+        ? t('accounts.reloadConfigsFailed', { succeeded: profiles.length - failed.length, total: profiles.length, names: failed.map(f => f.nickname).join(', ') })
+        : '';
       await loadProfiles();
     });
 
@@ -393,9 +397,13 @@ export default {
       if (!confirm(t('accounts.confirmStopAllGlobal', { count: profiles.length }))) return;
       globalStatusEl.textContent = t('accounts.stoppingAll');
       profiles.forEach(p => closeTerminal(p.id));
-      await Promise.all(profiles.map(p =>
-        ctx.fetchJSON(`/api/profiles/${encodeURIComponent(p.id)}/stop`, { method: 'POST' }).catch(() => {})));
-      globalStatusEl.textContent = '';
+      const results = await Promise.all(profiles.map(p =>
+        ctx.fetchJSON(`/api/profiles/${encodeURIComponent(p.id)}/stop`, { method: 'POST' })
+          .then(() => null).catch(err => ({ nickname: p.nickname, message: err.message }))));
+      const failed = results.filter(Boolean);
+      globalStatusEl.textContent = failed.length
+        ? t('accounts.reloadConfigsFailed', { succeeded: profiles.length - failed.length, total: profiles.length, names: failed.map(f => f.nickname).join(', ') })
+        : '';
       await loadProfiles();
     });
 
@@ -549,12 +557,20 @@ export default {
         });
 
         card.querySelector('[data-action="start"]').addEventListener('click', async () => {
-          await ctx.fetchJSON(`/api/profiles/${encodeURIComponent(id)}/start`, { method: 'POST' });
+          try {
+            await ctx.fetchJSON(`/api/profiles/${encodeURIComponent(id)}/start`, { method: 'POST' });
+          } catch (err) {
+            alert(t('accounts.startFailed', { message: err.message }));
+          }
           await loadProfiles();
         });
         card.querySelector('[data-action="stop"]').addEventListener('click', async () => {
           closeTerminal(id);
-          await ctx.fetchJSON(`/api/profiles/${encodeURIComponent(id)}/stop`, { method: 'POST' });
+          try {
+            await ctx.fetchJSON(`/api/profiles/${encodeURIComponent(id)}/stop`, { method: 'POST' });
+          } catch (err) {
+            alert(t('accounts.stopFailed', { message: err.message }));
+          }
           await loadProfiles();
         });
         card.querySelector('[data-action="pause"]').addEventListener('click', async () => {

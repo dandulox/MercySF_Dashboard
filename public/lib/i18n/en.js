@@ -309,6 +309,8 @@ export default {
   'accounts.renameNicknamePrompt': 'New nickname:',
   'accounts.pauseFailed': 'Pause failed: {{message}}',
   'accounts.resumeFailed': 'Resume failed: {{message}}',
+  'accounts.startFailed': 'Start failed: {{message}}',
+  'accounts.stopFailed': 'Stop failed: {{message}}',
   'accounts.claimingBtn': 'Claiming…',
   'accounts.claimedBtn': 'Claimed ✓',
   'accounts.claimFailed': 'Claim failed: {{message}}',
