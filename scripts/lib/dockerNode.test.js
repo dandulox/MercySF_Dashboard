@@ -19,6 +19,8 @@ test('buildNodeAgentRunArgs produces a detached container with NET_ADMIN, tun de
   assert.ok(args.includes('NET_ADMIN'));
   assert.ok(args.includes('--device'));
   assert.ok(args.includes('/dev/net/tun'));
+  assert.ok(args.includes('--label'));
+  assert.ok(args.includes('mercy.role=node'));
   assert.ok(args.join(' ').includes('mercy_node_node-1_data:/app/data'));
   assert.equal(args[args.length - 1], 'mercy-node-agent:latest');
 });

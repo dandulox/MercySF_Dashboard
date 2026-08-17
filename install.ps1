@@ -22,20 +22,61 @@ if ($PSVersionTable.PSVersion.Major -lt 6) {
   [System.Net.ServicePointManager]::CertificatePolicy = New-Object TrustAllCertsPolicy
 }
 
-function Write-Step($Message) {
-  Write-Host ""
-  Write-Host "==> $Message" -ForegroundColor Cyan
-}
-
-function Write-Ok($Message) {
-  Write-Host "[OK] $Message" -ForegroundColor Green
-}
+$Script:InstallStep = 0
+$Script:InstallTotalSteps = 1
 
 function Write-Banner {
   Write-Host ""
   Write-Host "  Mercy SF Dashboard - Installer" -ForegroundColor Cyan
   Write-Host "  -------------------------------" -ForegroundColor Cyan
   Write-Host ""
+}
+
+function Write-ProgressStep($Message) {
+  $Script:InstallStep++
+  $pct = [int](($Script:InstallStep / $Script:InstallTotalSteps) * 100)
+  Write-Progress -Activity "Mercy SF Dashboard Installer" -Status $Message -PercentComplete $pct
+  Write-Host ""
+  Write-Host ("==> [{0}%] ({1}/{2}) {3}" -f $pct, $Script:InstallStep, $Script:InstallTotalSteps, $Message) -ForegroundColor Cyan
+}
+
+function Write-Ok($Message) {
+  Write-Host "[OK] $Message" -ForegroundColor Green
+}
+
+# Runs a long, noisy command (docker build/pull, ...) behind a spinner instead of letting
+# hundreds of lines of layer hashes scroll past. Output goes to temp files: silent on success,
+# dumped (last 40 lines) on failure so the actual error is still visible.
+function Invoke-Quiet {
+  # Note: the parameter is named $Arguments, not $Args — $Args is a reserved PowerShell
+  # automatic variable (collects unbound positional arguments), and naming a parameter after it
+  # silently breaks binding (Start-Process would receive an empty list even when callers pass
+  # -Args explicitly).
+  param([string]$Label, [string]$Exe, [string[]]$Arguments)
+  $outFile = [System.IO.Path]::GetTempFileName()
+  $errFile = [System.IO.Path]::GetTempFileName()
+  $proc = Start-Process -FilePath $Exe -ArgumentList $Arguments -NoNewWindow -PassThru -RedirectStandardOutput $outFile -RedirectStandardError $errFile
+  # Forces .NET to open the process handle with the access rights needed to read ExitCode later
+  # — without this, $proc.ExitCode can come back blank even after HasExited is true (a known
+  # Start-Process -PassThru quirk on Windows PowerShell 5.1).
+  $proc.Handle | Out-Null
+  $spin = @('|', '/', '-', '\')
+  $i = 0
+  while (-not $proc.HasExited) {
+    Write-Host -NoNewline ("`r  {0} {1}   " -f $spin[$i % 4], $Label)
+    $i++
+    Start-Sleep -Milliseconds 150
+  }
+  if ($proc.ExitCode -eq 0) {
+    Write-Host ("`r  [OK] {0}                                                        " -f $Label) -ForegroundColor Green
+    Remove-Item $outFile, $errFile -ErrorAction SilentlyContinue
+  } else {
+    Write-Host ("`r  [FAIL] {0}                                                      " -f $Label) -ForegroundColor Red
+    Write-Host "  --- last output ---" -ForegroundColor DarkGray
+    Get-Content $errFile, $outFile -Tail 40 -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "  $_" }
+    Remove-Item $outFile, $errFile -ErrorAction SilentlyContinue
+    throw "$Label failed (exit $($proc.ExitCode))"
+  }
 }
 
 function Invoke-DashboardRest {
@@ -64,6 +105,23 @@ if ($Uninstall) {
     docker compose down -v
     Pop-Location
   }
+  if (Test-Docker) {
+    # Node containers created via add-node.ps1 (or install.ps1's own node loop) never go through
+    # docker-compose, so "compose down" above doesn't touch them — find them by the
+    # "mercy.role=node" label (set in scripts/lib/dockerNode.js) instead and remove each one
+    # plus its data volume.
+    $nodeIds = docker ps -aq --filter "label=mercy.role=node"
+    if ($nodeIds) {
+      $removed = 0
+      foreach ($cid in $nodeIds) {
+        $name = (docker inspect --format '{{.Name}}' $cid) -replace '^/', ''
+        docker rm -f $cid | Out-Null
+        if ($name) { docker volume rm "mercy_node_${name}_data" 2>$null | Out-Null }
+        $removed++
+      }
+      Write-Ok "Removed $removed Docker node container(s) and their volumes"
+    }
+  }
   Write-Ok "Done — containers and volumes removed. Directory '$InstallDir' (code) is left in place; delete it manually if you want it gone too."
   exit 0
 }
@@ -91,11 +149,16 @@ $DashUser = Read-Host "  Dashboard admin username"
 $DashPasswordSecure = Read-Host "  Dashboard admin password" -AsSecureString
 $DashPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($DashPasswordSecure))
 
-Write-Step "Building Docker images and starting dashboard + sf-api bridge"
-docker compose build
-docker compose up -d
+$Script:InstallStep = 0
+$Script:InstallTotalSteps = 5 + $NodeCount
 
-Write-Step "Waiting for the dashboard to become reachable"
+Write-ProgressStep "Building Docker images (dashboard + sf-api bridge)"
+Invoke-Quiet -Label "docker compose build — this can take a few minutes" -Exe "docker" -Arguments @('compose', 'build')
+
+Write-ProgressStep "Starting dashboard + sf-api bridge containers"
+Invoke-Quiet -Label "docker compose up -d" -Exe "docker" -Arguments @('compose', 'up', '-d')
+
+Write-ProgressStep "Waiting for the dashboard to become reachable"
 for ($i = 0; $i -lt 30; $i++) {
   try {
     Invoke-DashboardRest -Uri "$DashboardUrl/api/status" -TimeoutSec 2 | Out-Null
@@ -111,22 +174,23 @@ for ($i = 0; $i -lt 30; $i++) {
 }
 Write-Ok "Dashboard reachable"
 
-Write-Step "Setting up the dashboard account"
+Write-ProgressStep "Setting up the dashboard account"
 node scripts/docker-link-node.js setup --url $DashboardUrl --user $DashUser --password $DashPassword
 
 if ($NodeCount -gt 0) {
-  docker build -f Dockerfile.node-agent -t mercy-node-agent:latest .
+  Invoke-Quiet -Label "Building the node-agent image" -Exe "docker" -Arguments @('build', '-f', 'Dockerfile.node-agent', '-t', 'mercy-node-agent:latest', '.')
   # Compose derives the network name from the (lowercased) compose project directory name by
   # default — with $InstallDir = ...\Mercy\dashboard that's always "dashboard".
   $ProjectName = (Split-Path $InstallDir -Leaf).ToLower()
   $Network = "${ProjectName}_mercy-net"
   for ($i = 1; $i -le $NodeCount; $i++) {
     $NodeName = "node-$i"
-    Write-Step "Creating and linking node container '$NodeName'"
+    Write-ProgressStep "Creating and linking node container '$NodeName'"
     node scripts/docker-link-node.js create --url $DashboardUrl --user $DashUser --password $DashPassword --name $NodeName --network $Network --image mercy-node-agent:latest --volume "mercy_node_${NodeName}_data"
   }
 }
 
+Write-Progress -Activity "Mercy SF Dashboard Installer" -Completed
 Write-Host ""
 Write-Host "  Installation complete" -ForegroundColor Green
 Write-Host "  Dashboard: $DashboardUrl"

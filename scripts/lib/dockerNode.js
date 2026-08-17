@@ -5,6 +5,9 @@ function buildNodeAgentRunArgs({ name, network, image, volumeName }) {
     '--network', network,
     '--cap-add', 'NET_ADMIN',
     '--device', '/dev/net/tun',
+    // Labeled so `install.sh --uninstall` can find and remove every node container it created,
+    // even ones added later via add-node.sh that never went through docker-compose.
+    '--label', 'mercy.role=node',
     '-v', `${volumeName}:/app/data`,
     image,
   ];
