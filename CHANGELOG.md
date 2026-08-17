@@ -5,6 +5,12 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.10.2] - 2026-08-17
+
+### Added
+- Telemetrie-Ping meldet jetzt zusätzlich pro Node (und lokal) die Anzahl aktiver Accounts und
+  laufender Charaktere (`nodeStats`), hinter dem bestehenden Versions-Reporting-Opt-out.
+
 ## [2.10.1] - 2026-08-16
 
 ### Fixed
