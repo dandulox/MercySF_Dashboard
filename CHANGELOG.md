@@ -5,6 +5,17 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.11.5] - 2026-08-17
+
+### Fixed
+- **Critical (Docker installs only):** the CLI binary was downloaded to `/app/data/mercy-cli-linux-x64`
+  in the dashboard and node-agent containers, but every module that spawns it
+  (`lib/cliExec.js`, `lib/cliUpdate.js`, `lib/discoveryLogin.js`, `lib/ptyManager.js`, and their
+  node-agent equivalents) hard-codes/defaults to `/opt/mercy/mercy-cli-linux-x64` — so every
+  account-discovery attempt and bot start failed immediately with "CLI process exited
+  unexpectedly before login completed". Both containers now get a dedicated volume mounted at
+  `/opt/mercy` (matching the native install's layout) instead.
+
 ## [2.11.4] - 2026-08-17
 
 ### Fixed

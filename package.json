@@ -1,6 +1,6 @@
 {
   "name": "mercy-dashboard",
-  "version": "2.11.4",
+  "version": "2.11.5",
   "private": true,
   "main": "server.js",
   "scripts": {
