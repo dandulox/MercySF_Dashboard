@@ -5,6 +5,13 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.11.2] - 2026-08-17
+
+### Changed
+- Installer console output (`install.sh`, `install.ps1`, `add-node.sh`, `add-node.ps1`,
+  `scripts/docker-link-node.js`) translated from German to English, with a small banner and
+  colored step/success markers for a cleaner install experience.
+
 ## [2.11.1] - 2026-08-17
 
 ### Changed
