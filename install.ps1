@@ -123,7 +123,10 @@ if ($Uninstall) {
       foreach ($cid in $nodeIds) {
         $name = (docker inspect --format '{{.Name}}' $cid) -replace '^/', ''
         docker rm -f $cid | Out-Null
-        if ($name) { docker volume rm "mercy_node_${name}_data" 2>$null | Out-Null }
+        if ($name) {
+          docker volume rm "mercy_node_${name}_data" 2>$null | Out-Null
+          docker volume rm "mercy_node_${name}_cli" 2>$null | Out-Null
+        }
         $removed++
       }
       Write-Ok "Removed $removed Docker node container(s) and their volumes"
@@ -230,7 +233,7 @@ if ($NodeCount -gt 0) {
   for ($i = 1; $i -le $NodeCount; $i++) {
     $NodeName = "node-$i"
     Write-ProgressStep "Creating and linking node container '$NodeName'"
-    node scripts/docker-link-node.js create --url $DashboardUrl --user $DashUser --password $DashPassword --name $NodeName --network $Network --image mercy-node-agent:latest --volume "mercy_node_${NodeName}_data"
+    node scripts/docker-link-node.js create --url $DashboardUrl --user $DashUser --password $DashPassword --name $NodeName --network $Network --image mercy-node-agent:latest --volume "mercy_node_${NodeName}_data" --cli-volume "mercy_node_${NodeName}_cli"
   }
 }
 

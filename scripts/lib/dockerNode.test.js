@@ -8,6 +8,7 @@ test('buildNodeAgentRunArgs produces a detached container with NET_ADMIN, tun de
     network: 'mercy-net',
     image: 'mercy-node-agent:latest',
     volumeName: 'mercy_node_node-1_data',
+    cliVolumeName: 'mercy_node_node-1_cli',
   });
   assert.equal(args[0], 'run');
   assert.ok(args.includes('-d'));
@@ -22,6 +23,7 @@ test('buildNodeAgentRunArgs produces a detached container with NET_ADMIN, tun de
   assert.ok(args.includes('--label'));
   assert.ok(args.includes('mercy.role=node'));
   assert.ok(args.join(' ').includes('mercy_node_node-1_data:/app/data'));
+  assert.ok(args.join(' ').includes('mercy_node_node-1_cli:/opt/mercy'));
   assert.equal(args[args.length - 1], 'mercy-node-agent:latest');
 });
 

@@ -31,7 +31,8 @@ if [[ "$1" == "--remove" ]]; then
   NODE_NAME="$2"
   node scripts/docker-link-node.js remove \
     --url "$DASHBOARD_URL" --user "$DASH_USER" --password "$DASH_PASSWORD" \
-    --name "$NODE_NAME" --volume "mercy_node_${NODE_NAME}_data"
+    --name "$NODE_NAME" --volume "mercy_node_${NODE_NAME}_data" \
+    --cli-volume "mercy_node_${NODE_NAME}_cli"
   echo -e "${GREEN}✓ Node '$NODE_NAME' removed and unregistered.${RESET}"
   exit 0
 fi
@@ -40,5 +41,6 @@ NODE_NAME="$1"
 node scripts/docker-link-node.js create \
   --url "$DASHBOARD_URL" --user "$DASH_USER" --password "$DASH_PASSWORD" \
   --name "$NODE_NAME" --network "$NETWORK" \
-  --image mercy-node-agent:latest --volume "mercy_node_${NODE_NAME}_data"
+  --image mercy-node-agent:latest --volume "mercy_node_${NODE_NAME}_data" \
+  --cli-volume "mercy_node_${NODE_NAME}_cli"
 echo -e "${GREEN}✓ Node '$NODE_NAME' created and linked.${RESET}"

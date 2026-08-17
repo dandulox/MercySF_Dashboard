@@ -37,9 +37,9 @@ async function cmdSetup(flags) {
 }
 
 async function cmdCreate(flags) {
-  requireFlags(flags, ['url', 'user', 'password', 'name', 'network', 'image', 'volume']);
+  requireFlags(flags, ['url', 'user', 'password', 'name', 'network', 'image', 'volume', 'cli-volume']);
   console.log(`Starting node container '${flags.name}' ...`);
-  dockerExec(buildNodeAgentRunArgs({ name: flags.name, network: flags.network, image: flags.image, volumeName: flags.volume }));
+  dockerExec(buildNodeAgentRunArgs({ name: flags.name, network: flags.network, image: flags.image, volumeName: flags.volume, cliVolumeName: flags['cli-volume'] }));
 
   console.log('Waiting for pairing code ...');
   const pairing = await pollUntil(() => {
@@ -71,6 +71,7 @@ async function cmdRemove(flags) {
   }
   dockerExec(['rm', '-f', flags.name]);
   if (flags.volume) dockerExec(['volume', 'rm', flags.volume]);
+  if (flags['cli-volume']) dockerExec(['volume', 'rm', flags['cli-volume']]);
   console.log(`Container '${flags.name}' removed.`);
 }
 

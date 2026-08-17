@@ -16,10 +16,10 @@ $DashPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.Inte
 
 Push-Location $InstallDir
 if ($Remove) {
-  node scripts/docker-link-node.js remove --url $DashboardUrl --user $DashUser --password $DashPassword --name $Name --volume "mercy_node_${Name}_data"
+  node scripts/docker-link-node.js remove --url $DashboardUrl --user $DashUser --password $DashPassword --name $Name --volume "mercy_node_${Name}_data" --cli-volume "mercy_node_${Name}_cli"
   Write-Host "[OK] Node '$Name' removed and unregistered." -ForegroundColor Green
 } else {
-  node scripts/docker-link-node.js create --url $DashboardUrl --user $DashUser --password $DashPassword --name $Name --network $Network --image mercy-node-agent:latest --volume "mercy_node_${Name}_data"
+  node scripts/docker-link-node.js create --url $DashboardUrl --user $DashUser --password $DashPassword --name $Name --network $Network --image mercy-node-agent:latest --volume "mercy_node_${Name}_data" --cli-volume "mercy_node_${Name}_cli"
   Write-Host "[OK] Node '$Name' created and linked." -ForegroundColor Green
 }
 Pop-Location

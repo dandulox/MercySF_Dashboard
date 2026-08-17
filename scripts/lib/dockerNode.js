@@ -1,4 +1,4 @@
-function buildNodeAgentRunArgs({ name, network, image, volumeName }) {
+function buildNodeAgentRunArgs({ name, network, image, volumeName, cliVolumeName }) {
   return [
     'run', '-d',
     '--name', name,
@@ -8,7 +8,14 @@ function buildNodeAgentRunArgs({ name, network, image, volumeName }) {
     // Labeled so `install.sh --uninstall` can find and remove every node container it created,
     // even ones added later via add-node.sh that never went through docker-compose.
     '--label', 'mercy.role=node',
+    // Node-agent's own pairing/profile/VPN-config data (node-agent/lib/*.js resolve this
+    // relative to __dirname, i.e. /app/data given the image's WORKDIR).
     '-v', `${volumeName}:/app/data`,
+    // CLI binary + the CLI's own data (analytics, credentials.json) — node-agent/lib/{cliExec,
+    // cliUpdate,ptyManager}.js default to /opt/mercy/mercy-cli-linux-x64 and cwd /opt/mercy
+    // unless MERCY_CLI_PATH/MERCY_CLI_CWD override them; the container keeps that default
+    // rather than overriding it (see docker/entrypoint-node-agent.sh).
+    '-v', `${cliVolumeName}:/opt/mercy`,
     image,
   ];
 }

@@ -12,6 +12,10 @@ services:
     volumes:
       - mercy_dashboard_data:/app/data
       - mercy_certs:/app/certs
+      # CLI binary + the CLI's own data (analytics, credentials.json) — lib/{cliExec,cliUpdate,
+      # discoveryLogin,ptyManager}.js hard-code /opt/mercy/mercy-cli-linux-x64 and cwd /opt/mercy
+      # with no env override, so this path is not optional (see docker/entrypoint-dashboard.sh).
+      - mercy_cli_data:/opt/mercy
     restart: unless-stopped
 
   sfapi-bridge:
@@ -32,3 +36,4 @@ networks:
 volumes:
   mercy_dashboard_data:
   mercy_certs:
+  mercy_cli_data:

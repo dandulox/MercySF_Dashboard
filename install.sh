@@ -139,7 +139,10 @@ if [[ "${1:-}" == "--uninstall" ]]; then
       for cid in $NODE_CONTAINER_IDS; do
         NAME="$(docker inspect --format '{{.Name}}' "$cid" 2>/dev/null | sed 's#^/##')"
         docker rm -f "$cid" >/dev/null 2>&1 || true
-        [[ -n "$NAME" ]] && docker volume rm "mercy_node_${NAME}_data" >/dev/null 2>&1 || true
+        if [[ -n "$NAME" ]]; then
+          docker volume rm "mercy_node_${NAME}_data" >/dev/null 2>&1 || true
+          docker volume rm "mercy_node_${NAME}_cli" >/dev/null 2>&1 || true
+        fi
         NODE_COUNT_REMOVED=$((NODE_COUNT_REMOVED + 1))
       done
       ok "Removed $NODE_COUNT_REMOVED Docker node container(s) and their volumes"
@@ -239,7 +242,8 @@ install_docker_mode() {
       node scripts/docker-link-node.js create \
         --url https://localhost:8080 --user "$DASH_USER" --password "$DASH_PASSWORD" \
         --name "$NODE_NAME" --network "$NODE_NETWORK" \
-        --image mercy-node-agent:latest --volume "mercy_node_${NODE_NAME}_data"
+        --image mercy-node-agent:latest --volume "mercy_node_${NODE_NAME}_data" \
+        --cli-volume "mercy_node_${NODE_NAME}_cli"
     done
   fi
 
