@@ -5,6 +5,20 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.11.10] - 2026-08-18
+
+### Fixed
+- **Critical:** the randomizer moved an account to a node by writing the local `nodeId` field
+  directly instead of going through the same sync path as the regular "assign to node" action —
+  the node-agent never received the profile (credentials, character, server), so every
+  randomizer-scheduled account failed to start (`Profil nicht gefunden`) and its console showed
+  no live session, even though the dashboard believed it was "running on node X". Extracted the
+  sync logic (delete from old node, push to new node) into a shared `assignProfileToNode()` used
+  by both the route and the randomizer.
+- node-agent's VPN `disconnect()` no longer errors when no tunnel was ever brought up for that
+  interface (`wg-quick down` on a config file that was never created) — now a no-op unless that
+  interface is actually the active one.
+
 ## [2.11.9] - 2026-08-18
 
 ### Fixed
