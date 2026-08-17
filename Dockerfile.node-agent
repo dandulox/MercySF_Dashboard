@@ -5,6 +5,13 @@ RUN apt-get update -qq \
        build-essential python3 curl ca-certificates wireguard-tools iproute2 \
     && rm -rf /var/lib/apt/lists/*
 
+# wg-quick calls 'resolvconf -a <iface> -m 0 -x' / 'resolvconf -d <iface>' to manage DNS for the
+# tunnel — the real resolvconf package can't be installed here: its postinst tries to replace
+# /etc/resolv.conf with a symlink, which fails ("Device or resource busy") because Docker bind-
+# mounts that file. Docker already manages DNS for the container on its own, so a no-op stub
+# (same calling convention, does nothing) is enough for wg-quick to proceed past this step.
+RUN printf '#!/bin/sh\nexit 0\n' > /usr/bin/resolvconf && chmod +x /usr/bin/resolvconf
+
 WORKDIR /app
 COPY node-agent/package.json node-agent/package-lock.json ./
 RUN npm install --omit=dev --no-audit --no-fund
