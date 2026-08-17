@@ -5,6 +5,16 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.12.1] - 2026-08-18
+
+### Fixed
+- **Root cause of "node accounts only start when I open the console":** the Start/Stop button
+  handlers had no error handling, so a blocked start (e.g. a VPN gate requiring a connection that
+  was never established) failed completely silently — no message, button just looked
+  unresponsive. Opening the console worked because that WebSocket endpoint starts the bot
+  directly, bypassing the VPN gate check entirely. Errors now surface via an alert (Start/Stop,
+  and the new global Start all/Stop all buttons report which accounts failed and why).
+
 ## [2.12.0] - 2026-08-18
 
 ### Added
