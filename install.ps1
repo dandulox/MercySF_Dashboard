@@ -27,8 +27,15 @@ $Script:InstallTotalSteps = 1
 
 function Write-Banner {
   Write-Host ""
-  Write-Host "  Mercy SF Dashboard - Installer" -ForegroundColor Cyan
-  Write-Host "  -------------------------------" -ForegroundColor Cyan
+  Write-Host "  __  __                          ____  _____ " -ForegroundColor Cyan
+  Write-Host " |  \/  | ___ _ __ ___ _   _     / ___||  ___|" -ForegroundColor Cyan
+  Write-Host " | |\/| |/ _ \ '__/ __| | | |____\___ \| |_   " -ForegroundColor Cyan
+  Write-Host " | |  | |  __/ | | (__| |_| |_____|__) |  _|  " -ForegroundColor Cyan
+  Write-Host " |_|  |_|\___|_|  \___|\__, |    |____/|_|    " -ForegroundColor Cyan
+  Write-Host "                       |___/                  " -ForegroundColor Cyan
+  Write-Host ""
+  Write-Host "  Dashboard Installer - built on the official Mercy SF CLI and sf-api by the-marenga." -ForegroundColor DarkGray
+  Write-Host "  Thanks for using Mercy SF Dashboard!" -ForegroundColor DarkGray
   Write-Host ""
 }
 
@@ -131,6 +138,17 @@ if (-not (Test-Docker)) {
   exit 1
 }
 
+# Detect an existing installation so a second run updates it instead of re-prompting for
+# node count/admin credentials — those are one-time setup steps, and re-running account setup
+# against an account that already exists would just fail.
+$IsExistingInstall = $false
+if (Test-Path $InstallDir) {
+  Push-Location $InstallDir
+  $existingContainer = docker compose ps -q dashboard 2>$null
+  Pop-Location
+  if ($existingContainer) { $IsExistingInstall = $true }
+}
+
 if (-not (Test-Path $InstallDir)) {
   New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
   git clone --depth 1 $RepoUrl $InstallDir
@@ -143,6 +161,32 @@ if (-not (Test-Path $InstallDir)) {
 
 Push-Location $InstallDir
 
+if ($IsExistingInstall) {
+  Write-Ok "Existing installation detected — updating instead of reinstalling."
+  $Script:InstallStep = 0
+  $Script:InstallTotalSteps = 2
+
+  Write-ProgressStep "Rebuilding Docker images (dashboard + sf-api bridge)"
+  Invoke-Quiet -Label "docker compose build — this can take a few minutes" -Exe "docker" -Arguments @('compose', 'build')
+
+  Write-ProgressStep "Restarting dashboard + sf-api bridge containers"
+  Invoke-Quiet -Label "docker compose up -d" -Exe "docker" -Arguments @('compose', 'up', '-d')
+
+  Write-Progress -Activity "Mercy SF Dashboard Installer" -Completed
+  $LanIp = (Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
+    Where-Object { $_.IPAddress -notlike '127.*' -and $_.IPAddress -notlike '169.254.*' } |
+    Select-Object -First 1 -ExpandProperty IPAddress)
+  if (-not $LanIp) { $LanIp = 'localhost' }
+  Write-Host ""
+  Write-Host "  Update complete" -ForegroundColor Green
+  Write-Host "  Dashboard: https://${LanIp}:8080"
+  Write-Host "  Node containers keep running unchanged - rebuild one manually if node-agent code changed:"
+  Write-Host "  .\add-node.ps1 -Name <name> -Remove; .\add-node.ps1 -Name <name>"
+  Pop-Location
+  exit 0
+}
+
+Start-Sleep -Seconds 5
 $NodeCount = Read-Host "  How many extra node containers? [0]"
 if ([string]::IsNullOrWhiteSpace($NodeCount)) { $NodeCount = 0 } else { $NodeCount = [int]$NodeCount }
 $DashUser = Read-Host "  Dashboard admin username"

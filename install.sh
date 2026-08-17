@@ -101,9 +101,16 @@ run_step() {
 
 banner() {
   echo -e "${BOLD}${CYAN}"
-  echo "  Mercy SF Dashboard — Installer"
-  echo "  ─────────────────────────────"
+  echo '  __  __                          ____  _____ '
+  echo ' |  \/  | ___ _ __ ___ _   _     / ___||  ___|'
+  echo ' | |\/| |/ _ \ '"'"'__/ __| | | |____\___ \| |_   '
+  echo ' | |  | |  __/ | | (__| |_| |_____|__) |  _|  '
+  echo ' |_|  |_|\___|_|  \___|\__, |    |____/|_|    '
+  echo '                       |___/                  '
   echo -e "${RESET}"
+  echo -e "  ${DIM}Dashboard Installer — built on the official Mercy SF CLI and sf-api by the-marenga.${RESET}"
+  echo -e "  ${DIM}Thanks for using Mercy SF Dashboard!${RESET}"
+  echo
 }
 
 if [[ "$(id -u)" -ne 0 ]]; then
@@ -243,14 +250,59 @@ install_docker_mode() {
   echo -e "  Add more later:  ${DIM}./add-node.sh <name>${RESET}"
 }
 
-INSTALL_MODE="native"
-# --node is exclusively for the slim, native node-agent install (see the NODE_ONLY block below)
-# — the Docker path has add-node.sh for that instead, so skip the Docker prompt when --node was
-# explicitly given.
-if [[ "$NODE_ONLY" == "false" ]] && { [[ -t 0 ]] || [[ -e /dev/tty ]]; }; then
-  read -rp "  Installation type — [n]ative (systemd) or [d]ocker? [n/d]: " ANSWER < /dev/tty
-  if [[ "${ANSWER,,}" == "d" || "${ANSWER,,}" == "docker" ]]; then
-    INSTALL_MODE="docker"
+# Lighter re-run for an already-existing Docker install: no account/node-count prompts (the
+# account already exists — re-running the setup call would just 409 — and standalone node
+# containers are managed separately via add-node.sh, untouched by a compose rebuild). Just pulls
+# the latest code and rebuilds/restarts the dashboard + sf-api bridge containers.
+update_docker_mode() {
+  STEP=0
+  TOTAL_STEPS=2
+
+  progress "Pulling the latest code (branch: $BRANCH)"
+  git -C "$DASHBOARD_DIR" fetch --depth 1 origin "$BRANCH"
+  git -C "$DASHBOARD_DIR" checkout -B "$BRANCH" FETCH_HEAD
+  cd "$DASHBOARD_DIR"
+
+  progress "Rebuilding and restarting dashboard + sf-api bridge"
+  run_step "Building images — this can take a few minutes" docker compose build
+  run_step "Starting containers" docker compose up -d
+
+  IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
+  echo -e "\n${GREEN}${BOLD}✓ Update complete${RESET}"
+  echo -e "  Dashboard: ${BOLD}https://${IP:-<server-ip>}:8080${RESET}"
+  echo -e "  Node containers keep running unchanged — rebuild one manually if node-agent code changed:"
+  echo -e "  ${DIM}./add-node.sh --remove <name> && ./add-node.sh <name>${RESET}"
+}
+
+# Detect an existing installation so a second run updates it instead of re-prompting for
+# native-vs-Docker and (in the Docker case) re-running one-time setup steps like account
+# creation, which would just fail against an account that already exists.
+EXISTING_MODE=""
+if [[ -f /etc/systemd/system/mercy-dashboard.service || -f /etc/systemd/system/mercy-node-agent.service ]]; then
+  EXISTING_MODE="native"
+elif [[ -f "$DASHBOARD_DIR/docker-compose.yml" ]] && command -v docker >/dev/null 2>&1 \
+  && [[ -n "$(cd "$DASHBOARD_DIR" && docker compose ps -q dashboard 2>/dev/null)" ]]; then
+  EXISTING_MODE="docker"
+fi
+
+if [[ -n "$EXISTING_MODE" && "$NODE_ONLY" == "false" ]]; then
+  ok "Existing $EXISTING_MODE installation detected — updating instead of reinstalling."
+  if [[ "$EXISTING_MODE" == "docker" ]]; then
+    update_docker_mode
+    exit 0
+  fi
+  INSTALL_MODE="native"
+else
+  INSTALL_MODE="native"
+  # --node is exclusively for the slim, native node-agent install (see the NODE_ONLY block
+  # below) — the Docker path has add-node.sh for that instead, so skip the Docker prompt when
+  # --node was explicitly given.
+  if [[ "$NODE_ONLY" == "false" ]] && { [[ -t 0 ]] || [[ -e /dev/tty ]]; }; then
+    sleep 5
+    read -rp "  Installation type — [n]ative (systemd) or [d]ocker? [n/d]: " ANSWER < /dev/tty
+    if [[ "${ANSWER,,}" == "d" || "${ANSWER,,}" == "docker" ]]; then
+      INSTALL_MODE="docker"
+    fi
   fi
 fi
 
