@@ -55,8 +55,97 @@ if [[ "${1:-}" == "--uninstall" ]]; then
   systemctl disable mercy-dashboard mercy-sfapi-bridge mercy-node-agent 2>/dev/null || true
   rm -f /etc/systemd/system/mercy-dashboard.service /etc/systemd/system/mercy-sfapi-bridge.service /etc/systemd/system/mercy-node-agent.service
   systemctl daemon-reload
+  if [[ -d "$DASHBOARD_DIR" ]]; then
+    (cd "$DASHBOARD_DIR" && docker compose down -v 2>/dev/null || true)
+  fi
   rm -rf "$INSTALL_DIR"
-  log "Fertig — $INSTALL_DIR und alle systemd-Dienste vollständig entfernt."
+  log "Fertig — $INSTALL_DIR, alle systemd-Dienste und ein evtl. laufender Docker-Stack vollständig entfernt."
+  exit 0
+fi
+
+# --- Docker-Installationszweig ------------------------------------------------------------
+# Alternative zur nativen systemd-Installation unten: Dashboard, sf-api-Bridge (im selben
+# Network-Namespace, siehe docker-compose.yml — lib/characterClassDetector.js ruft die Bridge
+# hart codiert über 127.0.0.1:4001 auf) und optional zusätzliche Node-Container laufen als
+# Docker-Container statt als systemd-Dienste. Nodes werden über scripts/docker-link-node.js
+# automatisch erzeugt und gepairt (kein manuelles IP/Code-Eintippen im Dashboard nötig).
+install_docker_mode() {
+  if ! command -v docker >/dev/null 2>&1; then
+    log "Docker installieren"
+    curl -fsSL https://get.docker.com | sh >/dev/null
+  fi
+  if ! docker compose version >/dev/null 2>&1; then
+    echo "Docker Compose Plugin fehlt — bitte 'docker-compose-plugin' installieren." >&2
+    exit 1
+  fi
+  if ! command -v node >/dev/null 2>&1 || [[ "$(node -v | sed 's/v//' | cut -d. -f1)" -lt 18 ]]; then
+    # scripts/docker-link-node.js läuft auf dem Host, nicht im Container — braucht daher eine
+    # eigene Node-Runtime unabhängig vom Dashboard-Image.
+    log "Node.js 20.x (NodeSource) installieren (für scripts/docker-link-node.js auf dem Host)"
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - >/dev/null
+    apt-get install -y -qq nodejs >/dev/null
+  fi
+
+  read -rp "Anzahl zusätzlicher Node-Container [0]: " NODE_COUNT < /dev/tty
+  NODE_COUNT="${NODE_COUNT:-0}"
+  read -rp "Admin-Benutzername für das Dashboard: " DASH_USER < /dev/tty
+  read -rsp "Admin-Passwort für das Dashboard: " DASH_PASSWORD < /dev/tty
+  echo
+
+  mkdir -p "$INSTALL_DIR"
+  if [[ -d "$DASHBOARD_DIR/.git" ]]; then
+    git -C "$DASHBOARD_DIR" fetch --depth 1 origin "$BRANCH"
+    git -C "$DASHBOARD_DIR" checkout -B "$BRANCH" FETCH_HEAD
+  else
+    git clone --depth 1 --branch "$BRANCH" "$REPO_URL" "$DASHBOARD_DIR"
+  fi
+
+  cd "$DASHBOARD_DIR"
+  log "Docker-Images bauen und Dashboard + sf-api-Bridge starten"
+  docker compose build
+  docker compose up -d
+
+  log "Warte auf Dashboard-Erreichbarkeit"
+  for i in $(seq 1 30); do
+    if curl -sk https://localhost:8080/api/status >/dev/null 2>&1; then break; fi
+    sleep 1
+  done
+
+  log "Dashboard-Konto einrichten"
+  node scripts/docker-link-node.js setup --url https://localhost:8080 --user "$DASH_USER" --password "$DASH_PASSWORD"
+
+  if [[ "$NODE_COUNT" -gt 0 ]]; then
+    docker build -f Dockerfile.node-agent -t mercy-node-agent:latest .
+    # Compose leitet den Netzwerknamen standardmäßig aus dem (lowercased) Verzeichnisnamen des
+    # Compose-Projekts ab — "${DASHBOARD_DIR##*/}" ist hier immer "dashboard" (siehe
+    # DASHBOARD_DIR-Definition oben), ergibt also "dashboard_mercy-net".
+    NODE_NETWORK="${DASHBOARD_DIR##*/}_mercy-net"
+    for i in $(seq 1 "$NODE_COUNT"); do
+      NODE_NAME="node-$i"
+      log "Node-Container '$NODE_NAME' erzeugen und verlinken"
+      node scripts/docker-link-node.js create \
+        --url https://localhost:8080 --user "$DASH_USER" --password "$DASH_PASSWORD" \
+        --name "$NODE_NAME" --network "$NODE_NETWORK" \
+        --image mercy-node-agent:latest --volume "mercy_node_${NODE_NAME}_data"
+    done
+  fi
+
+  log "Fertig! Dashboard läuft: https://localhost:8080 ($NODE_COUNT Node-Container verlinkt)"
+}
+
+INSTALL_MODE="native"
+# --node ist ausschließlich für die native, schlanke Node-Agent-Installation gedacht (siehe
+# NODE_ONLY-Block unten) — für den Docker-Weg gibt es stattdessen add-node.sh, daher hier keine
+# Docker-Abfrage, wenn --node explizit angegeben wurde.
+if [[ "$NODE_ONLY" == "false" ]] && { [[ -t 0 ]] || [[ -e /dev/tty ]]; }; then
+  read -rp "Installationsart wählen — [n]ativ (systemd) oder [d]ocker? [n/d]: " ANSWER < /dev/tty
+  if [[ "${ANSWER,,}" == "d" || "${ANSWER,,}" == "docker" ]]; then
+    INSTALL_MODE="docker"
+  fi
+fi
+
+if [[ "$INSTALL_MODE" == "docker" ]]; then
+  install_docker_mode
   exit 0
 fi
 
