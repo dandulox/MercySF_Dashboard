@@ -5,6 +5,16 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.12.2] - 2026-08-18
+
+### Fixed
+- Installed `iproute2` in the node-agent Docker image — `wg-quick up` shells out to `ip` (link
+  add/set/delete) to actually create the WireGuard interface, which the slim base image didn't
+  include, so every VPN connect attempt on a node container failed with `ip: command not found`
+  right after `ip link add wgN type wireguard`. Requires rebuilding/recreating node containers
+  to pick up the fix — re-running `install.sh`/`install.ps1` against an existing installation
+  does this automatically for every node.
+
 ## [2.12.1] - 2026-08-18
 
 ### Fixed
