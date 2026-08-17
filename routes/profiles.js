@@ -60,6 +60,31 @@ async function fetchRemoteProfiles(nodeId) {
 
 const OFFLINE_UNREACHABLE = { running: false, botState: 'offline', lastExitInfo: { reason: 'node_unreachable' }, startedAt: null, commandsSent: 0, errorsSeen: 0 };
 
+// Pusht jedes node-zugewiesene Profil erneut per PUT an seinen Node (idempotent, siehe
+// node-agent/server.js) — ohne den Umweg über assignProfileToNode, damit ein laufender Bot dabei
+// NICHT gekillt wird (kein DELETE/killPty, nur ein Refresh der beim Node gespeicherten Daten).
+// Für den "Reload"-Button auf der Accounts-Seite: repariert Drift, bei dem das Dashboard einen
+// Account als "auf Node X" führt, der Node selbst das Profil aber nicht (mehr) kennt.
+router.post('/resync-all', async (req, res) => {
+  const targets = registry.list().filter(p => p.nodeId);
+  const results = await Promise.all(targets.map(async p => {
+    const node = nodeRegistry.get(p.nodeId);
+    if (!node) return { id: p.id, nickname: p.nickname, ok: false, error: 'Node nicht gefunden' };
+    try {
+      const password = credentialStore.getPassword(p.username);
+      await nodeClient.call(node, `/profiles/${encodeURIComponent(p.id)}`, {
+        method: 'PUT',
+        body: { username: p.username, server: p.server, characterName: p.characterName, nickname: p.nickname, password },
+      });
+      return { id: p.id, nickname: p.nickname, ok: true };
+    } catch (err) {
+      return { id: p.id, nickname: p.nickname, ok: false, error: err.message };
+    }
+  }));
+  const failed = results.filter(r => !r.ok);
+  res.json({ total: results.length, succeeded: results.length - failed.length, failed });
+});
+
 router.get('/', async (req, res) => {
   const all = registry.list();
   const remoteNodeIds = [...new Set(all.filter(p => p.nodeId).map(p => p.nodeId))];

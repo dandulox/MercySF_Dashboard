@@ -203,6 +203,12 @@ export default {
         <div class="add-hint" id="acc-add-status"></div>
       </div>
       <div class="filter-bar">
+        <button class="btn-secondary" id="acc-start-all" type="button">${t('accounts.startAllGlobalBtn')}</button>
+        <button class="btn-secondary" id="acc-stop-all" type="button">${t('accounts.stopAllGlobalBtn')}</button>
+        <button class="btn-secondary" id="acc-reload-configs" type="button" title="${t('accounts.reloadConfigsTitle')}">${t('accounts.reloadConfigsBtn')}</button>
+        <span class="add-hint" id="acc-global-status"></span>
+      </div>
+      <div class="filter-bar">
         <input type="text" id="acc-filter-search" placeholder="${t('accounts.filterSearchPlaceholder')}" />
         <select id="acc-filter-status">
           <option value="">${t('accounts.filterStatusAll')}</option>
@@ -367,6 +373,43 @@ export default {
 
     wrap.querySelector('#acc-filter-search').addEventListener('input', applyFilters);
     wrap.querySelector('#acc-filter-status').addEventListener('change', applyFilters);
+
+    const globalStatusEl = wrap.querySelector('#acc-global-status');
+
+    wrap.querySelector('#acc-start-all').addEventListener('click', async () => {
+      const profiles = await ctx.fetchJSON('/api/profiles');
+      if (!profiles.length) return;
+      if (!confirm(t('accounts.confirmStartAllGlobal', { count: profiles.length }))) return;
+      globalStatusEl.textContent = t('accounts.startingAll');
+      await Promise.all(profiles.map(p =>
+        ctx.fetchJSON(`/api/profiles/${encodeURIComponent(p.id)}/start`, { method: 'POST' }).catch(() => {})));
+      globalStatusEl.textContent = '';
+      await loadProfiles();
+    });
+
+    wrap.querySelector('#acc-stop-all').addEventListener('click', async () => {
+      const profiles = await ctx.fetchJSON('/api/profiles');
+      if (!profiles.length) return;
+      if (!confirm(t('accounts.confirmStopAllGlobal', { count: profiles.length }))) return;
+      globalStatusEl.textContent = t('accounts.stoppingAll');
+      profiles.forEach(p => closeTerminal(p.id));
+      await Promise.all(profiles.map(p =>
+        ctx.fetchJSON(`/api/profiles/${encodeURIComponent(p.id)}/stop`, { method: 'POST' }).catch(() => {})));
+      globalStatusEl.textContent = '';
+      await loadProfiles();
+    });
+
+    wrap.querySelector('#acc-reload-configs').addEventListener('click', async () => {
+      globalStatusEl.textContent = t('accounts.reloadingConfigs');
+      try {
+        const result = await ctx.fetchJSON('/api/profiles/resync-all', { method: 'POST' });
+        globalStatusEl.textContent = result.failed.length
+          ? t('accounts.reloadConfigsFailed', { succeeded: result.succeeded, total: result.total, names: result.failed.map(f => f.nickname).join(', ') })
+          : t('accounts.reloadConfigsDone', { succeeded: result.succeeded, total: result.total });
+      } catch (err) {
+        globalStatusEl.textContent = t('analytics.loadError', { message: err.message });
+      }
+    });
 
     async function loadProfiles() {
       const list = wrap.querySelector('#profiles-list');
