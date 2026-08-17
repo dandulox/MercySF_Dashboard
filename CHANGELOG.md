@@ -5,6 +5,13 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.12.4] - 2026-08-18
+
+### Fixed
+- `wg-quick up` failed at `ip6tables-restore: command not found` — wg-quick's fwmark-based
+  policy routing needs `iptables`/`ip6tables`, missing from the slim node-agent base image.
+  Requires rebuilding/recreating node containers to pick up the fix.
+
 ## [2.12.3] - 2026-08-18
 
 ### Fixed
