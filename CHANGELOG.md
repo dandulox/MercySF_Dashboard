@@ -5,6 +5,25 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.11.9] - 2026-08-18
+
+### Fixed
+- Randomizer, Nachbesserung zu 2.11.7: der Best-Fit-Fix reichte allein nicht aus. Zwei weitere
+  Effekte verhinderten weiterhin, dass alle möglichen Accounts eingeplant wurden:
+  - Die "wenigste Auslastung"-Auswahl verglich rohe Cursor-Zeiten; Nodes mit früh gewürfeltem
+    Start-Jitter wurden dadurch systematisch bevorzugt und teils über 100% ausgelastet, während
+    andere Nodes trotz freier Kapazität kaum Accounts bekamen. Auswahl ist jetzt echtes
+    Round-Robin mit Kapazitätsprüfung (kein Node bekommt einen zweiten Account, bevor nicht jeder
+    andere passende Node mindestens einen hat).
+  - Ein Account wurde einem Node zugewiesen, sobald nur sein ERSTER Block vor `dayHardEnd`
+    startete — seine gesamte Blockfolge (inkl. eigener Lücken) konnte dabei weit darüber
+    hinauslaufen (sichtbare Node-Auslastung über 100%). Die komplette Gesamtdauer wird jetzt vor
+    der Node-Wahl geprüft.
+  - Der Zufalls-Jitter für den ersten Einsatz eines noch unbenutzten Nodes wurde zwischen
+    `dayStart` und `dayEnd` gewürfelt statt eines kleinen Staggers — bei großem Abstand zwischen
+    beiden fraß das einen Großteil der Node-Tageskapazität, bevor überhaupt ein Account dort
+    lief. Jitter ist jetzt auf einen kleinen Versatz begrenzt (analog `blockGapMinutes`).
+
 ## [2.11.8] - 2026-08-18
 
 ### Fixed
