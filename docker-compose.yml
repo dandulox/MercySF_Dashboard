@@ -1,0 +1,34 @@
+services:
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.dashboard
+    image: mercy-dashboard:latest
+    container_name: dashboard
+    networks:
+      - mercy-net
+    ports:
+      - "8080:8080"
+    volumes:
+      - mercy_dashboard_data:/app/data
+      - mercy_certs:/app/certs
+    restart: unless-stopped
+
+  sfapi-bridge:
+    build:
+      context: .
+      dockerfile: Dockerfile.sfapi-bridge
+    image: mercy-sfapi-bridge:latest
+    container_name: sfapi-bridge
+    network_mode: "service:dashboard"
+    depends_on:
+      - dashboard
+    restart: unless-stopped
+
+networks:
+  mercy-net:
+    driver: bridge
+
+volumes:
+  mercy_dashboard_data:
+  mercy_certs:

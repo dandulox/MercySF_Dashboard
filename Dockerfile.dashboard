@@ -1,0 +1,25 @@
+FROM node:20-bookworm-slim
+
+RUN apt-get update -qq \
+    && apt-get install -y -qq --no-install-recommends \
+       build-essential python3 curl openssl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm install --omit=dev --no-audit --no-fund
+
+COPY . .
+RUN mkdir -p public/vendor \
+    && cp node_modules/chart.js/dist/chart.umd.js public/vendor/chart.js \
+    && cp node_modules/@xterm/xterm/lib/xterm.js public/vendor/xterm.js \
+    && cp node_modules/@xterm/xterm/css/xterm.css public/vendor/xterm.css
+
+COPY docker/entrypoint-dashboard.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh && mkdir -p /app/data /app/certs
+
+ENV PORT=8080
+ENV SSL_CERT=/app/certs/cert.pem
+ENV SSL_KEY=/app/certs/key.pem
+EXPOSE 8080
+ENTRYPOINT ["/entrypoint.sh"]
