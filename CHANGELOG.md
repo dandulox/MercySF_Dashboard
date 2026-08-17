@@ -5,6 +5,14 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.11.8] - 2026-08-18
+
+### Fixed
+- Installed `procps` in the dashboard's Docker image — `lib/data.js`'s local bot-running check
+  shells out to `pgrep`, which the slim base image didn't include, so it silently always
+  reported "not running" and spammed the container logs with `pgrep: not found` on every
+  `/api/status` poll.
+
 ## [2.11.7] - 2026-08-18
 
 ### Fixed
