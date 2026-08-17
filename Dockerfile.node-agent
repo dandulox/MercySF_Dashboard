@@ -2,7 +2,7 @@ FROM node:20-bookworm-slim AS base
 
 RUN apt-get update -qq \
     && apt-get install -y -qq --no-install-recommends \
-       build-essential python3 curl ca-certificates wireguard-tools iproute2 \
+       build-essential python3 curl ca-certificates wireguard-tools iproute2 iptables \
     && rm -rf /var/lib/apt/lists/*
 
 # wg-quick calls 'resolvconf -a <iface> -m 0 -x' / 'resolvconf -d <iface>' to manage DNS for the
