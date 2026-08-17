@@ -70,12 +70,31 @@ fi
 # Docker-Container statt als systemd-Dienste. Nodes werden über scripts/docker-link-node.js
 # automatisch erzeugt und gepairt (kein manuelles IP/Code-Eintippen im Dashboard nötig).
 install_docker_mode() {
-  if ! command -v docker >/dev/null 2>&1; then
-    log "Docker installieren"
-    curl -fsSL https://get.docker.com | sh >/dev/null
+  if ! command -v docker >/dev/null 2>&1 || ! docker compose version >/dev/null 2>&1; then
+    # Offizielles Docker-apt-Repo statt des generischen get.docker.com-Installers — passt zum
+    # Rest des Skripts, das ohnehin gezielt Debian/Ubuntu per apt bedient (siehe Header-Kommentar),
+    # und installiert docker-compose-plugin gleich mit (Compose v2, kein Legacy-"docker-compose").
+    log "Docker Engine + Compose Plugin über das offizielle apt-Repository installieren"
+    . /etc/os-release
+    case "$ID" in
+      debian|ubuntu) DOCKER_APT_DISTRO="$ID" ;;
+      *)
+        echo "Nicht unterstützte Distribution für die automatische Docker-Installation: $ID (nur Debian/Ubuntu). Bitte Docker manuell installieren und erneut versuchen." >&2
+        exit 1
+        ;;
+    esac
+    apt-get install -y -qq ca-certificates gnupg >/dev/null
+    install -m 0755 -d /etc/apt/keyrings
+    curl -fsSL "https://download.docker.com/linux/$DOCKER_APT_DISTRO/gpg" -o /etc/apt/keyrings/docker.asc
+    chmod a+r /etc/apt/keyrings/docker.asc
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/$DOCKER_APT_DISTRO $VERSION_CODENAME stable" \
+      > /etc/apt/sources.list.d/docker.list
+    apt-get update -qq
+    apt-get install -y -qq docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin >/dev/null
+    systemctl enable --now docker >/dev/null 2>&1
   fi
   if ! docker compose version >/dev/null 2>&1; then
-    echo "Docker Compose Plugin fehlt — bitte 'docker-compose-plugin' installieren." >&2
+    echo "Docker Compose Plugin fehlt trotz Installation — bitte manuell prüfen ('docker compose version')." >&2
     exit 1
   fi
   if ! command -v node >/dev/null 2>&1 || [[ "$(node -v | sed 's/v//' | cut -d. -f1)" -lt 18 ]]; then
