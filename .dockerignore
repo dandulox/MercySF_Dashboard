@@ -1,0 +1,9 @@
+node_modules
+node-agent/node_modules
+node-agent/data
+data
+certs
+.git
+docs
+backups
+sfapi-bridge/target

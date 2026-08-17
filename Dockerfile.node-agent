@@ -1,0 +1,18 @@
+FROM node:20-bookworm-slim AS base
+
+RUN apt-get update -qq \
+    && apt-get install -y -qq --no-install-recommends \
+       build-essential python3 curl ca-certificates wireguard-tools \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY node-agent/package.json node-agent/package-lock.json ./
+RUN npm install --omit=dev --no-audit --no-fund
+
+COPY node-agent/ ./
+COPY docker/entrypoint-node-agent.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh && mkdir -p /app/data
+
+ENV PORT=8090
+EXPOSE 8090
+ENTRYPOINT ["/entrypoint.sh"]
