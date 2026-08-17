@@ -5,6 +5,12 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.11.1] - 2026-08-17
+
+### Changed
+- Topbar: Emoji-Icons (Anonym-Modus, Theme-Toggle, Einstellungen, Zugang, Benachrichtigungen,
+  Aktualisieren) durch einheitliche Inline-SVG-Icons ersetzt.
+
 ## [2.11.0] - 2026-08-17
 
 ### Added
