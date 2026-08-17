@@ -4,12 +4,15 @@ import en from './i18n/en.js';
 const DICTS = { de, en };
 const STORAGE_KEY = 'mercy-lang';
 
-let activeLang = 'de';
+let activeLang = 'en';
 const listeners = new Set();
 
+// English is the project default (matches the primarily-English README/docs) — only switches to
+// German when the browser explicitly reports it; any other locale falls back to English rather
+// than German.
 function detectBrowserLang() {
-  const raw = (navigator.language || 'de').slice(0, 2).toLowerCase();
-  return raw === 'en' ? 'en' : 'de';
+  const raw = (navigator.language || 'en').slice(0, 2).toLowerCase();
+  return raw === 'de' ? 'de' : 'en';
 }
 
 function interpolate(str, vars) {
@@ -21,8 +24,8 @@ function interpolate(str, vars) {
 }
 
 export function t(key, vars) {
-  const dict = DICTS[activeLang] || DICTS.de;
-  const raw = dict[key] ?? DICTS.de[key] ?? key;
+  const dict = DICTS[activeLang] || DICTS.en;
+  const raw = dict[key] ?? DICTS.en[key] ?? key;
   return interpolate(raw, vars);
 }
 
@@ -51,7 +54,7 @@ export function applyTranslations(root = document) {
 }
 
 function applyLang(lang) {
-  activeLang = DICTS[lang] ? lang : 'de';
+  activeLang = DICTS[lang] ? lang : 'en';
   document.documentElement.setAttribute('lang', activeLang);
   applyTranslations(document);
   listeners.forEach(cb => cb(activeLang));

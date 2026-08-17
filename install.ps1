@@ -191,9 +191,16 @@ if ($NodeCount -gt 0) {
 }
 
 Write-Progress -Activity "Mercy SF Dashboard Installer" -Completed
+# Shown so the dashboard is reachable from other devices on the LAN too, not just this machine
+# — matches install.sh, which shows the server's real IP instead of "localhost" for the same
+# reason. Falls back to localhost if no non-loopback IPv4 address is found.
+$LanIp = (Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
+  Where-Object { $_.IPAddress -notlike '127.*' -and $_.IPAddress -notlike '169.254.*' } |
+  Select-Object -First 1 -ExpandProperty IPAddress)
+if (-not $LanIp) { $LanIp = 'localhost' }
 Write-Host ""
 Write-Host "  Installation complete" -ForegroundColor Green
-Write-Host "  Dashboard: $DashboardUrl"
+Write-Host "  Dashboard: https://${LanIp}:8080"
 Write-Host "  Node containers linked: $NodeCount"
 Write-Host "  Add more later: .\add-node.ps1 -Name <name>"
 Pop-Location

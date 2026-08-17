@@ -236,8 +236,9 @@ install_docker_mode() {
     done
   fi
 
+  IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
   echo -e "\n${GREEN}${BOLD}✓ Installation complete${RESET}"
-  echo -e "  Dashboard: ${BOLD}https://localhost:8080${RESET}"
+  echo -e "  Dashboard: ${BOLD}https://${IP:-<server-ip>}:8080${RESET}"
   echo "  Node containers linked: $NODE_COUNT"
   echo -e "  Add more later:  ${DIM}./add-node.sh <name>${RESET}"
 }
