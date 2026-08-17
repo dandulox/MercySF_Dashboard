@@ -5,6 +5,15 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.12.3] - 2026-08-18
+
+### Fixed
+- `wg-quick up` failed at `resolvconf -a wgN -m 0 -x` with `resolvconf: command not found` — the
+  real `resolvconf` apt package can't be installed in a container (its postinst tries to replace
+  `/etc/resolv.conf` with a symlink, which fails since Docker bind-mounts that file). Replaced
+  with a no-op stub matching wg-quick's calling convention; Docker already manages DNS for the
+  container on its own. Requires rebuilding/recreating node containers to pick up the fix.
+
 ## [2.12.2] - 2026-08-18
 
 ### Fixed
