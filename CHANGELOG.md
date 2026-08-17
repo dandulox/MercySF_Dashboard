@@ -5,6 +5,21 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.11.3] - 2026-08-17
+
+### Changed
+- `install.sh`/`install.ps1` now show a per-step progress indicator across all install paths,
+  and run long/noisy commands (`docker compose build/up`, `docker build`, `npm install`,
+  `cargo build`, `apt-get`, rustup) behind a spinner instead of dumping raw output — full output
+  is still shown automatically if a step fails.
+
+### Fixed
+- `install.sh --uninstall` / `install.ps1 -Uninstall` now also remove node containers created
+  via `add-node.sh`/`add-node.ps1` (and their data volumes) — previously only the dashboard and
+  sf-api bridge (managed by docker-compose) were cleaned up, leaving standalone node containers
+  behind. Node containers are now tagged with a `mercy.role=node` Docker label so uninstall can
+  find them regardless of how they were created.
+
 ## [2.11.2] - 2026-08-17
 
 ### Changed
