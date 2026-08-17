@@ -32,6 +32,29 @@ At the end, the script shows the IP address and a pairing code valid for 15 minu
 
 For the case where a bot or a whole node has hung, the **Nodes** page has a quick-control per node: restart just the active bot sessions, restart the node-agent service, or reboot the entire server (`systemctl reboot`) — recently running bots start back up automatically afterward, no manual re-clicking needed. Ping now visibly shows online/offline plus response time, and a rough load indicator (CPU load, RAM usage, uptime) runs alongside it. The dashboard itself also shows up as a node in the list (the server the dashboard is installed on) — the same quick-control, updates, and load indicator work for the dashboard's own server too, not just connected nodes.
 
+### Docker installation
+
+As an alternative to the native systemd installation above, `install.sh` (Linux/WSL) and
+`install.ps1` (Windows, Docker Desktop) offer a Docker-based install: choose "Docker" at the
+first prompt, and optionally how many additional node containers to create right away — they're
+built, started, and paired with the dashboard automatically, no manual IP/code entry needed.
+More node containers can be added or removed later without touching the install script:
+
+```bash
+./add-node.sh node-3            # create and link
+./add-node.sh --remove node-3   # unlink and remove
+```
+
+```powershell
+.\add-node.ps1 -Name node-3            # create and link
+.\add-node.ps1 -Name node-3 -Remove    # unlink and remove
+```
+
+Works identically under Docker Desktop (Windows/Mac) since it runs a Linux VM under the hood —
+including the WireGuard VPN gating per node container (each container gets its own isolated
+network namespace, so multiple node containers can each hold their own simultaneous WireGuard
+tunnel, unlike the "one VPN identity per node" limit on bare-metal nodes).
+
 ### Uninstallation
 
 ```bash

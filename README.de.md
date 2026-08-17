@@ -32,6 +32,30 @@ Am Ende zeigt das Skript die IP-Adresse und einen 15 Minuten gültigen Pairing-C
 
 Für den Fall, dass sich ein Bot oder ein ganzer Node mal aufgehängt hat, gibt es auf der **Nodes**-Seite pro Node eine Schnellsteuerung: nur die aktiven Bot-Sessions neu starten, den Node-Agent-Dienst neu starten, oder den kompletten Server rebooten (`systemctl reboot`) — zuletzt laufende Bots werden danach automatisch wieder gestartet, kein manuelles Nachklicken nötig. Ping zeigt jetzt sichtbar Online/Offline samt Antwortzeit an, und eine grobe Auslastungsanzeige (CPU-Load, RAM-Auslastung, Uptime) läuft mit. Das Dashboard selbst taucht dabei ebenfalls als Node in der Liste auf (Server, auf dem das Dashboard installiert ist) — dieselbe Schnellsteuerung, Updates und Auslastungsanzeige funktionieren also auch für den Dashboard-Server selbst, nicht nur für angebundene Nodes.
 
+### Docker-Installation
+
+Als Alternative zur nativen systemd-Installation oben bieten `install.sh` (Linux/WSL) und
+`install.ps1` (Windows, Docker Desktop) einen Docker-basierten Weg: bei der ersten Abfrage
+„Docker“ wählen, optional gleich die Anzahl zusätzlicher Node-Container angeben — sie werden
+automatisch gebaut, gestartet und mit dem Dashboard verlinkt, ohne manuelle IP/Code-Eingabe.
+Weitere Node-Container lassen sich später jederzeit hinzufügen oder entfernen, ohne das
+Install-Skript erneut aufzurufen:
+
+```bash
+./add-node.sh node-3            # erzeugen und verlinken
+./add-node.sh --remove node-3   # entfernen und austragen
+```
+
+```powershell
+.\add-node.ps1 -Name node-3            # erzeugen und verlinken
+.\add-node.ps1 -Name node-3 -Remove    # entfernen und austragen
+```
+
+Funktioniert unter Docker Desktop (Windows/Mac) identisch, da intern eine Linux-VM läuft —
+inklusive WireGuard-VPN-Gate pro Node-Container (jeder Container hat einen eigenen isolierten
+Netzwerk-Namespace, sodass mehrere Node-Container gleichzeitig je einen eigenen WireGuard-Tunnel
+halten können, anders als die „eine VPN-Identität pro Node“-Grenze bei physischen Nodes).
+
 ### Deinstallation
 
 ```bash
