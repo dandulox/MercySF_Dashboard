@@ -5,6 +5,23 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.11.4] - 2026-08-17
+
+### Fixed
+- Fixed a pre-existing bug where a genuinely unauthenticated first load of `/login.html` (fresh
+  install, cleared cookies) failed with `Failed to load module script: ... MIME type of
+  "text/html"` — `/lib/i18n.js` (imported by `login.js`) wasn't on the server's unauthenticated
+  allowlist and got redirected to `/login.html` instead of served as JS. All `/lib/` assets are
+  now allowlisted.
+- `install.sh`/`install.ps1` now print the machine's real IP in the final summary instead of
+  `localhost`, matching the native install path and making the dashboard's LAN URL clearer right
+  after a Docker install.
+
+### Changed
+- Default UI language is now English instead of German (still switches to German automatically
+  if the browser reports a German locale, and the in-app language toggle still works either
+  way) — `<html lang="en">` on the dashboard, login, and setup pages.
+
 ## [2.11.3] - 2026-08-17
 
 ### Changed
