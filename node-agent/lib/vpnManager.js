@@ -66,6 +66,11 @@ async function connect(interfaceName, configContent) {
 }
 
 async function disconnect(interfaceName) {
+  // wg-quick down fails loudly ("<iface>.conf does not exist") if the interface was never
+  // brought up in the first place — a no-op here rather than a real error, since there's
+  // nothing to tear down. Only attempt it when that interface is actually the active one.
+  const active = await currentActiveInterface();
+  if (active !== interfaceName) return;
   await run(WG_QUICK_BIN, ['down', interfaceName]);
 }
 

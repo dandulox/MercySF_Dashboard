@@ -164,14 +164,15 @@ router.post('/:id/nickname', express.json(), (req, res) => {
   }
 });
 
-// Weist ein bestehendes Profil (nachträglich) einem Node zu oder holt es zurück auf "lokal"
-// (nodeId: null). Beim Zuweisen wird das gespeicherte Passwort mitgeschickt, damit der Node die
-// CLI sofort automatisiert starten kann; beim Zurückholen wird das Profil auf dem alten Node
-// best-effort gelöscht.
-router.post('/:id/node', express.json(), async (req, res) => {
-  const { nodeId } = req.body || {};
-  const profile = registry.list().find(p => p.id === req.params.id);
-  if (!profile) return res.status(404).json({ error: 'Profil nicht gefunden' });
+// Weist ein Profil einem Node zu oder holt es zurück auf "lokal" (nodeId: null) — synct dabei
+// tatsächlich mit dem Node-Agent (DELETE beim alten Node, PUT beim neuen), statt nur das lokale
+// nodeId-Feld zu ändern. Wer das umgeht (z. B. per registry.setNode direkt) lässt den Node-Agent
+// ohne Kenntnis des Profils zurück — Start/Konsole schlagen dann mit "Profil nicht gefunden" fehl,
+// obwohl das Dashboard den Account bereits als "auf Node X" führt. Von der HTTP-Route unten UND
+// von lib/randomizer.js (Tick-Engine) benutzt, damit beide Wege denselben Sync-Pfad nehmen.
+async function assignProfileToNode(profileId, nodeId) {
+  const profile = registry.list().find(p => p.id === profileId);
+  if (!profile) throw Object.assign(new Error('Profil nicht gefunden'), { status: 404 });
 
   const oldNode = profile.nodeId ? nodeRegistry.get(profile.nodeId) : null;
   if (oldNode) {
@@ -182,12 +183,11 @@ router.post('/:id/node', express.json(), async (req, res) => {
   }
 
   if (!nodeId) {
-    const updated = registry.setNode(profile.id, null);
-    return res.json(updated);
+    return registry.setNode(profile.id, null);
   }
 
   const node = nodeRegistry.get(nodeId);
-  if (!node) return res.status(400).json({ error: 'Node nicht gefunden' });
+  if (!node) throw Object.assign(new Error('Node nicht gefunden'), { status: 400 });
   const password = credentialStore.getPassword(profile.username);
   try {
     await nodeClient.call(node, `/profiles/${encodeURIComponent(profile.id)}`, {
@@ -195,10 +195,19 @@ router.post('/:id/node', express.json(), async (req, res) => {
       body: { username: profile.username, server: profile.server, characterName: profile.characterName, nickname: profile.nickname, password },
     });
   } catch (err) {
-    return res.status(502).json({ error: `Node "${node.name}" nicht erreichbar: ${err.message}` });
+    throw Object.assign(new Error(`Node "${node.name}" nicht erreichbar: ${err.message}`), { status: 502 });
   }
-  const updated = registry.setNode(profile.id, node.id);
-  res.json(updated);
+  return registry.setNode(profile.id, node.id);
+}
+
+router.post('/:id/node', express.json(), async (req, res) => {
+  const { nodeId } = req.body || {};
+  try {
+    const updated = await assignProfileToNode(req.params.id, nodeId);
+    res.json(updated);
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  }
 });
 
 router.delete('/:id', async (req, res) => {
@@ -403,3 +412,4 @@ router.post('/:id/resume', async (req, res) => {
 module.exports = router;
 module.exports.startProfileById = startProfileById;
 module.exports.stopProfileById = stopProfileById;
+module.exports.assignProfileToNode = assignProfileToNode;
