@@ -44,7 +44,7 @@ async function cmdCreate(flags) {
   console.log('Waiting for pairing code ...');
   const pairing = await pollUntil(() => {
     try {
-      const raw = dockerExec(['exec', flags.name, 'cat', '/app/data/pairing.json']);
+      const raw = dockerExec(['exec', flags.name, 'cat', '/app-repo/node-agent/data/pairing.json']);
       return parsePairingJson(raw);
     } catch (e) {
       return null; // file not there yet / container not ready yet — keep polling

@@ -16,13 +16,15 @@ test('buildNodeAgentRunArgs produces a detached container with NET_ADMIN, tun de
   assert.ok(args.includes('node-1'));
   assert.ok(args.includes('--network'));
   assert.ok(args.includes('mercy-net'));
+  assert.ok(args.includes('--restart'));
+  assert.ok(args.includes('unless-stopped'));
   assert.ok(args.includes('--cap-add'));
   assert.ok(args.includes('NET_ADMIN'));
   assert.ok(args.includes('--device'));
   assert.ok(args.includes('/dev/net/tun'));
   assert.ok(args.includes('--label'));
   assert.ok(args.includes('mercy.role=node'));
-  assert.ok(args.join(' ').includes('mercy_node_node-1_data:/app/data'));
+  assert.ok(args.join(' ').includes('mercy_node_node-1_data:/app-repo/node-agent/data'));
   assert.ok(args.join(' ').includes('mercy_node_node-1_cli:/opt/mercy'));
   assert.equal(args[args.length - 1], 'mercy-node-agent:latest');
 });

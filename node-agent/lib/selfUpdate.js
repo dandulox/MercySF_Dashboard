@@ -1,4 +1,5 @@
 const { execSync, spawn } = require('child_process');
+const fs = require('fs');
 const path = require('path');
 
 // Angepasste Kopie von MercySF_Dashboard/lib/dashboardUpdate.js: aktualisiert den Code des
@@ -72,12 +73,20 @@ async function checkForUpdate() {
 
 // Gleiches Muster wie dashboardUpdate.js: Neustart erst nach kurzer Verzögerung, losgelöst vom
 // aktuellen Prozess, sonst würde applyUpdate() sich selbst mitten in der eigenen HTTP-Antwort killen.
+// In einem Docker-Container gibt es kein systemd — dort ist der Node-Prozess selbst PID 1, ein
+// 'systemctl restart' würde schlicht fehlschlagen (Binary nicht vorhanden). Eigenen Prozess
+// stattdessen sauber beenden; die '--restart unless-stopped'-Policy des Containers (siehe
+// scripts/lib/dockerNode.js) startet ihn mit dem frisch gepullten Code neu.
 function scheduleRestart() {
-  const child = spawn('bash', ['-c', 'sleep 2 && systemctl restart mercy-node-agent'], {
-    detached: true,
-    stdio: 'ignore',
-  });
-  child.unref();
+  if (fs.existsSync('/run/systemd/system')) {
+    const child = spawn('bash', ['-c', 'sleep 2 && systemctl restart mercy-node-agent'], {
+      detached: true,
+      stdio: 'ignore',
+    });
+    child.unref();
+  } else {
+    setTimeout(() => process.exit(0), 2000);
+  }
 }
 
 async function applyUpdate() {

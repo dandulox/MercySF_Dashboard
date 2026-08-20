@@ -2,7 +2,7 @@ FROM node:20-bookworm-slim AS base
 
 RUN apt-get update -qq \
     && apt-get install -y -qq --no-install-recommends \
-       build-essential python3 curl ca-certificates wireguard-tools iproute2 iptables \
+       build-essential python3 curl ca-certificates git wireguard-tools iproute2 iptables \
     && rm -rf /var/lib/apt/lists/*
 
 # wg-quick calls 'resolvconf -a <iface> -m 0 -x' / 'resolvconf -d <iface>' to manage DNS for the
@@ -12,13 +12,21 @@ RUN apt-get update -qq \
 # (same calling convention, does nothing) is enough for wg-quick to proceed past this step.
 RUN printf '#!/bin/sh\nexit 0\n' > /usr/bin/resolvconf && chmod +x /usr/bin/resolvconf
 
-WORKDIR /app
-COPY node-agent/package.json node-agent/package-lock.json ./
+# node-agent/lib/selfUpdate.js drives the in-app "Update" button by running 'git pull' one
+# directory above node-agent/ (same layout as the native /opt/mercy/dashboard install) — a real
+# git checkout is required for that to work at all, so the image is built from a clone instead of
+# a plain COPY of the local build context. Trade-off: this always builds the latest pushed
+# $MERCY_REPO_BRANCH, never uncommitted local changes — rebuild via 'docker build --build-arg
+# MERCY_REPO_URL=<fork> --build-arg MERCY_REPO_BRANCH=<branch>' to test unpushed work.
+ARG MERCY_REPO_URL=https://github.com/dandulox/MercySF_Dashboard.git
+ARG MERCY_REPO_BRANCH=main
+RUN git clone --branch "$MERCY_REPO_BRANCH" --single-branch --depth 1 "$MERCY_REPO_URL" /app-repo
+
+WORKDIR /app-repo/node-agent
 RUN npm install --omit=dev --no-audit --no-fund
 
-COPY node-agent/ ./
 COPY docker/entrypoint-node-agent.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh && mkdir -p /app/data
+RUN chmod +x /entrypoint.sh && mkdir -p /app-repo/node-agent/data
 
 ENV PORT=8090
 EXPOSE 8090

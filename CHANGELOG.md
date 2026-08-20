@@ -5,6 +5,19 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.14.0] - 2026-08-20
+
+### Changed
+- Node-agent Docker image is now built from a shallow `git clone` of the repo instead of `COPY`
+  of the local build context, so the in-app "Update" button (`/self-update/check` + `/apply`)
+  actually works for Docker-hosted nodes — it previously always reported "no update available"
+  because there was no `.git` checkout to compare against inside the container. `applyUpdate()`'s
+  restart step now also detects the no-systemd case (any Docker container) and exits the process
+  instead of calling `systemctl`, relying on the container's `--restart unless-stopped` policy
+  (newly added to node container creation) to bring it back up with the pulled code.
+- Node-agent's data volume mount path changed from `/app/data` to `/app-repo/node-agent/data` to
+  match the new image layout (existing named volumes are unaffected — only the mount target moved).
+
 ## [2.13.0] - 2026-08-18
 
 ### Added
