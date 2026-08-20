@@ -16,6 +16,12 @@ services:
       # discoveryLogin,ptyManager}.js hard-code /opt/mercy/mercy-cli-linux-x64 and cwd /opt/mercy
       # with no env override, so this path is not optional (see docker/entrypoint-dashboard.sh).
       - mercy_cli_data:/opt/mercy
+      # The CLI itself writes its actual per-account data (analytics/battle_history/characters/
+      # its own credentials.json) to $HOME/.config/mercy-sf, not under /opt/mercy — os.homedir()
+      # resolves to /root for the container's root user. Without this volume that data lives only
+      # in the container's writable layer and is lost on `docker compose up --force-recreate` /
+      # image rebuilds, even though /opt/mercy and /app/data survive those.
+      - mercy_cli_home:/root/.config/mercy-sf
     restart: unless-stopped
 
   sfapi-bridge:
@@ -37,3 +43,4 @@ volumes:
   mercy_dashboard_data:
   mercy_certs:
   mercy_cli_data:
+  mercy_cli_home:
