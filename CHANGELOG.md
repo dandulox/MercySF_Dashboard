@@ -5,6 +5,14 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.13.0] - 2026-08-18
+
+### Added
+- ARM support (e.g. Raspberry Pi): `install.sh` and both Docker entrypoints now detect the CPU
+  architecture (`uname -m`) and download the matching Mercy SF CLI build (`x64` or `arm64`)
+  instead of always fetching the x64 binary. Unsupported architectures fail fast with a clear
+  error instead of silently downloading a binary that won't run.
+
 ## [2.12.4] - 2026-08-18
 
 ### Fixed
