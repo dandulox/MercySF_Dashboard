@@ -7,7 +7,14 @@ CERTS_DIR="/app/certs"
 # layout has to match that exactly instead, or every account-discovery/bot-start spawn fails
 # with "CLI process exited before login completed" (pty.spawn silently can't find the binary).
 CLI_PATH="/opt/mercy/mercy-cli-linux-x64"
-CLI_DOWNLOAD_URL="https://mercysf.app/downloads/mercy-cli-linux-x64"
+case "$(uname -m)" in
+  x86_64|amd64) CLI_DOWNLOAD_URL="https://mercysf.app/downloads/mercy-cli-linux-x64" ;;
+  aarch64|arm64) CLI_DOWNLOAD_URL="https://mercysf.app/downloads/mercy-cli-linux-arm64" ;;
+  *)
+    echo "Unsupported CPU architecture for the Mercy SF CLI: $(uname -m) (supported: x86_64, aarch64/arm64)." >&2
+    exit 1
+    ;;
+esac
 
 if [ ! -f "$CERTS_DIR/cert.pem" ] || [ ! -f "$CERTS_DIR/key.pem" ]; then
   echo "==> Selbstsigniertes TLS-Zertifikat erzeugen"

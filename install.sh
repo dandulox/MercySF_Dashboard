@@ -30,8 +30,19 @@ INSTALL_DIR="/opt/mercy"
 DASHBOARD_DIR="$INSTALL_DIR/dashboard"
 NODE_AGENT_DIR="$DASHBOARD_DIR/node-agent"
 CERTS_DIR="$INSTALL_DIR/certs"
+# The on-disk filename/path stays "mercy-cli-linux-x64" regardless of actual CPU architecture —
+# every module that spawns the CLI (lib/cliExec.js, lib/discoveryLogin.js, lib/ptyManager.js,
+# lib/cliUpdate.js, and the node-agent equivalents) hard-codes this exact path with no env
+# override, so only the DOWNLOAD URL varies by arch, not the local name.
 CLI_PATH="$INSTALL_DIR/mercy-cli-linux-x64"
-CLI_DOWNLOAD_URL="https://mercysf.app/downloads/mercy-cli-linux-x64"
+case "$(uname -m)" in
+  x86_64|amd64) CLI_DOWNLOAD_URL="https://mercysf.app/downloads/mercy-cli-linux-x64" ;;
+  aarch64|arm64) CLI_DOWNLOAD_URL="https://mercysf.app/downloads/mercy-cli-linux-arm64" ;;
+  *)
+    echo "Unsupported CPU architecture for the Mercy SF CLI: $(uname -m) (supported: x86_64, aarch64/arm64)." >&2
+    exit 1
+    ;;
+esac
 
 NODE_ONLY=false
 for arg in "$@"; do
