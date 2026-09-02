@@ -386,7 +386,19 @@ STEP=0
 
 progress "Updating packages and installing build dependencies"
 run_step "apt-get update" apt-get update -qq
-run_step "Installing build dependencies" apt-get install -y -qq curl git build-essential python3 openssl ca-certificates wireguard-tools resolvconf
+BUILD_DEPS="curl git build-essential python3 openssl ca-certificates wireguard-tools"
+# resolvconf conflicts with the DNS manager most current Debian/Raspberry Pi OS installs already
+# run (NetworkManager or systemd-resolved) — installing it alongside one of those can leave
+# /etc/resolv.conf pointing nowhere partway through the install (seen as DNS suddenly breaking
+# right after this apt-get step, on an otherwise-working connection). wg-quick (used for
+# per-account VPN switching) still gets a working `resolvconf` command either way: systemd ships
+# a resolvectl-backed shim when systemd-resolved is active (which is what NetworkManager uses for
+# DNS by default too) — the standalone package is only needed as a fallback when neither is
+# managing DNS at all.
+if ! systemctl is-active --quiet NetworkManager 2>/dev/null && ! systemctl is-active --quiet systemd-resolved 2>/dev/null; then
+  BUILD_DEPS="$BUILD_DEPS resolvconf"
+fi
+run_step "Installing build dependencies" apt-get install -y -qq $BUILD_DEPS
 
 progress "Checking Node.js"
 if ! command -v node >/dev/null 2>&1 || [[ "$(node -v | sed 's/v//' | cut -d. -f1)" -lt 18 ]]; then

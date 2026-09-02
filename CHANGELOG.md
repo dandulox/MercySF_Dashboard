@@ -5,6 +5,17 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.14.3] - 2026-08-20
+
+### Fixed
+- Native install could lose DNS resolution partway through (`apt-get` suddenly failing with
+  "Temporary failure resolving ..." right after the build-dependencies step, on an otherwise-
+  working connection) on systems that already run NetworkManager or systemd-resolved — e.g.
+  current Raspberry Pi OS. Installing the standalone `resolvconf` apt package there fights with
+  the DNS manager already rewriting `/etc/resolv.conf`. Now only installed when neither is
+  already active; wg-quick still gets a working `resolvconf` command via systemd's
+  resolvectl-backed shim when systemd-resolved is running.
+
 ## [2.14.2] - 2026-08-20
 
 ### Changed
