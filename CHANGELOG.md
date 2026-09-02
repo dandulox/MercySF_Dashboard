@@ -5,6 +5,16 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.14.6] - 2026-09-02
+
+### Fixed
+- The per-login "Start all"/"Stop all"/"Pause all" buttons on the accounts page (`data-group-
+  action`) silently swallowed every error (`.catch(() => {})`) — unlike the identical global
+  buttons in the filter bar, which already surfaced failures. A failed start (e.g. a VPN handshake
+  timeout on a node) looked identical to a successful one: no error, no explanation, accounts just
+  kept showing "Offline". Now collects per-member results and shows which accounts failed and why,
+  matching the global buttons' behavior.
+
 ## [2.14.5] - 2026-08-20
 
 ### Fixed

@@ -792,29 +792,33 @@ export default {
           }
         });
 
-        group.querySelector('[data-group-action="start-all"]').addEventListener('click', async () => {
-          statusEl.textContent = t('accounts.startingAll');
-          await Promise.all(memberIds.map(mid =>
-            ctx.fetchJSON(`/api/profiles/${encodeURIComponent(mid)}/start`, { method: 'POST' }).catch(() => {})));
-          statusEl.textContent = '';
+        // Wie die globalen Start-all/Stop-all-Buttons oben (#acc-start-all/#acc-stop-all):
+        // sammelt pro Mitglied Erfolg/Fehler statt Fehler mit .catch(() => {}) zu verschlucken —
+        // sonst sieht ein fehlgeschlagener Start (z. B. VPN-Handshake-Timeout auf dem Node) exakt
+        // so aus wie ein erfolgreicher, nur dass die Accounts weiter als "Offline" geführt werden.
+        async function runGroupAction(mids, action, startingText) {
+          statusEl.textContent = startingText;
+          const results = await Promise.all(mids.map(mid =>
+            ctx.fetchJSON(`/api/profiles/${encodeURIComponent(mid)}/${action}`, { method: 'POST' })
+              .then(() => null).catch(err => ({ nickname: mid, message: err.message }))));
+          const failed = results.filter(Boolean);
+          statusEl.textContent = failed.length
+            ? t('accounts.reloadConfigsFailed', { succeeded: mids.length - failed.length, total: mids.length, names: failed.map(f => f.nickname).join(', ') })
+            : '';
           await loadProfiles();
+        }
+
+        group.querySelector('[data-group-action="start-all"]').addEventListener('click', () => {
+          runGroupAction(memberIds, 'start', t('accounts.startingAll'));
         });
 
-        group.querySelector('[data-group-action="stop-all"]').addEventListener('click', async () => {
-          statusEl.textContent = t('accounts.stoppingAll');
+        group.querySelector('[data-group-action="stop-all"]').addEventListener('click', () => {
           memberIds.forEach(closeTerminal);
-          await Promise.all(memberIds.map(mid =>
-            ctx.fetchJSON(`/api/profiles/${encodeURIComponent(mid)}/stop`, { method: 'POST' }).catch(() => {})));
-          statusEl.textContent = '';
-          await loadProfiles();
+          runGroupAction(memberIds, 'stop', t('accounts.stoppingAll'));
         });
 
-        group.querySelector('[data-group-action="pause-all"]').addEventListener('click', async () => {
-          statusEl.textContent = t('accounts.pausingAll');
-          await Promise.all(memberIds.map(mid =>
-            ctx.fetchJSON(`/api/profiles/${encodeURIComponent(mid)}/pause`, { method: 'POST' }).catch(() => {})));
-          statusEl.textContent = '';
-          await loadProfiles();
+        group.querySelector('[data-group-action="pause-all"]').addEventListener('click', () => {
+          runGroupAction(memberIds, 'pause', t('accounts.pausingAll'));
         });
 
         group.querySelector('[data-group-action="remove-login"]').addEventListener('click', async () => {
