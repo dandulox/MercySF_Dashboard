@@ -5,6 +5,17 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.14.5] - 2026-08-20
+
+### Fixed
+- The CLI update checker (`lib/cliUpdate.js` and the node-agent's copy) always downloaded the
+  **x64** reference build to hash-compare against the locally installed CLI, regardless of actual
+  CPU architecture — added in 2.13.0's ARM support for install.sh, but missed here. On ARM64
+  (Raspberry Pi etc.) this compared an arm64 binary's hash against an x64 file and reported an
+  "update" on every single check, immediately after a fresh install — applying it would have
+  overwritten the working arm64 binary with the x64 build. Now picks the reference download by
+  `os.arch()`, matching the arch the binary was actually installed for.
+
 ## [2.14.4] - 2026-08-20
 
 ### Fixed

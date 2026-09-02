@@ -10,7 +10,13 @@ const ptyManager = require('./ptyManager');
 // auf /opt/mercy verdrahtet, und ohne täglichen Auto-Check: das Dashboard stößt Prüfungen aktiv
 // über /cli/check an (siehe server.js), ein blinder 24h-Timer pro Node wäre unnötige Last.
 const CLI_PATH = process.env.MERCY_CLI_PATH || '/opt/mercy/mercy-cli-linux-x64';
-const DOWNLOAD_URL = 'https://mercysf.app/downloads/mercy-cli-linux-x64';
+// See MercySF_Dashboard/lib/cliUpdate.js — the reference file downloaded here must match the
+// node's own CPU architecture (os.arch() === 'arm64' on Raspberry Pi etc.), or every check finds
+// a "different file, not a different version" and reports an update that isn't one — applying it
+// would overwrite a correct arm64 binary with the x64 build.
+const DOWNLOAD_URL = os.arch() === 'arm64'
+  ? 'https://mercysf.app/downloads/mercy-cli-linux-arm64'
+  : 'https://mercysf.app/downloads/mercy-cli-linux-x64';
 
 const state = {
   checking: false,
