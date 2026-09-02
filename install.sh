@@ -115,8 +115,11 @@ run_step() {
 # spike well past 1 GB of RAM per parallel compiler job. On a board like the Raspberry Pi — a few
 # GB of RAM, all cores used at once, and (on stock Raspberry Pi OS) only ~100 MB of swap by
 # default — that causes such severe swap-thrashing that the install (sometimes the whole machine)
-# looks completely frozen rather than failing with an error. Sets BUILD_JOBS for callers to pass
-# to cargo/npm, and adds a temporary swapfile if there's little to none and disk space allows.
+# looks completely frozen rather than failing with an error.
+#
+# Deliberately does NOT create a swapfile (no unasked-for disk writes, no SD-card wear on boards
+# like the Pi) — the only lever here is build parallelism: sets BUILD_JOBS for callers to pass to
+# cargo/npm, trading install speed for staying inside whatever RAM+swap the system already has.
 BUILD_JOBS=1
 ensure_build_headroom() {
   local mem_total_kb swap_total_kb mem_total_mb swap_total_mb total_mb cores safe_total_for_cores
@@ -127,30 +130,15 @@ ensure_build_headroom() {
   total_mb=$(( mem_total_mb + swap_total_mb ))
   cores="$(nproc)"
 
-  # Rough budget: ~1.5 GB of RAM+swap per parallel compiler job keeps rustc/node-gyp comfortably
-  # inside memory instead of swapping continuously. Only caps down from the core count, never up.
+  # Rough budget: ~1.5 GB of whatever RAM+swap the system already has per parallel compiler job
+  # keeps rustc/node-gyp comfortably inside memory instead of swap-thrashing. Only caps down from
+  # the core count, never up — and never touches swap itself.
   BUILD_JOBS=$cores
   safe_total_for_cores=$(( cores * 1536 ))
   if [[ "$total_mb" -lt "$safe_total_for_cores" ]]; then
     BUILD_JOBS=$(( total_mb / 1536 ))
     [[ "$BUILD_JOBS" -lt 1 ]] && BUILD_JOBS=1
-    warn "Only ${total_mb} MB RAM+swap for ${cores} CPU core(s) — capping build parallelism to ${BUILD_JOBS} job(s) to avoid swap-thrashing (this is what looks like a full freeze on boards like the Raspberry Pi)."
-  fi
-
-  if [[ "$swap_total_mb" -lt 512 ]] && [[ ! -f /var/swap-mercy-install ]]; then
-    local avail_disk_mb swap_add_mb=2048
-    avail_disk_mb="$(df -Pm / | awk 'NR==2 {print $4}')"
-    if [[ "$avail_disk_mb" -gt $(( swap_add_mb + 1024 )) ]]; then
-      step "Adding a temporary ${swap_add_mb} MB swapfile (/var/swap-mercy-install) for the build — only ${swap_total_mb} MB swap present"
-      if { fallocate -l "${swap_add_mb}M" /var/swap-mercy-install 2>/dev/null || dd if=/dev/zero of=/var/swap-mercy-install bs=1M count="$swap_add_mb" status=none; } \
-        && chmod 600 /var/swap-mercy-install && mkswap /var/swap-mercy-install >/dev/null && swapon /var/swap-mercy-install; then
-        ok "Swapfile active — left in place after install (remove manually if unwanted: swapoff /var/swap-mercy-install && rm /var/swap-mercy-install)"
-      else
-        warn "Could not create a swapfile — continuing without it, the build may be slow or unstable on low-RAM boards"
-      fi
-    else
-      warn "Low swap (${swap_total_mb} MB) and not enough free disk space to add more — build may be slow/unstable on low-RAM boards"
-    fi
+    warn "Only ${total_mb} MB RAM+swap for ${cores} CPU core(s) — capping build parallelism to ${BUILD_JOBS} job(s) to avoid swap-thrashing (this is what looks like a full freeze on boards like the Raspberry Pi). The build will take longer instead."
   fi
 }
 

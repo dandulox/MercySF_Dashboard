@@ -5,6 +5,13 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.14.2] - 2026-08-20
+
+### Changed
+- `ensure_build_headroom()` (see 2.14.1) no longer creates a swapfile — only caps build
+  parallelism. No unasked-for disk writes/SD-card wear; a low-RAM board just gets a slower build
+  instead of a faster one backed by a swapfile the installer added on its own.
+
 ## [2.14.1] - 2026-08-20
 
 ### Fixed
