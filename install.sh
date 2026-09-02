@@ -35,14 +35,24 @@ CERTS_DIR="$INSTALL_DIR/certs"
 # lib/cliUpdate.js, and the node-agent equivalents) hard-codes this exact path with no env
 # override, so only the DOWNLOAD URL varies by arch, not the local name.
 CLI_PATH="$INSTALL_DIR/mercy-cli-linux-x64"
+# ELF e_machine (offset 18, 2-byte little-endian — low byte alone distinguishes the two
+# architectures this installer ever downloads) — used below to detect a leftover binary for the
+# wrong CPU (e.g. an x64 build downloaded before ARM support existed, still sitting there on a
+# re-run): "cannot execute binary file: Exec format error" with no other clue why.
 case "$(uname -m)" in
-  x86_64|amd64) CLI_DOWNLOAD_URL="https://mercysf.app/downloads/mercy-cli-linux-x64" ;;
-  aarch64|arm64) CLI_DOWNLOAD_URL="https://mercysf.app/downloads/mercy-cli-linux-arm64" ;;
+  x86_64|amd64) CLI_DOWNLOAD_URL="https://mercysf.app/downloads/mercy-cli-linux-x64"; CLI_EXPECTED_MACHINE="3e" ;;
+  aarch64|arm64) CLI_DOWNLOAD_URL="https://mercysf.app/downloads/mercy-cli-linux-arm64"; CLI_EXPECTED_MACHINE="b7" ;;
   *)
     echo "Unsupported CPU architecture for the Mercy SF CLI: $(uname -m) (supported: x86_64, aarch64/arm64)." >&2
     exit 1
     ;;
 esac
+
+cli_arch_mismatches() {
+  local machine_byte
+  machine_byte="$(od -An -tx1 -j 18 -N 1 "$CLI_PATH" 2>/dev/null | tr -d ' ')"
+  [[ "$machine_byte" != "$CLI_EXPECTED_MACHINE" ]]
+}
 
 NODE_ONLY=false
 for arg in "$@"; do
@@ -429,8 +439,14 @@ if [[ ! -f "$CLI_PATH" ]]; then
   curl -fsSL -o "$CLI_PATH" "$CLI_DOWNLOAD_URL"
   chmod +x "$CLI_PATH"
   ok "CLI downloaded"
+elif cli_arch_mismatches; then
+  warn "Existing CLI binary at $CLI_PATH is built for a different CPU architecture than this machine ($(uname -m)) — likely left over from an older install. Deleting it and downloading the correct one."
+  rm -f "$CLI_PATH"
+  curl -fsSL -o "$CLI_PATH" "$CLI_DOWNLOAD_URL"
+  chmod +x "$CLI_PATH"
+  ok "CLI re-downloaded for $(uname -m)"
 else
-  ok "CLI already present ($CLI_PATH) — skipping download (updates run through the dashboard/node agent itself)"
+  ok "CLI already present ($CLI_PATH), correct architecture — skipping download (updates run through the dashboard/node agent itself)"
 fi
 
 progress "Checking the TLS certificate"

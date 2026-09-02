@@ -5,6 +5,16 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.14.4] - 2026-08-20
+
+### Fixed
+- `install.sh` and both Docker entrypoints only checked whether the CLI binary *existed* before
+  deciding not to (re-)download it, never whether it matched the machine's CPU architecture. A
+  binary left over from before ARM support existed (or from any host-architecture change) was
+  silently reused forever, failing every login with "CLI process exited before login completed" /
+  `Exec format error`. Now reads the ELF `e_machine` field and re-downloads (deleting the stale
+  file first) whenever it doesn't match `uname -m`.
+
 ## [2.14.3] - 2026-08-20
 
 ### Fixed
