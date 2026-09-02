@@ -110,6 +110,50 @@ run_step() {
   fi
 }
 
+# A parallel `cargo build --release` of the sf-api bridge (tokio/hyper/rustls/axum) or a native
+# `npm install` compile of better-sqlite3/node-pty (no prebuilt binary for the platform) can each
+# spike well past 1 GB of RAM per parallel compiler job. On a board like the Raspberry Pi — a few
+# GB of RAM, all cores used at once, and (on stock Raspberry Pi OS) only ~100 MB of swap by
+# default — that causes such severe swap-thrashing that the install (sometimes the whole machine)
+# looks completely frozen rather than failing with an error. Sets BUILD_JOBS for callers to pass
+# to cargo/npm, and adds a temporary swapfile if there's little to none and disk space allows.
+BUILD_JOBS=1
+ensure_build_headroom() {
+  local mem_total_kb swap_total_kb mem_total_mb swap_total_mb total_mb cores safe_total_for_cores
+  mem_total_kb="$(awk '/^MemTotal:/ {print $2}' /proc/meminfo)"
+  swap_total_kb="$(awk '/^SwapTotal:/ {print $2}' /proc/meminfo)"
+  mem_total_mb=$(( mem_total_kb / 1024 ))
+  swap_total_mb=$(( swap_total_kb / 1024 ))
+  total_mb=$(( mem_total_mb + swap_total_mb ))
+  cores="$(nproc)"
+
+  # Rough budget: ~1.5 GB of RAM+swap per parallel compiler job keeps rustc/node-gyp comfortably
+  # inside memory instead of swapping continuously. Only caps down from the core count, never up.
+  BUILD_JOBS=$cores
+  safe_total_for_cores=$(( cores * 1536 ))
+  if [[ "$total_mb" -lt "$safe_total_for_cores" ]]; then
+    BUILD_JOBS=$(( total_mb / 1536 ))
+    [[ "$BUILD_JOBS" -lt 1 ]] && BUILD_JOBS=1
+    warn "Only ${total_mb} MB RAM+swap for ${cores} CPU core(s) — capping build parallelism to ${BUILD_JOBS} job(s) to avoid swap-thrashing (this is what looks like a full freeze on boards like the Raspberry Pi)."
+  fi
+
+  if [[ "$swap_total_mb" -lt 512 ]] && [[ ! -f /var/swap-mercy-install ]]; then
+    local avail_disk_mb swap_add_mb=2048
+    avail_disk_mb="$(df -Pm / | awk 'NR==2 {print $4}')"
+    if [[ "$avail_disk_mb" -gt $(( swap_add_mb + 1024 )) ]]; then
+      step "Adding a temporary ${swap_add_mb} MB swapfile (/var/swap-mercy-install) for the build — only ${swap_total_mb} MB swap present"
+      if { fallocate -l "${swap_add_mb}M" /var/swap-mercy-install 2>/dev/null || dd if=/dev/zero of=/var/swap-mercy-install bs=1M count="$swap_add_mb" status=none; } \
+        && chmod 600 /var/swap-mercy-install && mkswap /var/swap-mercy-install >/dev/null && swapon /var/swap-mercy-install; then
+        ok "Swapfile active — left in place after install (remove manually if unwanted: swapoff /var/swap-mercy-install && rm /var/swap-mercy-install)"
+      else
+        warn "Could not create a swapfile — continuing without it, the build may be slow or unstable on low-RAM boards"
+      fi
+    else
+      warn "Low swap (${swap_total_mb} MB) and not enough free disk space to add more — build may be slow/unstable on low-RAM boards"
+    fi
+  fi
+}
+
 banner() {
   echo -e "${BOLD}${CYAN}"
   echo '  __  __                          ____  _____ '
@@ -341,6 +385,9 @@ else
   fi
 fi
 
+log "Checking build memory headroom (native compiles: sf-api bridge, node-pty/better-sqlite3; Docker: same builds inside the image)"
+ensure_build_headroom
+
 if [[ "$INSTALL_MODE" == "docker" ]]; then
   install_docker_mode
   exit 0
@@ -402,7 +449,7 @@ if [[ "$NODE_ONLY" == "true" ]]; then
   # Control runs entirely from the central dashboard's "Nodes" page.
   progress "Installing npm dependencies for the node agent (compiles node-pty natively)"
   cd "$NODE_AGENT_DIR"
-  run_step "npm install" npm install --omit=dev --no-audit --no-fund
+  run_step "npm install" env JOBS="$BUILD_JOBS" npm install --omit=dev --no-audit --no-fund
   mkdir -p "$NODE_AGENT_DIR/data"
 
   progress "Setting up the node-agent systemd service"
@@ -451,7 +498,7 @@ source "$HOME/.cargo/env"
 
 progress "Installing npm dependencies (compiles node-pty natively)"
 cd "$DASHBOARD_DIR"
-run_step "npm install" npm install --omit=dev --no-audit --no-fund
+run_step "npm install" env JOBS="$BUILD_JOBS" npm install --omit=dev --no-audit --no-fund
 
 progress "Deploying vendor assets (Chart.js, xterm.js)"
 mkdir -p "$DASHBOARD_DIR/public/vendor"
@@ -469,7 +516,7 @@ systemctl restart mercy-dashboard
 
 progress "Building the sf-api bridge and setting it up as a systemd service (equipment lookups, localhost only)"
 cd "$DASHBOARD_DIR/sfapi-bridge"
-run_step "cargo build --release — this can take a few minutes" cargo build --release
+run_step "cargo build --release — this can take a few minutes" cargo build --release -j "$BUILD_JOBS"
 cp "$DASHBOARD_DIR/systemd/mercy-sfapi-bridge.service" /etc/systemd/system/mercy-sfapi-bridge.service
 systemctl daemon-reload
 systemctl enable mercy-sfapi-bridge >/dev/null 2>&1

@@ -5,6 +5,17 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.14.1] - 2026-08-20
+
+### Fixed
+- `install.sh` could look completely frozen on low-RAM ARM boards (e.g. Raspberry Pi) during the
+  native systemd install: `cargo build --release` (sf-api bridge) and native compiles of
+  node-pty/better-sqlite3 both default to using every CPU core at once, which on a board with a
+  few GB of RAM and (on stock Raspberry Pi OS) only ~100 MB of swap causes severe swap-thrashing
+  rather than an error. Added `ensure_build_headroom()`: caps build parallelism when RAM+swap is
+  tight relative to core count, and adds a temporary 2 GB swapfile when swap is low and disk space
+  allows. Applies to both the native and Docker install paths.
+
 ## [2.14.0] - 2026-08-20
 
 ### Changed
