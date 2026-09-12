@@ -5,6 +5,18 @@ Changelog](https://keepachangelog.com/). History before 2.0.0 lives in
 `git log` — this file starts tracking from the "Version 2" design
 overhaul.
 
+## [2.14.9] - 2026-09-12
+
+### Fixed
+- The statistics database (`data/stats.db`, and the separate copy every node agent keeps) grew
+  without any limit. `lib/statsCollector.js` stores a snapshot per account as often as the CLI
+  writes a new one, and `lib/actionLog.js` writes a row for every game command it recognises in
+  the PTY output — nothing was ever deleted again, while the daily-earnings view only ever reads
+  back a window of a few days. Rows older than 28 days are now removed on startup and once a day
+  afterwards, followed by a `VACUUM`, since SQLite does not hand the freed space back to the
+  filesystem on its own. Only the daily earnings and the detected fight windows are affected; the
+  analytics charts read the CLI's own analytics files and keep their full history.
+
 ## [2.14.8] - 2026-09-08
 
 ### Fixed
